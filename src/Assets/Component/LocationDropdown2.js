@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import {
   View,
   Text,
@@ -9,20 +10,17 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
-import React, { useState, useEffect, useRef, useContext } from 'react';
-import Geocode, { fromAddress, setDefaults, setKey } from 'react-geocode';
-// import Ionicons from 'react-native-vector-icons/Ionicons';
-// import Constants from '../Helpers/constant';
-import Constants, { FONTS, Googlekey } from '../Helpers/constant';
-
-import axios from 'axios';
+import React, { useState, useEffect, useRef } from 'react';
+import Constants, { FONTS } from '../Helpers/constant';
+import Geocoder from 'react-native-geocoding';
 import {
   request,
   PERMISSIONS,
-  requestLocationAccuracy,
 } from 'react-native-permissions';
-// import {LocationIcon, SearchIcon} from '../../Theme/icons';
 import { LocationIcon } from '../../../Theme';
+import GooglePlacesSDK from 'react-native-google-places-sdk';
+GooglePlacesSDK.initialize('AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs');
+Geocoder.init("AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs");
 
 
 const LocationDropdown = (props) => {
@@ -31,7 +29,6 @@ const LocationDropdown = (props) => {
   const [address, setAddress] = useState('');
   const [location, setLocation] = useState({});
   const refInput = useRef(null);
-
   useEffect(() => {
     setAddress(props.value);
   }, [props.value]);
@@ -40,28 +37,22 @@ const LocationDropdown = (props) => {
     getLocation();
   }, []);
   useEffect(() => {
-    // setShowList(props?.focus);
     if (props?.focus) {
       console.log(props?.focus);
       refInput.current.focus();
-      // Animated.timing(animate, {
-      //   toValue: isAnim ? 0 : -45,
-      //   duration: 300,
-      //   useNativeDriver: true,
-      // }).start();
     } else {
       // refInput.current?.blur();
     }
   }, [props]);
-  // console.log('prediction',prediction)
-  // prediction.map((ite)=>console.log('dropdata',item?.description))
-  console.log('location', location);
 
-  const getLocation = async () => {
+  const getLocation = async (text) => {
     try {
       if (Platform.OS === 'ios') {
         request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE).then(async result => {
           console.log(result);
+          if (result === 'granted') {
+            GooglePlacesInput(text)
+          }
         });
       } else {
         const granted = await PermissionsAndroid.request(
@@ -80,89 +71,89 @@ const LocationDropdown = (props) => {
     }
   };
 
-  const GOOGLE_PACES_API_BASE_URL =
-    'https://maps.googleapis.com/maps/api/place';
+  const GooglePlacesInput = async text => {
 
-  const GooglePlacesInput = async (text) => {
-    const apiUrl = `${GOOGLE_PACES_API_BASE_URL}/autocomplete/json?key=${Googlekey}&input=${text}`;
-    //&components=country:ec
-    try {
-      if (Platform.OS === 'ios') {
-        request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE).then(async result => {
-          console.log(result);
-          if (result === 'granted') {
-            setShowList(true);
-            const result = await axios.request({
-              method: 'post',
-              url: apiUrl,
-            });
-            if (result) {
-              const {
-                data: { predictions },
-              } = result;
-              setPredictions(predictions);
-              setShowList(true);
-            }
-          } else {
-            getLocation();
-          }
-        });
-      } else {
-        const check = await PermissionsAndroid.check(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        );
+    GooglePlacesSDK.fetchPredictions(
+      text, // query
+      // { countries: ["in", "us"] } // filters
+    )
+      .then((predictions) => {
+        setPredictions(predictions);
+        setShowList(true);
+        console.log(predictions)
 
-        if (check) {
-          setShowList(true);
-          const result = await axios.request({
-            method: 'post',
-            url: apiUrl,
-          });
-          if (result) {
-            const {
-              data: { predictions },
-            } = result;
-            setPredictions(predictions);
-            setShowList(true);
-          }
-        } else {
-          getLocation();
+      })
+      .catch((error) => console.log(error));
+  };
+
+
+  const checkLocation = async add => {
+    Geocoder.from(add)
+      .then(json => {
+
+        let locations = json.results;
+        console.log(locations);
+        if (locations.length > 0) {
+          console.log(locations);
+          const lat = locations[0].geometry.location;
+
+          const components = locations[0].address_components;
+          console.log(components);
+          const country = components.find(item =>
+            item.types.includes('country'),
+          );
+          const city =
+            components.find(comp => comp.types.includes('locality'))?.long_name
+            ||
+            components.find(comp => comp.types.includes('postal_town'))
+              ?.long_name ||
+            components.find(comp =>
+              comp.types.includes('administrative_area_level_3'),
+            )?.long_name ||
+            components.find(comp =>
+              comp.types.includes('administrative_area_level_2'),
+            )?.long_name ||
+            components.find(comp =>
+              comp.types.includes('sublocality_level_1'),
+            )?.long_name ||
+            components.find(comp =>
+              comp.types.includes('sublocality'),
+            )?.long_name ||
+            components.find(comp =>
+              comp.types.includes('neighborhood'),
+            )?.long_name;
+          console.log(city)
+
+          let state = components.find(item =>
+            item.types.includes('administrative_area_level_1'),
+          );
+
+
+          // ✅ Combine state with country or city
+          const fullLocation = {
+            lat,
+            add,
+            city: city || '',
+            country: country?.long_name || '',
+            state: state?.long_name || '',
+          };
+
+          // 🔁 Call parent function with all values
+          console.log(fullLocation)
+          props.getLocationVaue(
+            fullLocation.lat,
+            fullLocation.add,
+            fullLocation.city,
+            fullLocation.country,
+            fullLocation.state
+          );
+
+          setLocation(lat);
         }
-      }
-    } catch (e) {
-      console.log(e);
-    }
+      })
   };
-
-  const checkLocation = async (add) => {
-    console.log('add===>', add);
-    try {
-      setKey(Googlekey);
-      // setDefaults({
-      //   key: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", // Your API key here.
-      //   language: "en", // Default language for responses.
-      //   region: "es", // Default region for responses.
-      // });
-      if (add) {
-        fromAddress(add).then(
-          (response) => {
-            console.log('response==>', response);
-            const lat = response.results[0].geometry.location;
-            setLocation(lat);
-            props.getLocationVaue(lat, add);
-          },
-          (error) => {
-            console.error(error);
-          },
-        );
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   return (
-    <View style={{flex:1}}>
+    <View style={{ flex: 1 }}>
       <View
         style={{
           flexDirection: 'row',
@@ -172,7 +163,7 @@ const LocationDropdown = (props) => {
           // borderRadius: 20,
           // height: 30,
           // width: '100%',
-          flex:1
+          flex: 1
         }}>
         <View
           style={[
@@ -199,18 +190,18 @@ const LocationDropdown = (props) => {
               ref={refInput}
               // placeholder="Where you want to go...."
               placeholder={props?.placeholder || 'Address'}
-              placeholderTextColor={ Constants.customgrey}
+              placeholderTextColor={Constants.customgrey}
               numberOfLines={5}
               // textAlignVertical="center"
               style={[styles.amountTime, styles.editjobinput]}
               onBlur={() => {
-                if( props.setIsFocus){
-                props.setIsFocus(false);
+                if (props.setIsFocus) {
+                  props.setIsFocus(false);
                 }
                 setShowList(false);
               }}
               onFocus={() => {
-                if( props.setIsFocus){
+                if (props.setIsFocus) {
                   props.setIsFocus(props.focus);
                 }
               }}
@@ -233,7 +224,7 @@ const LocationDropdown = (props) => {
                 alignItems: 'center',
                 borderBottomWidth: 1,
                 borderBottomColor: Constants.lightgrey,
-                backgroundColor:Constants.saffron
+                backgroundColor: Constants.saffron
               }}
               onPress={() => console.log('pressed')}>
               {/* <Ionicons
@@ -258,10 +249,10 @@ const LocationDropdown = (props) => {
                   setAddress(item?.description);
                   checkLocation(item?.description);
                   setShowList(false);
-                  if(props.setIsFocus){
-                        setTimeout(() => {
-                    props.setIsFocus(false)
-                  }, 300)
+                  if (props.setIsFocus) {
+                    setTimeout(() => {
+                      props.setIsFocus(false)
+                    }, 300)
                   }
                 }}>
                 {item?.description}
@@ -300,7 +291,7 @@ const styles = StyleSheet.create({
     // fontWeight: '500',
     fontSize: 18,
     marginLeft: 5,
-    fontFamily:FONTS.Regular
+    fontFamily: FONTS.Regular
     // lineHeight: 18,
     // backgroundColor:COLORS.bgPrimary
   },

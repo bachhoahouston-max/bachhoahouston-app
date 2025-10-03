@@ -1,33 +1,18 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable no-unused-vars */
-import { View, Text } from 'react-native';
-import React from 'react';
-import {
-  setKey,
-  setDefaults,
-  setLanguage,
-  setRegion,
-  fromAddress,
-  fromLatLng,
-  fromPlaceId,
-  setLocationType,
-  geocode,
-  RequestType,
-} from 'react-geocode';
+
+import Geocoder from 'react-native-geocoding';
+Geocoder.init("AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs");
 
 const GetCurrentAddressByLatLong = (props) => {
   console.log(props);
-  setDefaults({
-    key: "AIzaSyCre5Sym7PzqWQjHoNz7A3Z335oqtkUa9k", // Your API key here.
-    language: "en", // Default language for responses.
-    region: "es", // Default region for responses.
-  });
-  // setKey('AIzaSyCre5Sym7PzqWQjHoNz7A3Z335oqtkUa9k');
   let address = '';
   return new Promise((resolve, reject) => {
-    fromLatLng(props.lat, props.long)
-      .then(({ results }) => {
-        const { lat, lng } = results[0].geometry.location;
+    Geocoder.from(props.lat, props.long)
+      .then(json => {
+        let results = json.results;
+        console.log(results);
+        // const { lat, lng } = results[0].geometry.location;
         const l = results.filter(
           (f) =>
             f.geometry.location.lat === props.lat &&
@@ -37,8 +22,7 @@ const GetCurrentAddressByLatLong = (props) => {
         address = results;
         resolve({ results, latlng: props });
       })
-      .catch(console.error);
-
+      .catch(error => console.warn(error));
     return address;
   });
 };

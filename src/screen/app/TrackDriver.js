@@ -33,9 +33,9 @@ import { useTranslation } from 'react-i18next';
 
 const TrackDriver = props => {
   const data = props?.route?.params;
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   console.log(data)
-  const GOOGLE_MAPS_APIKEY = 'AIzaSyDHd5FoyP2sDBo0vO2i0Zq7TIUZ_7GhBcI';
+  const GOOGLE_MAPS_APIKEY = 'AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs';
   const [location, setlocation] = useState(null);
   const [destination, setdestination] = useState(null);
   const [render, setrender] = useState();
@@ -63,26 +63,26 @@ const TrackDriver = props => {
 
   useEffect(() => {
     let int;
-    if(data.driverid){
+    if (data.driverid) {
       getdriverlocation();
       clearInterval(interval);
-     
+
       // if (data.assign) {
-        int = setInterval(() => {
-          getdriverlocation(int);
-        }, 30000);
-        setinter(int);
+      int = setInterval(() => {
+        getdriverlocation(int);
+      }, 30000);
+      setinter(int);
       // } else {
       //   clearInterval(int);
       // }
     }
-   
+
     return () => {
       clearInterval(int);
     };
   }, [data]);
 
-  
+
   const getdriverlocation = (inter) => {
 
     GetApi(`getdriverlocation/${data.driverid}`).then(
@@ -104,7 +104,7 @@ const TrackDriver = props => {
       },
     );
   };
-  
+
 
 
   const PackageIcon = () => {
@@ -156,9 +156,9 @@ const TrackDriver = props => {
         styles.container,
       ]}>
       <DriverHeader item={t('Track Driver')} showback={true} />
-   <View style={{ flex: 1 }}>
-       {assigndata&& <MapView
-       key={render}
+      <View style={{ flex: 1 }}>
+        {assigndata && <MapView
+          key={render}
           ref={mapRef}
           provider={PROVIDER_GOOGLE} // remove if not using Google Maps
           style={styles.map}
@@ -166,13 +166,13 @@ const TrackDriver = props => {
           region={destination ? destination : location}
         // showsUserLocation={true}
         >
-         
+
           <Marker
             coordinate={{
               latitude: data?.userlocation?.coordinates[1],
               longitude: data?.userlocation?.coordinates[0],
             }}
-            // title={'Sourse'}
+          // title={'Sourse'}
           />
           {assigndata?.currentlocation && <Marker
             zIndex={8}
@@ -184,7 +184,7 @@ const TrackDriver = props => {
             anchor={{ x: 0.5, y: 0.5 }}
           >
             <PackageIcon /></Marker>}
-         
+
           {/* <MapViewDirections
             origin={{
               latitude: data?.src?.coordinates[1],
@@ -243,9 +243,9 @@ const TrackDriver = props => {
             strokeColors={['#000']}
             optimizeWaypoints={true}
           />}
-          
+
         </MapView>}
-       
+
       </View>
     </SafeAreaView>
   );
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
   },
   secendtxt: {
     // color: Constants.black,
-    fontSize:13,
+    fontSize: 13,
     textAlign: 'left',
     width: '60%',
     fontFamily: FONTS.Regular

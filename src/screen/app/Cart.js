@@ -562,6 +562,22 @@ const Cart = () => {
       return;
     }
 
+    if (PickupType === 'localDelivery' && (!user.address || !user.address?.location)) {
+      Toast.show({
+        type: 'error',
+        text1: t('Please add the shipping address'),
+      });
+      return;
+    }
+
+    if (PickupType === 'shipping' && (!user.address || !user.address?.location)) {
+      Toast.show({
+        type: 'error',
+        text1: t('Please add the shipping address'),
+      });
+      return;
+    }
+
     setLoading(true);
     setShowStripePayment(true);
     console.log('newarr:', newarr);

@@ -4,7 +4,7 @@
 const prodUrl = 'https://api.bachhoahouston.com/v1/api/';
 
 let apiUrl = prodUrl;
-export const Googlekey = 'AIzaSyCre5Sym7PzqWQjHoNz7A3Z335oqtkUa9k';
+export const Googlekey = 'AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs';
 export const Currency = '$';
 
 const Constants = {

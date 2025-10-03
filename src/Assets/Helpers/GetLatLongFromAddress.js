@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const GOOGLE_API_KEY = 'AIzaSyCre5Sym7PzqWQjHoNz7A3Z335oqtkUa9k';
+const GOOGLE_API_KEY = 'AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs';
 
 const GetLatLongFromAddress = async address => {
   try {

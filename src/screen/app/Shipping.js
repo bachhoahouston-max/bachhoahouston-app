@@ -231,46 +231,48 @@ const Shipping = props => {
   //   }
   // }, [addressdata?.zipcode, availableZipCodes]);
 
-  useEffect(() => {
-    if (locationadd) {
-      fetchLatLongAndLocationDetails(locationadd);
-    }
-  }, [locationadd]);
+  // useEffect(() => {
+  //   if (locationadd) {
+  //     fetchLatLongAndLocationDetails(locationadd);
+  //   }
+  // }, [locationadd]);
 
-  const fetchLatLongAndLocationDetails = async address => {
-    // Only fetch lat/long if we don't already have complete location data
-    if (!location || !addressdata.city || !addressdata.country) {
-      const result = await GetLatLongFromAddress(address);
+  // const fetchLatLongAndLocationDetails = async address => {
+  //   // Only fetch lat/long if we don't already have complete location data
+  //   if (!location || !addressdata.city || !addressdata.country) {
+  //     const result = await GetLatLongFromAddress(address);
 
-      if (result) {
-        const { latitude, longitude, state, country, city } = result;
+  //     if (result) {
+  //       const { latitude, longitude, state, country, city } = result;
 
-        setlocation({
-          latitude,
-          longitude,
-        });
+  //       setlocation({
+  //         latitude,
+  //         longitude,
+  //       });
 
-        setaddressdata(prev => ({
-          ...prev,
-          lat: latitude,
-          long: longitude,
-          state: state || prev.state || '',
-          country: country || prev.country || '',
-          city: city || prev.city || '',
-        }));
+  //       setaddressdata(prev => ({
+  //         ...prev,
+  //         lat: latitude,
+  //         long: longitude,
+  //         state: state || prev.state || '',
+  //         country: country || prev.country || '',
+  //         city: city || prev.city || '',
+  //       }));
 
-        console.log('Fetched location details from address:', {
-          lat: latitude,
-          long: longitude,
-          state,
-          country,
-          city,
-        });
-      }
-    }
-  };
+  //       console.log('Fetched location details from address:', {
+  //         lat: latitude,
+  //         long: longitude,
+  //         state,
+  //         country,
+  //         city,
+  //       });
+  //     }
+  //   }
+  // };
 
   const getLocationValue = (lat, add, city, country, state) => {
+
+    console.log(lat)
     console.log('lat=======>', lat);
     console.log('add=======>', add);
     console.log('city=======>', city);
@@ -536,8 +538,8 @@ const Shipping = props => {
                 focus={from === 'location'}
                 setIsFocus={setFrom}
                 from="location"
-                getLocationValue={(lat, add, city, country) =>
-                  getLocationValue(lat, add, city, country)
+                getLocationValue={(lat, add, city, country, state) =>
+                  getLocationValue(lat, add, city, country, state)
                 }
               />
             </View>

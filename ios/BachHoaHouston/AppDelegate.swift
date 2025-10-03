@@ -13,7 +13,7 @@ class AppDelegate: RCTAppDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     self.moduleName = "BachHoaHouston"
-    GMSServices.provideAPIKey("AIzaSyCre5Sym7PzqWQjHoNz7A3Z335oqtkUa9k")
+    GMSServices.provideAPIKey("AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs")
     self.dependencyProvider = RCTAppDependencyProvider()
 
     // You can add your custom initial props in the dictionary below.

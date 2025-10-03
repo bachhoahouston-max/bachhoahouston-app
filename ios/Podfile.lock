@@ -10,6 +10,7 @@ PODS:
   - GoogleMaps (9.4.0):
     - GoogleMaps/Maps (= 9.4.0)
   - GoogleMaps/Maps (9.4.0)
+  - GooglePlaces (7.3.0)
   - hermes-engine (0.81.1):
     - hermes-engine/Pre-built (= 0.81.1)
   - hermes-engine/Pre-built (0.81.1)
@@ -126,6 +127,7 @@ PODS:
     - React-RCTText (= 0.81.1)
     - React-RCTVibration (= 0.81.1)
   - React-callinvoker (0.81.1)
+  - React-Codegen (0.1.0)
   - React-Core (0.81.1):
     - boost
     - DoubleConversion
@@ -1857,6 +1859,14 @@ PODS:
     - Yoga
   - react-native-geolocation-service (5.3.1):
     - React
+  - react-native-google-places-sdk (0.3.1):
+    - GooglePlaces (= 7.3.0)
+    - RCT-Folly
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Codegen
+    - React-Core
+    - ReactCommon/turbomodule/core
   - react-native-image-picker (8.2.1):
     - boost
     - DoubleConversion
@@ -1885,9 +1895,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-maps (1.26.1):
-    - react-native-maps/Maps (= 1.26.1)
-  - react-native-maps/Generated (1.26.1):
+  - react-native-maps (1.26.6):
+    - react-native-maps/Maps (= 1.26.6)
+  - react-native-maps/Generated (1.26.6):
     - boost
     - DoubleConversion
     - fast_float
@@ -1915,7 +1925,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-maps/Google (1.26.1):
+  - react-native-maps/Google (1.26.6):
     - boost
     - DoubleConversion
     - fast_float
@@ -1947,7 +1957,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-maps/Maps (1.26.1):
+  - react-native-maps/Maps (1.26.6):
     - boost
     - DoubleConversion
     - fast_float
@@ -3191,6 +3201,7 @@ DEPENDENCIES:
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - react-native-blob-util (from `../node_modules/react-native-blob-util`)
   - react-native-geolocation-service (from `../node_modules/react-native-geolocation-service`)
+  - react-native-google-places-sdk (from `../node_modules/react-native-google-places-sdk`)
   - react-native-image-picker (from `../node_modules/react-native-image-picker`)
   - react-native-maps (from `../node_modules/react-native-maps`)
   - react-native-maps/Google (from `../node_modules/react-native-maps`)
@@ -3248,7 +3259,9 @@ SPEC REPOS:
   trunk:
     - Google-Maps-iOS-Utils
     - GoogleMaps
+    - GooglePlaces
     - OneSignalXCFramework
+    - React-Codegen
     - SocketRocket
     - Stripe
     - StripeApplePay
@@ -3347,6 +3360,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-blob-util"
   react-native-geolocation-service:
     :path: "../node_modules/react-native-geolocation-service"
+  react-native-google-places-sdk:
+    :path: "../node_modules/react-native-google-places-sdk"
   react-native-image-picker:
     :path: "../node_modules/react-native-image-picker"
   react-native-maps:
@@ -3457,6 +3472,7 @@ SPEC CHECKSUMS:
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   Google-Maps-iOS-Utils: 0a484b05ed21d88c9f9ebbacb007956edd508a96
   GoogleMaps: 0608099d4870cac8754bdba9b6953db543432438
+  GooglePlaces: 0609463845250bbadafa1739938181e54dece439
   hermes-engine: 4f8246b1f6d79f625e0d99472d1f3a71da4d28ca
   HtmlToPdf: 6a9c28f54ec810d1d120a698a9b3c83e2bdb1672
   OneSignalXCFramework: 7112f3e89563e41ebc23fe807788f11985ac541c
@@ -3466,6 +3482,7 @@ SPEC CHECKSUMS:
   RCTTypeSafety: 720403058b7c1380c6a3ae5706981d6362962c89
   React: f1486d005993b0af01943af1850d3d4f3b597545
   React-callinvoker: 133f69368c8559e744efa345223625d412f5dfbe
+  React-Codegen: 4b8b4817cea7a54b83851d4c1f91f79aa73de30a
   React-Core: 559823921b4f294c2840fa8238ca958a29ddc211
   React-CoreModules: c41e7bbfabbc420783bb926f45837a0d5e53341e
   React-cxxreact: 9cb9fa738274a1b36b97ede09c8a6717dec1a20b
@@ -3495,8 +3512,9 @@ SPEC CHECKSUMS:
   React-microtasksnativemodule: 1ead4fe154df3b1ba34b5a9e35ef3c4bdfa72ccb
   react-native-blob-util: e2162ce4757849682559754bca954b65dc7eeb2f
   react-native-geolocation-service: 32b2c2a3b91e70ce2a8d0c684801aaeb0a07e0ec
+  react-native-google-places-sdk: 89b9c08379db4c0f2d28335ce81accd1e17f8181
   react-native-image-picker: 0314366753615115fa55c3cc937ac44cb7e75702
-  react-native-maps: 2414d33592f219298a3818c592419d0d3aa7ee93
+  react-native-maps: a678a0fc9b61c93c9f7e2651b05307bf6f11e8ac
   react-native-netinfo: cec9c4e86083cb5b6aba0e0711f563e2fbbff187
   react-native-onesignal: 0829ce2a504db26dd80eaf14d4e0211ea626fe62
   react-native-render-html: 5afc4751f1a98621b3009432ef84c47019dcb2bd

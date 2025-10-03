@@ -1,7 +1,7 @@
 // Configuration for Google Maps API
 // TODO: Move API key to environment variables in production
 export const GOOGLE_MAPS_CONFIG = {
-  API_KEY: 'AIzaSyCre5Sym7PzqWQjHoNz7A3Z335oqtkUa9k', // Should be moved to .env file
+  API_KEY: 'AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs', // Should be moved to .env file
   DIRECTIONS_API_URL: 'https://maps.googleapis.com/maps/api/directions/json',
   DEFAULT_REGION: {
     latitudeDelta: 0.05,

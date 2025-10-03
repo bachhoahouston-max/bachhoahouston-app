@@ -34,7 +34,7 @@ const ProductCard = ({
   }
 
   useEffect(() => {
-    console.log(item)
+    // console.log(item)
   }, [item])
 
   return (
