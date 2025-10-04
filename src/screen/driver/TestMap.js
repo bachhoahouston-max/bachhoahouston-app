@@ -148,6 +148,7 @@ export default function TestMap() {
         <MapView
           ref={mapRef}
           provider={PROVIDER_GOOGLE}
+
           // key={`map-${sortedOrders.length}`}
           style={styles.map}
           initialRegion={{

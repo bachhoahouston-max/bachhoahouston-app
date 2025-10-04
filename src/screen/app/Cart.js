@@ -239,72 +239,6 @@ const Cart = () => {
     }
   }, [PickupType]);
 
-  // useEffect(() => {
-  //   const sumdata =
-  //     cartdetail && cartdetail.length > 0
-  //       ? cartdetail.reduce((a, item) => {
-  //           return Number(a) + Number(item?.price) * Number(item?.qty);
-  //         }, 0)
-  //       : null;
-  //   console.log(sumdata);
-  //   settotalsum(sumdata);
-  //   // Calculate total offer
-  //   const offdata =
-  //     cartdetail && cartdetail.length > 0
-  //       ? cartdetail.reduce((a, item) => {
-  //           return Number(a) + Number(item?.offer) * Number(item?.qty);
-  //         }, 0)
-  //       : null;
-  //   console.log(sumdata);
-  //   settotaloff(offdata);
-  //   setTotalFinal(offdata - couponDiscount);
-
-  //   // Calculate delivery charge based on pickup type
-  //   if (PickupType === 'localDelivery') {
-  //     if (offdata < 35) {
-  //       setTotalFinal(
-  //         Number(
-  //           (offdata + localDeliveryCost - couponDiscount + totalTax).toFixed(
-  //             2,
-  //           ),
-  //         ),
-  //       );
-  //       setDeliveryFees(localDeliveryCost);
-  //     } else {
-  //       setTotalFinal(offdata - couponDiscount + totalTax);
-  //       setDeliveryFees(0);
-  //     }
-  //   } else if (PickupType === 'shipping') {
-  //     if (offdata < 200) {
-  //       setTotalFinal(
-  //         Number(
-  //           (
-  //             offdata +
-  //             shippingDeliveryCost -
-  //             couponDiscount +
-  //             totalTax
-  //           ).toFixed(2),
-  //         ),
-  //       );
-  //       setDeliveryFees(shippingDeliveryCost);
-  //     } else {
-  //       setTotalFinal(offdata - couponDiscount + totalTax);
-  //       setDeliveryFees(0);
-  //     }
-  //   } else {
-  //     setTotalFinal(offdata - couponDiscount + totalTax);
-  //     setDeliveryFees(0);
-  //   }
-  // }, [
-  //   cartdetail,
-  //   deliveryTip,
-  //   PickupType,
-  //   shippingDeliveryCost,
-  //   localDeliveryCost,
-  //   shippingFee,
-  //   couponDiscount,
-  //   totalTax,
-  // ]);
 
   useEffect(() => {
     // Calculate cart total (original prices)
@@ -561,8 +495,8 @@ const Cart = () => {
       });
       return;
     }
-
-    if (PickupType === 'localDelivery' && (!user.address || !user.address?.location)) {
+    console.log(user)
+    if (PickupType === 'localDelivery' && (!user.address || !user?.location?.coordinates || (user?.location?.coordinates && user?.location?.coordinates.length === 0))) {
       Toast.show({
         type: 'error',
         text1: t('Please add the shipping address'),
@@ -570,7 +504,7 @@ const Cart = () => {
       return;
     }
 
-    if (PickupType === 'shipping' && (!user.address || !user.address?.location)) {
+    if (PickupType === 'shipping' && (!user.address || !user?.location?.coordinates || (user?.location?.coordinates && user?.location?.coordinates.length === 0))) {
       Toast.show({
         type: 'error',
         text1: t('Please add the shipping address'),
@@ -681,7 +615,7 @@ const Cart = () => {
         ...(isShipmentDelivery || isLocalDelivery
           ? {
             Local_address: {
-              address: user.address ?? '',
+              address: user.address || '',
               ...localDeliveryAddress,
               name: user?.username,
               phoneNumber: user?.number,
@@ -721,6 +655,7 @@ const Cart = () => {
 
       const response = await Post('createProductRquest', data, {});
       setLoading(false);
+      console.log('Order creation response:', response);
       if (!response.status) {
         Toast.show({
           type: 'error',
