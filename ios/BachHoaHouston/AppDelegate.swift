@@ -3,6 +3,7 @@ import GoogleMapsUtils
 // import RCTLinkingManager
 import React
 import ReactAppDependencyProvider
+import ReactNativeConfig
 import React_RCTAppDelegate
 import UIKit
 
@@ -13,7 +14,12 @@ class AppDelegate: RCTAppDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     self.moduleName = "BachHoaHouston"
-    GMSServices.provideAPIKey("AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs")
+    if let googleMapsKey = ReactNativeConfig.env(for: "GOOGLE_MAPS_API_KEY") {
+      GMSServices.provideAPIKey(googleMapsKey)
+    } else {
+      print("❌ GOOGLE_MAPS_API_KEY not found")
+    }
+    // GMSServices.provideAPIKey("AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs")
     self.dependencyProvider = RCTAppDependencyProvider()
 
     // You can add your custom initial props in the dictionary below.

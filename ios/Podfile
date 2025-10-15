@@ -44,6 +44,7 @@ pod 'react-native-maps/Google', :path => rn_maps_path
   # pod 'GoogleMaps'
   pod 'Google-Maps-iOS-Utils' # x-release-please-version
   pod 'RNInAppBrowser', :path => '../node_modules/react-native-inappbrowser-reborn'
+pod 'react-native-config', :path => '../node_modules/react-native-config'
 
   use_react_native!(
     :path => config[:reactNativePath],
