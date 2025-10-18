@@ -7,6 +7,8 @@ import {
   TextInput,
   Image,
   ScrollView,
+  ImageBackground,
+  Platform,
 } from 'react-native';
 import React, { createRef, useContext, useEffect, useState } from 'react';
 import styles from './styles';
@@ -48,8 +50,7 @@ const SignIn = props => {
       let lng =
         x == 'en'
           ? 'English'
-          : // : x == 'ar' ? 'العربية' : 'کوردی'
-          'Vietnames';
+          : 'Vietnames';
       setSelectLanguage(lng);
     }
   };
@@ -68,17 +69,12 @@ const SignIn = props => {
       return;
     }
 
-    // const player_id = await OneSignal.User.pushSubscription.getIdAsync();
-    // const device_token = await OneSignal.User.pushSubscription.getTokenAsync();
     const data = {
       username: userDetail.username.toLowerCase().trim(),
       password: userDetail.password,
-      // player_id,
-      // device_token,
     };
 
     console.log('data==========>', userDetail);
-    // userDetail.email = userDetail.email.toLowerCase();
     setLoading(true);
     console.log('data2==========>', userDetail);
     Post('login', data, { ...props }).then(
@@ -124,8 +120,6 @@ const SignIn = props => {
             setLoading(false);
             reset('App');
           }
-
-          // setToast(res.message);
         } else {
           setLoading(false);
           console.log('error------>', res);
@@ -144,102 +138,151 @@ const SignIn = props => {
       },
     );
   };
+
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={[styles.container, { padding: Platform.OS === 'ios' ? 20 : 0 }]}
-        showsVerticalScrollIndicator={false}>
-        <TouchableOpacity
-          style={[styles.langView, { borderColor: Constants.black }]}
-          onPress={() => langRef.current.show()}>
-          <Text style={[styles.lang, { color: Constants.black }]}>
-            {selectLanguage}
-          </Text>
-          <Downarrow height={15} width={15} color={Constants.black} />
-        </TouchableOpacity>
-        <View style={{ marginTop: 30 }}>
-          <Text style={styles.logintitle}>{t('WELCOME')}</Text>
-          <Text style={styles.title2}>
-            {t('Please enter your Sign in details')}
-          </Text>
-        </View>
-        <Image
-          source={require('../../Assets/Images/image5.png')}
-          style={styles.logo}
-        />
-        <View style={styles.textInput}>
-          <TextInput
-            style={styles.input}
-            placeholder={t('Enter email')}
-            placeholderTextColor={Constants.customgrey}
-            value={userDetail.username}
-            onChangeText={username => setUserDetail({ ...userDetail, username })}
-          />
-          <View style={[styles.mylivejobtitle]}>
-            <Text style={styles.jobtitle}>{t('Email')}</Text>
+    <SafeAreaView style={newStyles.container}>
+    <ScrollView
+  style={newStyles.scrollView}
+  showsVerticalScrollIndicator={false}
+  contentContainerStyle={[newStyles.scrollContent, { overflow: 'visible' }]}>
+        
+        {/* Header with Background Image */}
+        <ImageBackground
+          source={require('../../Assets/Images/ron.png')}
+          style={newStyles.headerBackground}
+          resizeMode="cover">
+          
+          {/* Language Switcher */}
+          <View style={newStyles.languageSwitcher}>
+            <TouchableOpacity
+              style={[
+                newStyles.langButton,
+                selectLanguage === 'English' && newStyles.langButtonActive
+              ]}
+              onPress={async () => {
+                await AsyncStorage.setItem('LANG', 'en');
+                i18n.changeLanguage('en');
+                setSelectLanguage('English');
+              }}>
+              <Text style={[
+                newStyles.langButtonText,
+                selectLanguage === 'English' && newStyles.langButtonTextActive
+              ]}>
+                EN
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                newStyles.langButton,
+                selectLanguage === 'Vietnames' && newStyles.langButtonActive
+              ]}
+              onPress={async () => {
+                await AsyncStorage.setItem('LANG', 'vi');
+                i18n.changeLanguage('vi');
+                setSelectLanguage('Vietnames');
+              }}>
+              <Text style={[
+                newStyles.langButtonText,
+                selectLanguage === 'Vietnames' && newStyles.langButtonTextActive
+              ]}>
+                VI
+              </Text>
+            </TouchableOpacity>
           </View>
-        </View>
-        {submitted && userDetail.username === '' && (
-          <Text style={styles.require}>{t('Email is required')}</Text>
-        )}
-        <View style={styles.textInput}>
-          <TextInput
-            style={styles.input}
-            placeholder={t('Password')}
-            placeholderTextColor={Constants.customgrey}
-            secureTextEntry={showPass}
-            value={userDetail.password}
-            onChangeText={password => setUserDetail({ ...userDetail, password })}
+
+          {/* Welcome Text on Header */}
+          <View style={newStyles.headerTextContainer}>
+            <Text style={newStyles.welcomeText}>{t('Welcome!')}</Text>
+            <Text style={newStyles.subtitleText}>
+              {t('Please enter your details to Sign In')}
+            </Text>
+          </View>
+        </ImageBackground>
+
+        {/* Main Content */}
+        <View style={newStyles.mainContent}>
+          {/* Character Image */}
+          <Image
+            source={require('../../Assets/Images/girl1.png')}
+            style={newStyles.characterImage}
+            resizeMode="contain"
           />
-          <TouchableOpacity
-            onPress={() => {
-              setShowPass(!showPass);
-            }}
-            style={[styles.iconView, { borderRightWidth: 0 }]}>
-            <Image
-              source={
-                showPass
-                  ? require('../../Assets/Images/eye-1.png')
-                  : require('../../Assets/Images/eye.png')
-              }
-              style={{ height: 28, width: 28 }}
-              resizeMode="contain"
+
+          {/* Email Input */}
+          <View style={newStyles.inputContainer}>
+            {/* <Text style={newStyles.inputLabel}>{t('Enter Email')}</Text> */}
+            <TextInput
+              style={newStyles.input}
+              placeholder={t('Enter email')}
+              placeholderTextColor="#999"
+              value={userDetail.username}
+              onChangeText={username => setUserDetail({ ...userDetail, username })}
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
-          </TouchableOpacity>
-          <View style={[styles.mylivejobtitle]}>
-            <Text style={styles.jobtitle}>{t('Password')}</Text>
           </View>
-        </View>
-        {submitted && userDetail.password === '' && (
-          <Text style={styles.require}>{t('Password is required')}</Text>
-        )}
-        <TouchableOpacity onPress={() => navigate('ForgotPassword')}>
-          <Text style={styles.forgot}>{t('Forgot password ?')}</Text>
-        </TouchableOpacity>
-        {/* <View style={styles.pp}>
-        <Text style={styles.pp2}>{t('By clicking Sign In, you agree with our')}</Text>
-        <View style={styles.pt}>
-          <Text style={styles.pp3} onPress={() => navigate('Term')}>{t('Terms and Condition')}</Text>
-          <Text style={styles.pp2}>{t('and')}</Text>
-          <Text style={styles.pp3} onPress={() => navigate('Privacy')}>{t('Privacy Policy')}</Text>
-        </View>
-      </View> */}
+          {submitted && userDetail.username === '' && (
+            <Text style={newStyles.errorText}>{t('Email is required')}</Text>
+          )}
 
-        <TouchableOpacity style={styles.signInbtn} onPress={() => submit()}>
-          <Text style={styles.buttontxt}>{t('Sign In')}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigate('App')}>
-          <Text style={styles.skip}>{t('Skip')}</Text>
-        </TouchableOpacity>
+          {/* Password Input */}
+          <View style={newStyles.inputContainer}>
+            {/* <Text style={newStyles.inputLabel}>{t('Password')}</Text> */}
+            <View style={newStyles.passwordWrapper}>
+              <TextInput
+                style={[newStyles.input, { paddingRight: 50 }]}
+                placeholder={t('Password')}
+                placeholderTextColor="#999"
+                secureTextEntry={showPass}
+                value={userDetail.password}
+                onChangeText={password => setUserDetail({ ...userDetail, password })}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPass(!showPass)}
+                style={newStyles.eyeIcon}>
+                <Image
+                  source={
+                    showPass
+                      ? require('../../Assets/Images/eye-1.png')
+                      : require('../../Assets/Images/eye.png')
+                  }
+                  style={{ height: 24, width: 24 }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+          {submitted && userDetail.password === '' && (
+            <Text style={newStyles.errorText}>{t('Password is required')}</Text>
+          )}
 
-        <View style={{ alignSelf: 'center', marginBottom: 40 }}>
-          <View style={[styles.acountBtn]}>
-            <Text style={styles.Already}>{t('Do not have an Account ? ')}</Text>
+          {/* Forgot Password */}
+          <TouchableOpacity onPress={() => navigate('ForgotPassword')}>
+            <Text style={newStyles.forgotPassword}>{t('Forgot Password ?')}</Text>
+          </TouchableOpacity>
+
+          {/* Sign In Button */}
+          <TouchableOpacity style={newStyles.signInButton} onPress={() => submit()}>
+            <Text style={newStyles.signInButtonText}>{t('Sign In')}</Text>
+          </TouchableOpacity>
+
+          {/* Skip Button */}
+          <TouchableOpacity onPress={() => navigate('App')}>
+            <Text style={newStyles.skipText}>{t('Skip')}</Text>
+          </TouchableOpacity>
+
+          {/* Sign Up Link */}
+          <View style={newStyles.signUpContainer}>
+            <Text style={newStyles.signUpText}>
+              {t('Do not have an Account ? ')}
+            </Text>
             <TouchableOpacity onPress={() => navigate('SignUp')}>
-              <Text style={styles.signin}>{t('signup')}</Text>
+              <Text style={newStyles.signUpLink}>{t('Sign Up')}</Text>
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Language Selection ActionSheet - Keep for backward compatibility */}
         <ActionSheet
           ref={langRef}
           closeOnTouchBackdrop={true}
@@ -316,25 +359,179 @@ const SignIn = props => {
                 Vietnamese
               </Text>
             </TouchableOpacity>
-
-            {/* <TouchableOpacity
-              style={[styles.item, { borderColor: selectLanguage === 'کوردی' ? Constants.saffron : Constants.black }]}
-              onPress={async () => {
-                await AsyncStorage.setItem('LANG', 'ku');
-                i18n.changeLanguage('ku');
-                setSelectLanguage('کوردی');
-                langRef.current.hide()
-              }}>
-
-              {selectLanguage == 'کوردی' ? <RadioonIcon color={Constants.saffron} height={25} width={25} /> :
-                <RadiooffIcon color={Constants.saffron} height={25} width={25} />}
-              <Text style={[styles.itemTxt, { color: Constants.black }]}>کوردی</Text>
-            </TouchableOpacity> */}
           </View>
         </ActionSheet>
       </ScrollView>
     </SafeAreaView>
   );
 };
+
+const newStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#E8F5E9',
+    overflow: 'visible', 
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    overflow: 'visible', 
+  },
+  headerBackground: {
+    width: '100%',
+    height: 230,
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    zIndex: 10,
+     position: 'relative',
+
+   
+  },
+  languageSwitcher: {
+    flexDirection: 'row',
+    alignSelf: 'flex-end',
+    marginRight: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    padding: 3,
+  },
+  langButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 6,
+    borderRadius: 18,
+  },
+  langButtonActive: {
+    backgroundColor: '#DCE775',
+  },
+  langButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2E7D32',
+  },
+  langButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  headerTextContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 30,
+  },
+  welcomeText: {
+    fontSize: 56,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 10,
+  },
+  subtitleText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginBottom: 20,
+  },
+  mainContent: {
+    flex: 1,
+    backgroundColor: '#E8F5E9',
+   
+    paddingHorizontal: 20,
+    paddingTop: 80,
+    zIndex: 5,
+     marginTop: 10,
+  },
+  characterImage: {
+    width: 180,
+    height: 180,
+    alignSelf: 'center',
+    marginTop: -60,
+    marginBottom: 20,
+  },
+  inputContainer: {
+    marginBottom: 25,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 8,
+    marginLeft: 5,
+  },
+  input: {
+  backgroundColor: '#FFFFFF',
+  borderRadius: 25,
+  paddingHorizontal: 20,
+  paddingVertical: 15,
+  fontSize: 15,
+  color: '#374151',  
+  borderWidth: 1,  
+  borderColor: '#4B5563',  
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.05,
+  shadowRadius: 3,
+  elevation: 2,
+},
+  passwordWrapper: {
+    position: 'relative',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 15,
+    top: 15,
+    padding: 5,
+  },
+  errorText: {
+    color: '#D32F2F',
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 10,
+    marginLeft: 10,
+  },
+  forgotPassword: {
+    fontSize: 13,
+    color: '#666',
+    fontStyle: 'italic',
+    alignSelf: 'flex-start',
+    marginBottom: 30,
+    marginLeft: 5,
+  },
+  signInButton: {
+    backgroundColor: '#2E7D32',
+    borderRadius: 25,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginBottom: 15,
+    shadowColor: '#2E7D32',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  signInButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  skipText: {
+    fontSize: 15,
+    color: '#666',
+    alignSelf: 'center',
+    fontStyle: 'italic',
+    marginBottom: 20,
+    textDecorationLine: 'underline',
+  },
+  signUpContainer: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    marginBottom: 30,
+  },
+  signUpText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  signUpLink: {
+    fontSize: 14,
+    color: '#2E7D32',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+});
 
 export default SignIn;

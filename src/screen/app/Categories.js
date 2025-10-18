@@ -141,7 +141,7 @@ export default Categories;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Constants.white,
+    backgroundColor: Constants.lightgreen,
   },
   inpcov: {
     // borderWidth: 1,
@@ -191,6 +191,7 @@ const styles = StyleSheet.create({
     // resizeMode:'contain',
     // backgroundColor:'red',
     marginVertical: 20,
+    borderRadius:20
   },
   box: {
     width: 180,
@@ -301,7 +302,7 @@ const styles = StyleSheet.create({
   categoryimg: {
     height: Dimensions.get('window').width < 500 ? 80 : 100,
     width: Dimensions.get('window').width < 500 ? 80 : 100,
-    borderRadius: 5,
+    borderRadius: 45,
   },
   categorytxt2: {
     fontSize: 14,

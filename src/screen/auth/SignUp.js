@@ -8,6 +8,8 @@ import {
   Image,
   ScrollView,
   Linking,
+  ImageBackground,
+  Platform,
 } from 'react-native';
 import React, { useContext, useEffect, useState } from 'react';
 import styles from './styles';
@@ -22,6 +24,7 @@ import { checkEmail } from '../../Assets/Helpers/InputsNullChecker';
 import { useTranslation } from 'react-i18next';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 import Toast from 'react-native-toast-message';
+import i18n from '../../../i18n';
 
 const SignUp = props => {
   const { t } = useTranslation();
@@ -31,6 +34,7 @@ const SignUp = props => {
   const [toast, setToast] = useContext(ToastContext);
   const [title, settile] = useState('');
   const [user, setuser] = useState(0);
+  const [selectLanguage, setSelectLanguage] = useState('English');
   const [userDetail, setUserDetail] = useState({
     password: '',
     number: '',
@@ -38,6 +42,18 @@ const SignUp = props => {
     username: '',
     type: 'USER'
   });
+
+  useEffect(() => {
+    checkLng();
+  }, []);
+
+  const checkLng = async () => {
+    const x = await AsyncStorage.getItem('LANG');
+    if (x != null) {
+      let lng = x == 'en' ? 'English' : 'Vietnames';
+      setSelectLanguage(lng);
+    }
+  };
 
   const submit = async () => {
     if (
@@ -95,11 +111,11 @@ const SignUp = props => {
       },
     );
   };
+
   const privacy = async () => {
     try {
       if (await InAppBrowser.isAvailable()) {
         await InAppBrowser.open('https://www.bachhoahouston.com/PrivacyPolicy', {
-          // Customization options
           dismissButtonStyle: 'cancel',
           preferredBarTintColor: Constants.saffron,
           preferredControlTintColor: 'white',
@@ -110,18 +126,17 @@ const SignUp = props => {
           enableBarCollapsing: false,
         });
       } else {
-        // Fallback to a regular browser if InAppBrowser is not available
         Linking.openURL('https://www.bachhoahouston.com/PrivacyPolicy');
       }
     } catch (error) {
       console.error(error);
     }
   }
+
   const term = async () => {
     try {
       if (await InAppBrowser.isAvailable()) {
         await InAppBrowser.open('https://www.bachhoahouston.com/Termsandcondition', {
-          // Customization options
           dismissButtonStyle: 'cancel',
           preferredBarTintColor: Constants.saffron,
           preferredControlTintColor: 'white',
@@ -132,177 +147,441 @@ const SignUp = props => {
           enableBarCollapsing: false,
         });
       } else {
-        // Fallback to a regular browser if InAppBrowser is not available
         Linking.openURL('https://www.bachhoahouston.com/PrivacyPolicy');
       }
     } catch (error) {
       console.error(error);
     }
   }
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={newStyles.container}>
       <Spinner color={'#fff'} visible={loading} />
-      <View style={{ marginTop: 30 }}>
-        <Text style={styles.logintitle}>{t('WELCOME')}</Text>
-        <Text style={styles.title2}>{t('Please enter your Sign up details')}</Text>
-      </View>
-      {/* <Image
-          source={require('../../Assets/Images/loginlogo.png')}
-          style={styles.logo}
-        /> */}
-      <View style={[styles.btnCov2, styles.shadowProp]}>
-        <TouchableOpacity
-          style={[user === 0 ? styles.selectBtn : styles.unselectBtn]}
-          onPress={() => {
-            setuser(0);
-            userDetail.type = 'USER';
-          }}>
-          <View style={user === 0 ? styles.selectshad : null}>
-            <Text style={[user === 0 ? styles.selebtntxt : styles.unselebtntxt]}>{t('User')}</Text>
+      <ScrollView
+        style={newStyles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={newStyles.scrollContent}>
+        
+        {/* Header with Background Image */}
+        <ImageBackground
+          source={require('../../Assets/Images/ron.png')}
+          style={newStyles.headerBackground}
+          resizeMode="cover">
+          
+          {/* Language Switcher */}
+          <View style={newStyles.languageSwitcher}>
+            <TouchableOpacity
+              style={[
+                newStyles.langButton,
+                selectLanguage === 'English' && newStyles.langButtonActive
+              ]}
+              onPress={async () => {
+                await AsyncStorage.setItem('LANG', 'en');
+                i18n.changeLanguage('en');
+                setSelectLanguage('English');
+              }}>
+              <Text style={[
+                newStyles.langButtonText,
+                selectLanguage === 'English' && newStyles.langButtonTextActive
+              ]}>
+                EN
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                newStyles.langButton,
+                selectLanguage === 'Vietnames' && newStyles.langButtonActive
+              ]}
+              onPress={async () => {
+                await AsyncStorage.setItem('LANG', 'vi');
+                i18n.changeLanguage('vi');
+                setSelectLanguage('Vietnames');
+              }}>
+              <Text style={[
+                newStyles.langButtonText,
+                selectLanguage === 'Vietnames' && newStyles.langButtonTextActive
+              ]}>
+                VI
+              </Text>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-        {/* <TouchableOpacity
-          style={[user === 1 ? styles.selectBtn : styles.unselectBtn,
-            // {    borderRightWidth:user != 1 ?1:0,
-            // borderLeftWidth:user != 1 ?1:0,
-            // borderColor:Constants.saffron}
-          ]}
-          onPress={() => {
-            setuser(1);
-            userDetail.type = 'SELLER';
-          }}>
-          <View style={user === 1 ? styles.selectshad : null}>
-            <Text style={[user === 1 ? styles.selebtntxt : styles.unselebtntxt]}>{t('Seller')}</Text>
+
+          {/* Header Text */}
+          <View style={newStyles.headerTextContainer}>
+            <Text style={newStyles.welcomeText}>{t('WELCOME')}</Text>
+            <Text style={newStyles.subtitleText}>
+              {t('Please enter your Sign up details')}
+            </Text>
           </View>
-        </TouchableOpacity> */}
-        <TouchableOpacity
-          style={[user === 2 ? styles.selectBtn : styles.unselectBtn]}
-          onPress={() => {
-            setuser(2);
-            userDetail.type = 'DRIVER';
-          }}>
-          <View style={user === 2 ? styles.selectshad : null}>
-            <Text style={[user === 2 ? styles.selebtntxt : styles.unselebtntxt]}>{t('Driver')}</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.textInput}>
-        <TextInput
-          style={styles.input}
-          placeholder={t('Enter Name')}
-          placeholderTextColor={Constants.customgrey}
-          value={userDetail.username}
-          onChangeText={username => setUserDetail({ ...userDetail, username })}
-        />
-        <View style={[styles.mylivejobtitle]}>
-          <Text style={styles.jobtitle}>{t('Name')}</Text>
-        </View>
-      </View>
-      {submitted && userDetail.username === '' && (
-        <Text style={styles.require}>{t('Name is required')}</Text>
-      )}
-      <View style={styles.textInput}>
-        <TextInput
-          style={styles.input}
-          placeholder={t('Enter Email')}
-          placeholderTextColor={Constants.customgrey}
-          value={userDetail.email}
-          onChangeText={email => setUserDetail({ ...userDetail, email })}
-        />
-        <View style={[styles.mylivejobtitle]}>
-          <Text style={styles.jobtitle}>{t('Email')}</Text>
-        </View>
-      </View>
-      {submitted && userDetail.email === '' && (
-        <Text style={styles.require}>{t('Email is required')}</Text>
-      )}
-      <View style={styles.textInput}>
-        <TextInput
-          style={styles.input}
-          placeholder={t('Phone Number')}
-          placeholderTextColor={Constants.customgrey}
-          keyboardType="number-pad"
-          value={userDetail.number}
-          onChangeText={number => setUserDetail({ ...userDetail, number })}
-        />
-        <View style={[styles.mylivejobtitle]}>
-          <Text style={styles.jobtitle}>{t('Phone Number')}</Text>
-        </View>
-      </View>
-      {submitted && userDetail.number === '' && (
-        <Text style={styles.require}>{t('Number is required')}</Text>
-      )}
-      <View style={styles.textInput}>
-        <TextInput
-          style={styles.input}
-          placeholder={t('Password')}
-          placeholderTextColor={Constants.customgrey}
-          secureTextEntry={showPass}
-          value={userDetail.password}
-          onChangeText={password => setUserDetail({ ...userDetail, password })}
-        />
-        <TouchableOpacity
-          onPress={() => {
-            setShowPass(!showPass);
-          }}
-          style={[styles.iconView, { borderRightWidth: 0 }]}>
-          <Image
-            source={
-              showPass
-                ? require('../../Assets/Images/eye-1.png')
-                : require('../../Assets/Images/eye.png')
-            }
-            style={{ height: 28, width: 28 }}
+        </ImageBackground>
+
+        {/* Main Content */}
+        <View style={newStyles.mainContent}>
+          {/* Character Image */}
+          {/* <Image
+            source={require('../../Assets/Images/girl2.png')}
+            style={newStyles.characterImage}
             resizeMode="contain"
-          />
-        </TouchableOpacity>
-        <View style={[styles.mylivejobtitle]}>
-          <Text style={styles.jobtitle}>{t('Password')}</Text>
-        </View>
-      </View>
-      {submitted && userDetail.password === '' && (
-        <Text style={styles.require}>{t('Password is required')}</Text>
-      )}
-      {user === 0 && <View style={styles.textInput}>
-        <TextInput
-          style={styles.input}
-          placeholder={t('Referral Code (optional)')}
-          placeholderTextColor={Constants.customgrey}
-          value={userDetail.referal}
-          onChangeText={referal => setUserDetail({ ...userDetail, referal })}
-        />
-        <View style={[styles.mylivejobtitle]}>
-          <Text style={styles.jobtitle}>{t('Referral Code')}</Text>
-        </View>
-      </View>}
+          /> */}
 
-      <View style={styles.pp}>
-        <Text style={styles.pp2}>{t('By clicking Sign up, you agree with our')}</Text>
-        <View style={styles.pt}>
-          <Text style={styles.pp3} onPress={() => term()}>
-            {t('Terms and Condition')}
-          </Text>
-          <Text style={styles.pp2}> {t('and')} </Text>
-          <Text style={styles.pp3} onPress={() => privacy()}>
-            {t('Privacy Policy')}
-          </Text>
-        </View>
-      </View>
+          {/* User Type Selection */}
+          <View style={newStyles.userTypeContainer}>
+            <TouchableOpacity
+              style={[
+                newStyles.userTypeButton,
+                user === 0 && newStyles.userTypeButtonActive
+              ]}
+              onPress={() => {
+                setuser(0);
+                userDetail.type = 'USER';
+              }}>
+              <Text style={[
+                newStyles.userTypeText,
+                user === 0 && newStyles.userTypeTextActive
+              ]}>
+                {t('User')}
+              </Text>
+            </TouchableOpacity>
 
-      <TouchableOpacity style={styles.signInbtn} onPress={() => submit()}>
-        <Text style={styles.buttontxt}>{t('Sign Up')}</Text>
-      </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                newStyles.userTypeButton,
+                user === 2 && newStyles.userTypeButtonActive
+              ]}
+              onPress={() => {
+                setuser(2);
+                userDetail.type = 'DRIVER';
+              }}>
+              <Text style={[
+                newStyles.userTypeText,
+                user === 2 && newStyles.userTypeTextActive
+              ]}>
+                {t('Driver')}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-      <View style={{ alignSelf: 'center', marginBottom: 40 }}>
-        <View style={[styles.acountBtn]}>
-          <Text style={styles.Already}>{t('Already have any account ?')}</Text>
-          <TouchableOpacity onPress={() => navigate('SignIn')}>
-            <Text style={styles.signin}>{t('Sign in')}</Text>
+          {/* Name Input */}
+          <View style={newStyles.inputContainer}>
+            <TextInput
+              style={newStyles.input}
+              placeholder={t('Enter Name')}
+              placeholderTextColor="#4B5563"
+              value={userDetail.username}
+              onChangeText={username => setUserDetail({ ...userDetail, username })}
+            />
+          </View>
+          {submitted && userDetail.username === '' && (
+            <Text style={newStyles.errorText}>{t('Name is required')}</Text>
+          )}
+
+          {/* Email Input */}
+          <View style={newStyles.inputContainer}>
+            <TextInput
+              style={newStyles.input}
+              placeholder={t('Enter Email')}
+              placeholderTextColor="#4B5563"
+              value={userDetail.email}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              onChangeText={email => setUserDetail({ ...userDetail, email })}
+            />
+          </View>
+          {submitted && userDetail.email === '' && (
+            <Text style={newStyles.errorText}>{t('Email is required')}</Text>
+          )}
+
+          {/* Phone Number Input */}
+          <View style={newStyles.inputContainer}>
+            <TextInput
+              style={newStyles.input}
+              placeholder={t('Phone Number')}
+              placeholderTextColor="#4B5563"
+              keyboardType="number-pad"
+              value={userDetail.number}
+              onChangeText={number => setUserDetail({ ...userDetail, number })}
+            />
+          </View>
+          {submitted && userDetail.number === '' && (
+            <Text style={newStyles.errorText}>{t('Number is required')}</Text>
+          )}
+
+          {/* Password Input */}
+          <View style={newStyles.inputContainer}>
+            <View style={newStyles.passwordWrapper}>
+              <TextInput
+                style={[newStyles.input, { paddingRight: 50 }]}
+                placeholder={t('Password')}
+                placeholderTextColor="#4B5563"
+                secureTextEntry={showPass}
+                value={userDetail.password}
+                onChangeText={password => setUserDetail({ ...userDetail, password })}
+              />
+              <TouchableOpacity
+                onPress={() => setShowPass(!showPass)}
+                style={newStyles.eyeIcon}>
+                <Image
+                  source={
+                    showPass
+                      ? require('../../Assets/Images/eye-1.png')
+                      : require('../../Assets/Images/eye.png')
+                  }
+                  style={{ height: 24, width: 24 }}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+          {submitted && userDetail.password === '' && (
+            <Text style={newStyles.errorText}>{t('Password is required')}</Text>
+          )}
+
+          {/* Referral Code (only for User type) */}
+          {user === 0 && (
+            <View style={newStyles.inputContainer}>
+              <TextInput
+                style={newStyles.input}
+                placeholder={t('Referral Code (optional)')}
+                placeholderTextColor="#4B5563"
+                value={userDetail.referal}
+                onChangeText={referal => setUserDetail({ ...userDetail, referal })}
+              />
+            </View>
+          )}
+
+          {/* Terms and Privacy */}
+          <View style={newStyles.termsContainer}>
+            <Text style={newStyles.termsText}>
+              {t('By clicking Sign up, you agree with our')}
+            </Text>
+            <View style={newStyles.termsLinks}>
+              <TouchableOpacity onPress={() => term()}>
+                <Text style={newStyles.termsLink}>
+                  {t('Terms and Condition')}
+                </Text>
+              </TouchableOpacity>
+              <Text style={newStyles.termsText}> {t('and')} </Text>
+              <TouchableOpacity onPress={() => privacy()}>
+                <Text style={newStyles.termsLink}>
+                  {t('Privacy Policy')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Sign Up Button */}
+          <TouchableOpacity
+            style={newStyles.actionButton}
+            onPress={() => submit()}>
+            <Text style={newStyles.actionButtonText}>{t('Sign Up')}</Text>
           </TouchableOpacity>
+
+          {/* Back to Sign In */}
+          <View style={newStyles.backToLoginContainer}>
+            <Text style={newStyles.backToLoginText}>
+              {t('Already have any account ?')}
+            </Text>
+            <TouchableOpacity onPress={() => navigate('SignIn')}>
+              <Text style={newStyles.backToLoginLink}> {t('Sign in')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
+
+const newStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#E8F5E9',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  headerBackground: {
+    width: '100%',
+    height: 220,
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    zIndex: 10,
+    position: 'relative',
+  },
+  languageSwitcher: {
+    flexDirection: 'row',
+    alignSelf: 'flex-end',
+    marginRight: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    padding: 3,
+  },
+  langButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 6,
+    borderRadius: 18,
+  },
+  langButtonActive: {
+    backgroundColor: '#DCE775',
+  },
+  langButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2E7D32',
+  },
+  langButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  headerTextContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 30,
+  },
+  welcomeText: {
+    fontSize: 50,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 0,
+  },
+  subtitleText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginBottom: 10,
+  },
+  mainContent: {
+    flex: 1,
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    marginTop: 0,
+  },
+  characterImage: {
+    width: 180,
+    height: 180,
+    alignSelf: 'center',
+    marginTop: -40,
+    marginBottom: 10,
+  },
+  userTypeContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#E8F5E9',
+    borderRadius: 25,
+    
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+    borderColor:'#2E7D32',
+    borderWidth:1,
+  },
+  userTypeButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 22,
+  },
+  userTypeButtonActive: {
+    backgroundColor: '#2E7D32',
+  },
+  userTypeText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#2E7D32',
+  },
+  userTypeTextActive: {
+    color: '#FFFFFF',
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  input: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    fontSize: 15,
+    color: '#374151',
+    borderWidth: 1,
+    borderColor: '#4B5563',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  passwordWrapper: {
+    position: 'relative',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 15,
+    top: 15,
+    padding: 5,
+  },
+  errorText: {
+    color: '#D32F2F',
+    fontSize: 12,
+    marginTop: -10,
+    marginBottom: 10,
+    marginLeft: 10,
+  },
+  termsContainer: {
+    marginTop: 10,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  termsText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  termsLinks: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  termsLink: {
+    fontSize: 12,
+    color: '#2E7D32',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+  actionButton: {
+    backgroundColor: '#2E7D32',
+    borderRadius: 25,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#2E7D32',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  backToLoginContainer: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    marginBottom: 30,
+  },
+  backToLoginText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  backToLoginLink: {
+    fontSize: 14,
+    color: '#2E7D32',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
+});
 
 export default SignUp;

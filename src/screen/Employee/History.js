@@ -163,16 +163,17 @@ const History = () => {
                     <View key={prodIndex}>
                       <View style={{flexDirection: 'row', marginBottom: 5, width: '100%'}}>
                         <Image
-                          source={
-                            prod?.image
-                              ? {
-                                  uri: `${prod.image}`,
-                                }
-                              : require('../../Assets/Images/veg.png')
-                          }
-                          style={styles.cartimg}
-                          resizeMode="contain"
-                        />
+  source={
+    prod?.image && 
+    (Array.isArray(prod.image) ? prod.image[0] : prod.image)
+      ? {
+          uri: Array.isArray(prod.image) ? prod.image[0] : prod.image,
+        }
+      : require('../../Assets/Images/veg.png')
+  }
+  style={styles.cartimg}
+  resizeMode="contain"
+/>
                         <View style={{width: '100%'}}>
                           <Text style={styles.boxtxt}>
                             {prod?.product?.name}

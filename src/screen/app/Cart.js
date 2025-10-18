@@ -44,7 +44,7 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { GetApi, Post } from '../../Assets/Helpers/Service';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { DateTime } from 'luxon';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import StripeCheckoutButton from '../../Assets/Component/StripePayment';
 import i18n from 'i18next';
 
@@ -74,6 +74,7 @@ const pickupOptions = [
 const width = Dimensions.get('window').width;
 
 const Cart = () => {
+  const navigation = useNavigation();
   const { t } = useTranslation();
   const [cartdetail, setcartdetail] = useContext(CartContext);
   const [locationadd, setlocationadd] = useContext(AddressContext);
@@ -514,6 +515,17 @@ const Cart = () => {
 
     setLoading(true);
     setShowStripePayment(true);
+    const testPaymentResult = {
+  paymentId: `test_${Date.now()}`,
+  paymentIntentId: `pi_test_${Date.now()}`,
+  sessionId: `sess_test_${Date.now()}`,
+  total: totalFinal,
+  subtotal: totaloff,
+  tax: 0,
+  currency: 'usd',
+};
+setLoading(true);
+// submitCheckoutWithStripeData(testPaymentResult);
     console.log('newarr:', newarr);
     console.warn('pickup', PickupType);
     console.warn('pickupDate', pickupDate);
@@ -543,15 +555,15 @@ const Cart = () => {
   };
 
   const submitCheckoutWithStripeData = async stripePaymentResult => {
-    const type = await AsyncStorage.getItem('pickupType');
-    const date = await AsyncStorage.getItem('pickupDate');
-    console.warn('data', type, date);
-    console.warn('stripePaymentResult', stripePaymentResult);
+  };
 
+ 
+  
+  const processOrder = async () => {
     setLoading(true);
-    let cart = await AsyncStorage.getItem('cartdata');
-    let carDetails = JSON.parse(cart)
     try {
+      let cart = await AsyncStorage.getItem('cartdata');
+      let carDetails = JSON.parse(cart);
       let newarr = carDetails.map(item => {
         return {
           product: item.productid,
@@ -726,7 +738,7 @@ const Cart = () => {
         </View>
         {cartdetail && cartdetail.length > 0 ? (
           <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={{ backgroundColor: Constants.white }}>
+              <View style={{ backgroundColor: Constants.lightgreen }}>
               {cartdetail.map((item, i) => (
                 <View style={[styles.box, { borderBottomWidth: 1 }]} key={i}>
                   <View style={styles.firstpart}>
@@ -791,8 +803,8 @@ const Cart = () => {
                               }}>
                               <MinusIcon
                                 color={Constants.white}
-                                height={20}
-                                width={20}
+                                height={16}
+                                width={16}
                               />
                             </TouchableOpacity>
                             <Text style={styles.plus2}>{item?.qty}</Text>
@@ -823,8 +835,8 @@ const Cart = () => {
                               }}>
                               <Plus2Icon
                                 color={Constants.white}
-                                height={20}
-                                width={20}
+                                height={16}
+                                width={16}
                               />
                             </TouchableOpacity>
                           </View>
@@ -1009,7 +1021,7 @@ const Cart = () => {
                     style={{
                       borderWidth: 1,
                       borderColor: Constants.customgrey2,
-                      borderRadius: 5,
+                      borderRadius: 25,
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -1128,7 +1140,7 @@ const Cart = () => {
                     style={{
                       borderWidth: 1,
                       borderColor: Constants.customgrey2,
-                      borderRadius: 5,
+                      borderRadius: 25,
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -1304,7 +1316,7 @@ const Cart = () => {
                     style={{
                       borderWidth: 1,
                       borderColor: Constants.customgrey2,
-                      borderRadius: 5,
+                      borderRadius: 25,
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -1400,6 +1412,7 @@ const Cart = () => {
                     placeholder={t('Select Zip Code')}
                     placeholderStyle={{ color: Constants.customgrey }}
                     selectedTextStyle={{ color: Constants.black }}
+                    
                     maxHeight={200}
                     labelField="label"
                     valueField="value"
@@ -1419,7 +1432,7 @@ const Cart = () => {
                       fontFamily: FONTS.Regular,
                       borderWidth: 1,
                       borderColor: Constants.customgrey2,
-                      borderRadius: 5,
+                      borderRadius: 25,
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -2267,10 +2280,10 @@ export default Cart;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Constants.white,
+    backgroundColor: Constants.lightgreen,
   },
   toppart: {
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
     paddingTop: 10,
     // paddingBottom: 20,
     flexDirection: 'row',
@@ -2291,14 +2304,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Constants.white,
   },
-  box: {
-    paddingTop: 20,
-    paddingHorizontal: 15,
-    paddingBottom: 10,
-    // borderBottomWidth: 1,
-    borderColor: Constants.customgrey3,
-    marginHorizontal: 10,
+ box: {
+  paddingTop: 24,
+  paddingHorizontal: 20,
+  paddingBottom: 10,
+  borderBottomWidth: 1,
+  borderColor: Constants.customgrey3,
+  marginHorizontal: 10,
+  // Add these new styles:
+  marginVertical: 8,
+  borderRadius: 15,
+  backgroundColor: Constants.white,
+  shadowColor: 'black',
+  shadowOffset: {
+    width: 0,
+    height: 2,
   },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 1,
+},
   firstpart: {
     flexDirection: 'row',
     // alignItems: 'center',
@@ -2352,7 +2377,7 @@ const styles = StyleSheet.create({
     // borderRadius:10
   },
   plus: {
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
     // color: Constants.white,
     flex: 1,
     textAlign: 'center',
@@ -2361,14 +2386,14 @@ const styles = StyleSheet.create({
     // fontSize: 30,
     alignSelf: 'center',
     // fontFamily: FONTS.Bold,
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
+    borderTopLeftRadius: 20,
+    borderBottomLeftRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
   plus2: {
-    backgroundColor: '#F3F3F3',
-    color: Constants.black,
+    backgroundColor: Constants.greennew,
+    color: Constants.white,
     flex: 1,
     textAlign: 'center',
     height: '100%',
@@ -2378,7 +2403,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Black,
   },
   plus3: {
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
     color: Constants.white,
     flex: 1,
     textAlign: 'center',
@@ -2387,21 +2412,36 @@ const styles = StyleSheet.create({
     // fontSize: 30,
     alignSelf: 'center',
     // fontFamily: FONTS.Bold,
-    borderTopRightRadius: 10,
-    borderBottomRightRadius: 10,
+    borderTopRightRadius: 20,
+    borderBottomRightRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
   btombg: {
-    backgroundColor: Constants.white,
+    // backgroundColor: Constants.lightgreen,
     // flex: 1,
     paddingBottom: 70,
+   
   },
   totalcov: {
     backgroundColor: Constants.white,
     // marginVertical: 10,
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
     paddingVertical: 10,
+    borderRadius:30,
+    marginTop:10,
+     backgroundColor: Constants.white,
+  borderWidth: 1,
+  borderColor: Constants.customgrey3,
+
+  // 👇 Shadow for Android
+  elevation: 8, // try 8–12 for stronger effect
+
+  // 👇 For iOS (optional)
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.25,
+  shadowRadius: 4,
   },
   paycov: {
     backgroundColor: Constants.white,
@@ -2451,8 +2491,8 @@ const styles = StyleSheet.create({
   cartbtn: {
     height: 60,
     // width: 370,
-    borderRadius: 10,
-    backgroundColor: Constants.saffron,
+    borderRadius: 30,
+    backgroundColor: Constants.greennew,
     // marginTop: 40,
     flexDirection: 'row',
     justifyContent: 'center',
@@ -2597,16 +2637,28 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: FONTS.Bold,
   },
-  radioView: {
-    marginVertical: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    marginHorizontal: 5,
-    borderRadius: 10,
-    backgroundColor: Constants.white,
-    borderWidth: 1,
-    borderColor: Constants.customgrey3,
-  },
+radioView: {
+  marginVertical: 5,
+  paddingVertical: 10,
+  paddingHorizontal: 10,
+  marginHorizontal: 5,
+  borderRadius: 20,
+  backgroundColor: Constants.white,
+  borderWidth: 1,
+  borderColor: Constants.customgrey3,
+
+
+  elevation: 6,
+
+ 
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.25,
+  shadowRadius: 4,
+},
+
+
+
   itemText: {
     color: Constants.black,
     fontSize: 16,

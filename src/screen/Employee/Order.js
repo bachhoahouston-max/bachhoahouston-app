@@ -46,9 +46,10 @@ const Orders = () => {
 
   const getProducts = filters => {
     const params = {
-    orderType: filters?.orderType ?? '', 
-    date: filters?.date ?? '',
-  };
+      orderType: filters?.orderType ?? '', 
+      date: filters?.date ?? '',
+    };
+    console.log('Fetching orders with filters:', params);
     setLoading(true);
     Post(
       `getPendingOrdersByAdmin?filter=${encodeURIComponent(
@@ -57,18 +58,20 @@ const Orders = () => {
       {},
     ).then(
       async res => {
+        console.log('Orders fetched successfully:', res.data);
         setLoading(false);
         setproductlist(res.data);
       },
       err => {
+        console.error('Error fetching orders:', err);
         setLoading(false);
         setproductlist([]);
-        console.log('errrrrrr===>', err);
       },
     );
   };
 
   const assigdriver = id => {
+    console.log('Assigning driver for order ID:', id);
     const body = {
       id: id,
       status: 'Driverassigned',
@@ -76,13 +79,13 @@ const Orders = () => {
     setLoading(true);
     Post('changeorderstatus', body).then(
       async res => {
+        console.log('Driver assignment response:', res);
         setLoading(false);
-        console.log(res);
         getProducts();
       },
       err => {
+        console.error('Error assigning driver:', err);
         setLoading(false);
-        console.log(err);
       },
     );
   };
@@ -203,17 +206,18 @@ const Orders = () => {
                           marginBottom: 5,
                           width: '100%',
                         }}>
-                        <Image
-                          source={
-                            prod?.image
-                              ? {
-                                  uri: `${prod.image}`,
-                                }
-                              : require('../../Assets/Images/veg.png')
-                          }
-                          style={styles.cartimg}
-                          resizeMode="contain"
-                        />
+      <Image
+  source={
+    prod?.image && 
+    (Array.isArray(prod.image) ? prod.image[0] : prod.image)
+      ? {
+          uri: Array.isArray(prod.image) ? prod.image[0] : prod.image,
+        }
+      : require('../../Assets/Images/veg.png')
+  }
+  style={styles.cartimg}
+  resizeMode="contain"
+/>
                         <View style={{width: '100%'}}>
                           <Text style={styles.boxtxt}>
                             {prod?.product?.name}

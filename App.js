@@ -413,7 +413,7 @@ const App = () => {
                                                     <Spinner color={'#fff'} visible={loading} />
                                                     <StatusBar
                                                         barStyle='default'
-                                                        backgroundColor={Constants.saffron}
+                                                        backgroundColor={Constants.greennew}
                                                     />
                                                     {initial !== '' && <Navigation initial={initial} />}
                                                 </SafeAreaView>
@@ -434,7 +434,7 @@ const App = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Constants.saffron,
+        backgroundColor: Constants.greennew,
         // paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0
     },
     toastManager: {

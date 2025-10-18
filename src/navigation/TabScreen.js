@@ -67,42 +67,40 @@ export const TabNav = () => {
   const { t } = useTranslation();
   const [cartdetail, setcartdetail] = useContext(CartContext);
 
-  const TabArr = [
-    {
-      iconActive: <HomeIcon color={Constants.white} height={24} />,
-      iconInActive: (
-        <HomeFilledIcon color={Constants.customgrey3} height={24} />
-      ),
-      component: HomeStack,
-      routeName: 'Home',
-      name: 'Home',
-    },
-    {
-      iconActive: <CategoriesFilledIcon color={Constants.white} height={25} />,
-      iconInActive: (
-        <CategoriesIcon color={Constants.customgrey3} height={24} />
-      ),
-      component: CategoriesStack,
-      routeName: 'Categories',
-      name: 'Categories',
-    },
-    {
-      iconActive: <OrdersIconFilled color={Constants.white} height={33} />,
-      iconInActive: (
-        <OrdersIconNone color={Constants.customgrey3} height={30} />
-      ),
-      component: OrdersStack,
-      routeName: 'Orders',
-      name: 'Orders',
-    },
-    {
-      iconActive: <CartFilledIcon color={Constants.white} height={26} />,
-      iconInActive: <CartIcon color={Constants.customgrey3} height={26} />,
-      component: CartStack,
-      routeName: 'Cart',
-      name: 'Cart',
-    },
-  ];
+const TabArr = [
+  {
+    iconActive: <HomeFilledIcon color="#2E7D32" height={24} />, // Filled icon active pe
+    iconInActive: <HomeIcon color={Constants.customgrey3} height={24} />, // Outline icon inactive pe
+    component: HomeStack,
+    routeName: 'Home',
+    name: 'Home',
+  },
+  {
+    iconActive: <CategoriesFilledIcon color="#2E7D32" height={25} />,
+    iconInActive: (
+      <CategoriesIcon color={Constants.customgrey3} height={24} />
+    ),
+    component: CategoriesStack,
+    routeName: 'Categories',
+    name: 'Categories',
+  },
+  {
+    iconActive: <OrdersIconFilled color="#2E7D32" height={33} />,
+    iconInActive: (
+      <OrdersIconNone color={Constants.customgrey3} height={30} />
+    ),
+    component: OrdersStack,
+    routeName: 'Orders',
+    name: 'Orders',
+  },
+  {
+    iconActive: <CartFilledIcon color="#2E7D32" height={26} />,
+    iconInActive: <CartIcon color={Constants.customgrey3} height={26} />,
+    component: CartStack,
+    routeName: 'Cart',
+    name: 'Cart',
+  },
+];
 
   const TabButton = useCallback(
     ({ accessibilityState, onPress, onclick, item, index }) => {
@@ -117,7 +115,7 @@ export const TabNav = () => {
               onPress={onclick ? onclick : onPress}
               style={[
                 styles.tabBtn,
-                // isSelected ? styles.tabBtnActive : styles.tabBtnInActive,
+               isSelected && { backgroundColor: 'white' },
               ]}>
               {isSelected ? item.iconActive : item.iconInActive}
             </TouchableOpacity>
@@ -153,7 +151,7 @@ export const TabNav = () => {
           position: 'absolute',
           width: '100%',
           minHeight: Platform?.OS === 'android' ? 70 : 90,
-          backgroundColor: Constants.saffron,
+          backgroundColor: Constants.greennew,
           borderTopRightRadius: 15,
           borderTopLeftRadius: 15,
           borderTopWidth: 0,
@@ -194,7 +192,7 @@ const styles = StyleSheet.create({
   tabBtn: {
     height: 40,
     width: 40,
-    borderRadius: 15,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },

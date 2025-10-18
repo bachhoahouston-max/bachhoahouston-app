@@ -39,6 +39,7 @@ import posterDetail from '../screen/app/posterDetail';
 import { ProductForm } from '../screen/Employee/ProductForm';
 import TestMap from '../screen/driver/TestMap';
 import CategoryFilter from '../screen/app/CategoryFilter';
+import OrderSuccessScreen from '../screen/app/OrderSuccessScreen';
 
 const Stack = createNativeStackNavigator();
 const AuthStack = createNativeStackNavigator();
@@ -97,6 +98,14 @@ export default function Navigation(props) {
         <Stack.Screen name="Language" component={Language} />
         <Stack.Screen name="posterDetail" component={posterDetail} />
         <Stack.Screen name="AddProduct" component={ProductForm} />
+        <Stack.Screen 
+          name="OrderSuccess" 
+          component={OrderSuccessScreen} 
+          options={{
+            headerShown: false,
+            gestureEnabled: false
+          }}
+        />
         <Stack.Screen name="TestMap" component={TestMap} />
 
       </Stack.Navigator>

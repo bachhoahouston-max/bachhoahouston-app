@@ -995,7 +995,7 @@ const Map = props => {
                     setModalVisibleGoogleMaps(!modalVisibleGoogleMaps)
                   }
                   style={styles.cancelButtonStyle}>
-                  <Text style={[styles.modalText, { color: Constants.saffron }]}>
+                  <Text style={[styles.modalText, { color: Constants.greennew }]}>
                     {t('Cancel')}
                   </Text>
                 </TouchableOpacity>
@@ -1083,7 +1083,7 @@ const styles = StyleSheet.create({
     color: Constants.white,
     fontSize: 16,
     fontFamily: FONTS.Medium,
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
     paddingHorizontal: 10,
     // paddingVertical: 5,
     marginVertical: 7,
@@ -1217,13 +1217,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 15,
     marginRight: 10,
-    borderColor: Constants.saffron,
+    borderColor: Constants.greennew,
     borderWidth: 1,
     borderRadius: 10,
   },
   logOutButtonStyle: {
     flex: 0.5,
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
     borderRadius: 10,
     paddingVertical: 15,
     paddingHorizontal: 5,
@@ -1261,7 +1261,7 @@ const styles = StyleSheet.create({
     // justifyContent:'space-between'
   },
   inputbox: {
-    backgroundColor: Constants.saffron + 50,
+    backgroundColor: Constants.lightgreen,
     color: Constants.custom_black,
     borderRadius: 15,
     marginVertical: 5,

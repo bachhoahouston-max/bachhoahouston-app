@@ -141,7 +141,7 @@ const Home = () => {
   };
   const getTopSoldProduct = () => {
     setLoading(true);
-    GetApi(`getTopSoldProduct?limit=5`, {}).then(
+    GetApi(`getTopSoldProduct?limit=6`, {}).then(
       async res => {
         setLoading(false);
         console.log(res);
@@ -230,7 +230,7 @@ const Home = () => {
   return (
     <>
       <Header />
-      <TouchableOpacity style={{ backgroundColor: Constants.saffron, paddingBottom: 15 }}
+      <TouchableOpacity style={{ backgroundColor: Constants.greennew, paddingBottom: 15 }}
         onPress={() => navigate('Searchpage')}
       >
         <View
@@ -249,9 +249,11 @@ const Home = () => {
         data={topsellinglist}
         keyExtractor={(item, index) => item._id || index.toString()}
         showsVerticalScrollIndicator={false}
+         numColumns={2}
+          columnWrapperStyle={{ paddingHorizontal: 10 }}
         contentContainerStyle={{
           paddingBottom: Platform.OS === 'android' ? 70 : 40,
-          backgroundColor: Constants.white
+          backgroundColor: "#E8F5E9"
         }}
         ListHeaderComponent={
           <>
@@ -300,7 +302,52 @@ const Home = () => {
             </View>
 
             <Sale setIsSale={setIsSale} />
+<View style={styles.covline}>
+              <Text style={styles.categorytxt}>
+                {t('Explore By Categories')}
+              </Text>
+              <TouchableOpacity
+                style={{ flexDirection: 'row' }}
+                onPress={() => navigate('CategoryFilter', { item: 'All', name: 'All Categories' })}>
+                <Text style={styles.seealltxt}>{t('See all')}</Text>
+                <RightarrowIcon
+                  height={17}
+                  width={17}
+                  style={{ alignSelf: 'center' }}
+                  color={Constants.pink}
+                />
+              </TouchableOpacity>
+            </View>
 
+          
+            <FlatList
+              data={categorylist}
+              scrollEnabled={false}
+              numColumns={Dimensions.get('window').width < 500 ? 4 : 6}
+              keyExtractor={(item, index) => item._id || index.toString()}
+              style={{ width: '100%', gap: 5, marginVertical: 10, marginBottom: 100 }}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{ flex: 1, marginVertical: 10 }}
+                  onPress={() =>
+                    navigate('CategoryFilter', { item: item._id, name: item.name })
+                  }>
+                  <View style={styles.categorycircle}>
+                    <Image
+                      source={
+                        item?.image
+                          ? { uri: item?.image }
+                          : require('../../Assets/Images/veg.png')
+                      }
+                      style={styles.categoryimg}
+                    />
+                    <View>
+                      <Text style={styles.categorytxt2}>{item.name}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
             {/* Top Selling Header */}
             <View style={styles.covline}>
               <Text style={styles.categorytxt}>{t('Top Selling Items')}</Text>
@@ -333,6 +380,7 @@ const Home = () => {
               key={item._id || index.toString()}
               style={[
                 styles.box,
+                 { flex: 1 }
                 // {
                 //   marginRight:
                 //     topsellinglist.length === index + 1 ? 20 : 10,
@@ -351,52 +399,7 @@ const Home = () => {
         ListFooterComponent={
           <>
             {/* Explore Categories Header */}
-            <View style={styles.covline}>
-              <Text style={styles.categorytxt}>
-                {t('Explore By Categories')}
-              </Text>
-              <TouchableOpacity
-                style={{ flexDirection: 'row' }}
-                onPress={() => navigate('CategoryFilter', { item: 'All', name: 'All Categories' })}>
-                <Text style={styles.seealltxt}>{t('See all')}</Text>
-                <RightarrowIcon
-                  height={17}
-                  width={17}
-                  style={{ alignSelf: 'center' }}
-                  color={Constants.pink}
-                />
-              </TouchableOpacity>
-            </View>
-
-            {/* Category Grid */}
-            <FlatList
-              data={categorylist}
-              scrollEnabled={false}
-              numColumns={Dimensions.get('window').width < 500 ? 4 : 6}
-              keyExtractor={(item, index) => item._id || index.toString()}
-              style={{ width: '100%', gap: 5, marginVertical: 10, marginBottom: 100 }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={{ flex: 1, marginVertical: 10 }}
-                  onPress={() =>
-                    navigate('CategoryFilter', { item: item._id, name: item.name })
-                  }>
-                  <View style={styles.categorycircle}>
-                    <Image
-                      source={
-                        item?.image
-                          ? { uri: item?.image }
-                          : require('../../Assets/Images/veg.png')
-                      }
-                      style={styles.categoryimg}
-                    />
-                    <View>
-                      <Text style={styles.categorytxt2}>{item.name}</Text>
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              )}
-            />
+            
           </>
         }
       />
@@ -415,7 +418,7 @@ const styles = StyleSheet.create({
     // borderWidth: 1,
     borderColor: Constants.customgrey,
     backgroundColor: Constants.white,
-    borderRadius: 10,
+    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
@@ -463,11 +466,13 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   box: {
-    // width: 180,
-    marginVertical: 5,
-    marginHorizontal: 15,
-    // boxShadow: '0 0 6 0.5 grey',
-  },
+  flex: 1,
+  margin: 8,
+  
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 3,
+},
   cardimg: {
     height: 130,
     width: '100%',
@@ -500,7 +505,7 @@ const styles = StyleSheet.create({
   covline: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 20,
+    marginHorizontal: 10,
     marginVertical: 10,
     // backgroundColor:Constants.red
   },
@@ -517,7 +522,7 @@ const styles = StyleSheet.create({
   categoryimg: {
     height: Dimensions.get('window').width < 500 ? 80 : 100,
     width: Dimensions.get('window').width < 500 ? 80 : 100,
-    borderRadius: 5,
+    borderRadius: 45,
   },
   categorytxt2: {
     fontSize: 14,

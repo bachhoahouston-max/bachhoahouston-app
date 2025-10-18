@@ -192,7 +192,7 @@ const Work = () => {
           style={{
             flex: 1,
             borderBottomColor:
-              currentTab === 'pending' ? Constants.saffron : 'lightgray',
+              currentTab === 'pending' ? Constants.greennew : 'lightgray',
             borderBottomWidth: currentTab === 'pending' ? 5 : 2,
             height: 50,
             backgroundColor:
@@ -210,7 +210,7 @@ const Work = () => {
               textAlign: 'center',
               fontSize: 20,
               fontWeight: '700',
-              color: currentTab === 'pending' ? Constants.saffron : 'black',
+              color: currentTab === 'pending' ? Constants.greennew : 'black',
             }}>
             {t('Pending')}
           </Text>
@@ -219,7 +219,7 @@ const Work = () => {
           style={{
             flex: 1,
             borderBottomColor:
-              currentTab === 'ongoing' ? Constants.saffron : 'lightgray',
+              currentTab === 'ongoing' ? Constants.greennew : 'lightgray',
             borderBottomWidth: currentTab === 'ongoing' ? 5 : 2,
             height: 50,
             backgroundColor:
@@ -236,7 +236,7 @@ const Work = () => {
               textAlign: 'center',
               fontSize: 20,
               fontWeight: '700',
-              color: currentTab === 'ongoing' ? Constants.saffron : 'black',
+              color: currentTab === 'ongoing' ? Constants.greennew : 'black',
             }}>
             {t('Route')}
           </Text>
@@ -857,7 +857,7 @@ const styles = StyleSheet.create({
   },
   acceptButtonStyle: {
     flex: 1,
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 5,

@@ -286,7 +286,7 @@ const Preview = props => {
     }
     // navigate('Cart');
     Toast.show({
-      type: 'Success',
+      type: 'success',
       text1: t('Product added to cart successfully!'),
     })
   };
@@ -364,138 +364,96 @@ const Preview = props => {
         onRequestClose={() => setVisibleImg(false)}
       />
       <DriverHeader item={t('Product Detail')} showback={true} showCart={true} />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={{ padding: 20 }}
-        contentContainerStyle={{ paddingBottom: 50, backgroundColor: Constants.white }}
-        ref={scrollRef}>
-        <View style={{ marginTop: 0 }}>
+     <ScrollView
+  showsVerticalScrollIndicator={false}
+  style={{ paddingHorizontal: 20, backgroundColor: Constants.lightgreen }} 
+  contentContainerStyle={{ paddingBottom: 50, backgroundColor: Constants.lightgreen }} 
+  ref={scrollRef}>
+       <View style={{ marginTop: 0, marginHorizontal: -20 }}>
           <SwiperFlatList
             // autoplay
             // autoplayDelay={2}
             // autoplayLoop
             // index={2}
             showPagination
-            paginationActiveColor="red"
+            paginationActiveColor="green"
+            paginationStyle={{
+    bottom: 5,
+    backgroundColor: 'white', 
+    paddingHorizontal: 5,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignSelf: 'center',
+  }}
+   paginationStyleItem={{
+    marginTop: -8, 
+  }}
+
             data={productdata?.varients[0].image || []}
             // renderItem={({item}) => (
             //   <View style={[styles.child, {backgroundColor: item}]}>
             //     <Text style={styles.text}>{item}</Text>
             //   </View>
             // )}
-            renderItem={({ item, index }) => (
-              <Pressable onPress={() => {
-                const newImageArray = productdata?.varients[0].image.map(f => { return { uri: f } })
-                setImages(newImageArray);
-                setImageIndex(index);
-                setVisibleImg(true)
-              }}
-                style={{ paddingBottom: 35, width: width, alignItems: 'center' }}>
-                {/* <ImageZoom uri={item} style={{
-                  height: 200,
-                  width: '93%',
-                  borderRadius: 15,
-                  // marginLeft:-40,
-                  // backgroundColor: 'red',
-                }}
-                  resizeMode="contain"
-                  minScale={1}
-                  maxScale={5}
-                  doubleTapScale={3}
-                  isDoubleTapEnabled
-                /> */}
-                <Image
-                  source={{ uri: `${item}` }}
-                  // source={item.images}
-                  style={{
-                    height: 200,
-                    width: '93%',
-                    borderRadius: 15,
-                    // marginLeft:-40,
-                    // backgroundColor: 'red',
-                  }}
-                  resizeMode="contain"
-                  key={index}
-                />
-              </Pressable>
-            )}
+renderItem={({ item, index }) => (
+  <View style={{ 
+    paddingBottom: 55, 
+    width: Dimensions.get('window').width, 
+    alignItems: 'center', 
+    backgroundColor:'#F3F4F6',
+    paddingHorizontal: 20,
+  }}>
+    <View style={{
+      backgroundColor: 'white',
+      borderRadius: 15,
+      padding: 15,  
+      width: '100%',
+      height: 230,  
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginTop: 15,
+      // Shadow properties
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,  // Android ke liye
+    }}>
+      <Pressable onPress={() => {
+        const newImageArray = productdata?.varients[0].image.map(f => { return { uri: f } })
+        setImages(newImageArray);
+        setImageIndex(index);
+        setVisibleImg(true)
+      }}
+        style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+        <Image
+          source={{ uri: `${item}` }}
+          style={{
+            height: '100%',
+            width: '100%',
+            borderRadius: 15,
+          }}
+          resizeMode="contain"
+          key={index}
+        />
+      </Pressable>
+    </View>
+  </View>
+)}
           />
         </View>
-        <Text style={styles.proname}>{i18n.language === 'vi' ? (productdata?.vietnamiesName || productdata?.name) : productdata?.name}</Text>
-        <Text style={[styles.dectitle, { marginLeft: 10 }]}>
-          {productdata?.short_description}
-        </Text>
-        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
-          {productdata?.price_slot &&
-            productdata?.price_slot.length > 0 &&
-            productdata?.price_slot[0].unit &&
-            productdata.price_slot
-              .sort((a, b) => {
-                // Sort by our_price, then by value if prices are equal
-                if (a.our_price === b.our_price) {
-                  return a.value - b.value;
-                }
-                return a.our_price - b.our_price;
-              })
-              .map((item, i) => (
-                <TouchableOpacity
-                  style={[
-                    styles.box,
-                    {
-                      marginRight:
-                        productdata?.price_slot.length === i + 1 ? 20 : 10,
-                      backgroundColor:
-                        selectedslot?.our_price === item.our_price
-                          ? Constants.lightpink
-                          : Constants.lightgrey,
-                      borderColor:
-                        selectedslot?.our_price === item.our_price
-                          ? Constants.linearcolor
-                          : Constants.lightgrey,
-                    },
-                  ]}
-                  key={i}
-                  onPress={() => setsselectedslot(item)}>
-                  {item?.other_price && (
-                    <ImageBackground
-                      source={require('../../Assets/Images/star1.png')}
-                      style={styles.cardimg2}>
-                      <Text style={styles.offtxt}>
-                        {(
-                          ((item?.other_price - item?.our_price) /
-                            item?.other_price) *
-                          100
-                        ).toFixed(0)}
-                        %
-                      </Text>
-                      <Text style={styles.offtxt}>{t('off')}</Text>
-                    </ImageBackground>
-                  )}
-                  <Text style={styles.weight}>
-                    {item?.value}
-                    {item.unit}
-                  </Text>
-                  <View style={{}}>
-                    <Text style={styles.maintxt}>
-                      {Currency}
-                      {item.our_price}
-                    </Text>
-                    <Text style={styles.disctxt}>
-                      {formatPricePerUnit(
-                        item.our_price,
-                        item?.value,
-                        item.unit,
-                      )}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-        </ScrollView>
-        <View style={styles.pricecov}>
+       <Text style={styles.proname}>{i18n.language === 'vi' ? (productdata?.vietnamiesName || productdata?.name) : productdata?.name}</Text>
+<Text style={[styles.dectitle, { marginLeft: 10, marginTop: -25 }]}>
+  {productdata?.short_description}
+</Text>
+<View style={[styles.pricecov, {marginTop: 1, marginBottom: -35}]}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Text style={styles.maintxt2}>
+            {/* <Text style={styles.maintxt2}>
               {Currency} {selectedslot?.our_price}
-            </Text>
+            </Text> */}
             {selectedslot?.other_price && (
               <Text
                 style={[styles.weight, { textDecorationLine: 'line-through' }]}>
@@ -628,6 +586,73 @@ const Preview = props => {
             </TouchableOpacity>
           )}
         </View>
+      <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={{marginTop: 5}}>
+          {productdata?.price_slot &&
+            productdata?.price_slot.length > 0 &&
+            productdata?.price_slot[0].unit &&
+            productdata.price_slot
+              .sort((a, b) => {
+                // Sort by our_price, then by value if prices are equal
+                if (a.our_price === b.our_price) {
+                  return a.value - b.value;
+                }
+                return a.our_price - b.our_price;
+              })
+              .map((item, i) => (
+                <TouchableOpacity
+                  style={[
+                    styles.box,
+                    {
+                      marginRight:
+                        productdata?.price_slot.length === i + 1 ? 20 : 10,
+                      backgroundColor:
+                        selectedslot?.our_price === item.our_price
+                          ? Constants.lightgreen
+                          : Constants.lightgreen,
+                      borderColor:
+                        selectedslot?.our_price === item.our_price
+                          ? Constants.lightgreen
+                          : Constants.lightgreen,
+                    },
+                  ]}
+                  key={i}
+                  onPress={() => setsselectedslot(item)}>
+                  {item?.other_price && (
+                    <ImageBackground
+                      source={require('../../Assets/Images/star1.png')}
+                      style={styles.cardimg2}>
+                      <Text style={styles.offtxt}>
+                        {(
+                          ((item?.other_price - item?.our_price) /
+                            item?.other_price) *
+                          100
+                        ).toFixed(0)}
+                        %
+                      </Text>
+                      <Text style={styles.offtxt}>{t('off')}</Text>
+                    </ImageBackground>
+                  )}
+                  <Text style={styles.weight}>
+                    {item?.value}
+                    {item.unit}
+                  </Text>
+                  <View style={{marginTop: -5}}>
+  <Text style={styles.maintxt}>
+    {Currency}
+    {item.our_price}
+  </Text>
+  {/* <Text style={[styles.disctxt, {marginTop: -3}]}>
+    {formatPricePerUnit(
+      item.our_price,
+      item?.value,
+      item.unit,
+    )}
+  </Text> */}
+</View>
+                </TouchableOpacity>
+              ))}
+        </ScrollView>
+    
         <View style={styles.line} />
         <View style={styles.productinfocov}>
           <Text style={styles.proddec}>{t('Product Information')}</Text>
@@ -639,7 +664,7 @@ const Preview = props => {
           </View> */}
         </View>
         {productdata?.long_description && (
-          <View style={{ marginTop: 10 }}>
+          <View style={{ marginTop: 10, backgroundColor: Constants.lightgreen, paddingHorizontal: -10  }}>
             <RenderHTML
               contentWidth={width}
               tagsStyles={mixedStyle}
@@ -696,32 +721,32 @@ const Preview = props => {
         </View> */}
         {/* Frequently bought product */}
         <Text style={[styles.proddec, { marginTop: 10 }]}>
-          {t('Frequently Bought Products')}
-        </Text>
-        <View style={{ marginTop: 5 }}>
-          {productList.map((item, index) => {
-            const cartItem = Array.isArray(cartdetail)
-              ? cartdetail.find(it => it?.productid === item?._id)
-              : undefined;
+  {t('Frequently Bought Products')}
+</Text>
+<View style={{ marginTop: 5, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+  {productList.map((item, index) => {
+    const cartItem = Array.isArray(cartdetail)
+      ? cartdetail.find(it => it?.productid === item?._id)
+      : undefined;
 
-            return (
-              <View
-                key={item._id || index.toString()}
-                style={[
-                  styles.box2,
-                  // { marginRight: productList.length === index + 1 ? 20 : 10 },
-                ]}>
-                <ProductCard
-                  item={item}
-                  cartItem={cartItem}
-                  cartdata={cartdata2}
-                  setcartdetail={setcartdetail}
-                  cartdetail={cartdetail}
-                />
-              </View>
-            );
-          })}
-        </View>
+    return (
+      <View
+        key={item._id || index.toString()}
+        style={[
+          styles.box2,
+          { width: '48%' }
+        ]}>
+        <ProductCard
+          item={item}
+          cartItem={cartItem}
+          cartdata={cartdata2}
+          setcartdetail={setcartdetail}
+          cartdetail={cartdetail}
+        />
+      </View>
+    );
+  })}
+</View>
       </ScrollView>
       <View style={styles.line} />
 
@@ -754,7 +779,7 @@ export default Preview;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Constants.white,
+    backgroundColor: Constants.lightgreen,
     // padding: 20,
   },
   proname: {
@@ -763,6 +788,8 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Bold,
     marginVertical: 10,
     marginLeft: 10,
+    backgroundColor: Constants.lightgreen,
+    
   },
   weight: {
     fontSize: 14,
@@ -793,16 +820,18 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Bold,
     // textDecorationLine: 'line-through',
   },
-  box: {
-    backgroundColor: Constants.lightpink,
-    width: 150,
-    padding: 10,
-    borderRadius: 7,
-    borderWidth: 1,
-    borderColor: Constants.linearcolor,
-    marginLeft: 10,
-    marginTop: 10,
-  },
+ box: {
+  backgroundColor: Constants.lightgreen,
+  width: 150,
+  padding: 8,
+  paddingVertical: 6,
+  borderRadius: 7,
+  borderWidth: 1,
+  borderColor: Constants.linearcolor,
+  marginLeft: 10,
+  marginTop: 10,
+  marginBottom: 5,
+},
   box2: {
     // width: 180,
     marginVertical: 5,
@@ -830,7 +859,7 @@ const styles = StyleSheet.create({
     color: Constants.white,
     paddingHorizontal: 25,
     paddingVertical: 7,
-    borderRadius: 5,
+    borderRadius: 25,
     fontSize: 18,
     fontFamily: FONTS.Bold,
     // position: 'absolute',
@@ -870,6 +899,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 10,
+     backgroundColor: Constants.lightgreen,
   },
   expirycard: {
     backgroundColor: '#EDEDED',

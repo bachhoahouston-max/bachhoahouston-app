@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
   },
   hi: {
     marginRight: 10,

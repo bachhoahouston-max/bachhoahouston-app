@@ -219,11 +219,12 @@ const Searchpage = () => {
       <FlatList
         data={productlist}
         // numColumns={Dimensions.get('window').width < 600 ? 2 : 3}
-        numColumns={1}
+        numColumns={2}
         // style={{paddingRight: 20, marginLeft: 5, paddingTop: 10, flex: 1}}
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 10 }}
         showsVerticalScrollIndicator={false}
+         columnWrapperStyle={{ justifyContent: 'space-between' }}
         ListEmptyComponent={() => (
           <View
             style={{
@@ -348,7 +349,7 @@ export default Searchpage;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Constants.white,
+    backgroundColor: Constants.lightgreen,
     // padding: 20,
   },
   inpcov: {
@@ -373,7 +374,7 @@ const styles = StyleSheet.create({
     // backgroundColor:Constants.red
   },
   searchcov: {
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
     padding: 20,
     flexDirection: 'row',
   },
@@ -383,7 +384,8 @@ const styles = StyleSheet.create({
     //     ? Dimensions.get('window').width / 2 - 20
     //     : Dimensions.get('window').width / 3 - 20,
     // width: Dimensions.get('window').width < 600 ? '48%' : '31%',
-    marginVertical: 10,
+    width: '48%',
+  marginVertical: 10,
   },
   cardimg: {
     height: 95,

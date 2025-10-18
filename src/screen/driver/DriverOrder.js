@@ -65,8 +65,8 @@ const DriverOrder = props => {
                 orderdata?.status === 'Pending'
                   ? Constants.white
                   : orderdata?.status === 'Driverassigned'
-                  ? '#E9FFE9'
-                  : '#FFF6D8',
+                  ? '#E8F5E9'
+                  : '#E8F5E9',
             },
           ]}>
           <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   inputbox: {
-    backgroundColor: Constants.lightpink,
+    backgroundColor: '#E8F5E9',
     color: Constants.custom_black,
     borderRadius: 15,
     marginVertical: 5,

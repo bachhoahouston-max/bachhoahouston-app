@@ -27,7 +27,7 @@ export const Drivertab = () => {
         <WorkIcon color={Constants.white} height={35} width={35} />
       ),
       iconInActive: (
-        <WorkIcon color={Constants.black} height={35} width={35} />
+        <WorkIcon color={Constants.white} height={35} width={35} />
       ),
       component: Work,
       // component: TestMap,
@@ -39,7 +39,7 @@ export const Drivertab = () => {
         <HistoryIcon color={Constants.white} height={35} width={35} />
       ),
       iconInActive: (
-        <HistoryIcon color={Constants.black} height={35} width={35} />
+        <HistoryIcon color={Constants.white} height={35} width={35} />
       ),
       component: History,
       routeName: 'History',
@@ -67,13 +67,13 @@ export const Drivertab = () => {
             ]}>
             {isSelected ? item.iconActive : item.iconInActive}
           </TouchableOpacity>
-          <Text
-            style={[
-              styles.tabtxt,
-              { color: isSelected ? Constants.white : Constants.black },
-            ]}>
-            {t(item.name)}
-          </Text>
+         <Text
+  style={[
+    styles.tabtxt,
+    { color: Constants.white },
+  ]}>
+  {t(item.name)}
+</Text>
         </View>
       );
     },
@@ -91,7 +91,7 @@ export const Drivertab = () => {
           position: 'absolute',
           width: '100%',
           minHeight: Platform?.OS === 'android' ? 70 : 90,
-          backgroundColor: Constants.saffron,
+          backgroundColor: Constants.greennew,
           borderTopRightRadius: 15,
           borderTopLeftRadius: 15,
           borderTopWidth: 0,

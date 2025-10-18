@@ -69,11 +69,11 @@ export const Employeetab = () => {
             ]}>
             {isSelected ? item.iconActive : item.iconInActive}
           </TouchableOpacity>
-          <Text
-            style={[
-              styles.tabtxt,
-              {color: isSelected ? Constants.linearcolor : Constants.black},
-            ]}>
+         <Text
+  style={[
+    styles.tabtxt,
+    {color: Constants.white},
+  ]}>
             {t(item.name)}
           </Text>
         </View>
@@ -91,12 +91,16 @@ export const Employeetab = () => {
         tabBarStyle: {
           position: 'absolute',
           width: '100%',
-          height: 70,
-          backgroundColor: Constants.white,
+          height: 80,  // Increased height
+          backgroundColor: Constants.greennew,
           borderTopRightRadius: 15,
           borderTopLeftRadius: 15,
           borderTopWidth: 0,
-          //   paddingTop: Platform.OS === 'ios' ? 10 : 0,
+          paddingTop: 10,  // Added padding at the top
+          justifyContent: 'flex-start',  // Align items to the start
+        },
+        tabBarItemStyle: {
+          paddingTop: 8,  // Added padding to each tab item
         },
       }}>
       {TabArr.map((item, index) => {
@@ -131,16 +135,17 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 4, // Added top margin to the icon container
   },
   tabBtnActive: {
-    backgroundColor: Constants.white,
+    backgroundColor: 'transparent',
   },
   tabBtnInActive: {
-    backgroundColor: 'white',
+    backgroundColor: 'transparent',
   },
   tabtxt: {
-    color: Constants.black,
-    // fontWeight:'400',
+    color: 'white',
     fontFamily: FONTS.Medium,
+    
   },
 });

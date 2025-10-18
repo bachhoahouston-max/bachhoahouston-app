@@ -169,45 +169,50 @@ const Products = props => {
     <SafeAreaView style={styles.container}>
       <DriverHeader item={t('Products')} showback={true} />
       <Text style={styles.headtxt}>{catname}</Text>
-      <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 10 }}
-        showsVerticalScrollIndicator={false}
-        style={{ flex: 1, width: '100%' }}>
-        {productlist && productlist.length > 0 ? (
-          productlist.map((item, i) => {
-            const cartItem = Array.isArray(cartdetail)
-              ? cartdetail.find(it => it?.productid === item?._id)
-              : undefined;
-            return (
-              <View key={item._id || i.toString()} style={[styles.box, { marginBottom: productlist.length === i + 1 ? 100 : 10 }]}>
-                <ProductCard
-                  item={item}
-                  cartItem={cartItem}
-                  cartdata={cartdata}
-                  setcartdetail={setcartdetail}
-                  cartdetail={cartdetail}
-                />
-              </View>
-            );
-          })
-        ) : (
-          <View
-            style={{
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: Dimensions.get('window').height - 200,
-            }}>
-            <Text
-              style={{
-                color: Constants.black,
-                fontSize: 20,
-                fontFamily: FONTS.Medium,
-              }}>
-              {t('No Products')}
-            </Text>
-          </View>
-        )}
-      </ScrollView>
+     <FlatList
+  data={productlist}
+  numColumns={2}
+  keyExtractor={(item, index) => item._id || index.toString()}
+  contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 100 }}
+  columnWrapperStyle={{ justifyContent: 'space-between' }}
+  showsVerticalScrollIndicator={false}
+  ListEmptyComponent={() => (
+    <View
+      style={{
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: Dimensions.get('window').height - 200,
+      }}>
+      <Text
+        style={{
+          color: Constants.black,
+          fontSize: 20,
+          fontFamily: FONTS.Medium,
+        }}>
+        {t('No Products')}
+      </Text>
+    </View>
+  )}
+  renderItem={({ item }) => {
+    const cartItem = Array.isArray(cartdetail)
+      ? cartdetail.find(it => it?.productid === item?._id)
+      : undefined;
+
+    return (
+      <View style={[styles.box, { marginVertical: 10 }]}>
+        <ProductCard
+          item={item}
+          cartItem={cartItem}
+          cartdata={cartdata}
+          setcartdetail={setcartdetail}
+          cartdetail={cartdetail}
+        />
+      </View>
+    );
+  }}
+  onEndReached={fetchNextPage}
+  onEndReachedThreshold={0.05}
+/>
     </SafeAreaView>
   );
 };
@@ -217,7 +222,7 @@ export default Products;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Constants.white,
+    backgroundColor: Constants.lightgreen,
     paddingBottom: 70,
   },
 
@@ -236,6 +241,7 @@ const styles = StyleSheet.create({
     //     : Dimensions.get('window').width / 3 - 20,
     // width: Dimensions.get('window').width < 600 ? '48%' : '31%',
     // marginVertical: 10,
+width:'48%',
   },
   cardimg: {
     height: 95,

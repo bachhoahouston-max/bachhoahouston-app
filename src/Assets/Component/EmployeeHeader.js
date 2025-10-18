@@ -56,7 +56,7 @@ const EmployeeHeader = props => {
       <View style={styles.toppart}>
         <StatusBar
           barStyle="light-content"
-          backgroundColor={Constants.saffron}
+          backgroundColor={Constants.greennew}
         />
         <View
           style={{
@@ -239,7 +239,7 @@ const EmployeeHeader = props => {
                   }}
                   style={[
                     styles.logOutButtonStyle,
-                    {backgroundColor: Constants.saffron},
+                    {backgroundColor: Constants.greennew},
                   ]}>
                   <Text style={styles.modalText}>{t('Apply Filter')}</Text>
                 </TouchableOpacity>
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
   },
   hi: {
     marginRight: 10,
