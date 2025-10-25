@@ -958,57 +958,61 @@ setLoading(true);
                 }}
                 value={PickupType}>
                 {pickupOptions.map((option, index) => (
-                  <TouchableOpacity
+                  <View
                     key={index}
                     style={[
                       styles.radioView,
-                      { flexDirection: 'row-reverse', alignItems: 'flex-start' },
-                    ]}
-                    onPress={() => {
-                      setPickupType(option.value);
-                      setPickupDate(null);
-                      setDeliveryTip(0);
-                      setLocalDeliveryAddress({
-                        ApartmentNo: user?.ApartmentNo || '',
-                        SecurityGateCode: user?.SecurityGateCode || '',
-                        zipcode: user?.zipcode || '',
-                      });
-                    }}>
-                    <RadioButton.Android
-                      value={option.value}
-                      status={
-                        PickupType === option.value ? 'checked' : 'unchecked'
-                      }
-                      color={Constants.pink}
-                      uncheckedColor={Constants.black}
-                    />
-                    <View style={{ flex: 1, marginRight: 10 }}>
-                      <Text
-                        style={{
-                          color:
-                            PickupType === option.value
-                              ? Constants.pink
-                              : Constants.black,
-                          fontSize: 16,
-                          fontWeight: '700',
-                        }}>
-                        {t(option.label)}
-                      </Text>
-                      <Text
-                        style={{
-                          color: Constants.customgrey2,
-                          fontSize: 14,
-                          marginTop: 2,
-                        }}>
-                        {t(option.description)}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </RadioButton.Group>
-
-              {PickupType === 'orderPickup' && (
-                <View style={styles.totalcov}>
+                      { flexDirection: 'column' },
+                    ]}>
+                    <TouchableOpacity
+                      style={{
+                        flexDirection: 'row-reverse',
+                        alignItems: 'flex-start',
+                      }}
+                      onPress={() => {
+                        setPickupType(option.value);
+                        setPickupDate(null);
+                        setDeliveryTip(0);
+                        setLocalDeliveryAddress({
+                          ApartmentNo: user?.ApartmentNo || '',
+                          SecurityGateCode: user?.SecurityGateCode || '',
+                          zipcode: user?.zipcode || '',
+                        });
+                      }}>
+                      <RadioButton.Android
+                        value={option.value}
+                        status={
+                          PickupType === option.value ? 'checked' : 'unchecked'
+                        }
+                        color={Constants.pink}
+                        uncheckedColor={Constants.black}
+                      />
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text
+                          style={{
+                            color:
+                              PickupType === option.value
+                                ? Constants.pink
+                                : Constants.black,
+                            fontSize: 16,
+                            fontWeight: '700',
+                          }}>
+                          {t(option.label)}
+                        </Text>
+                        <Text
+                          style={{
+                            color: Constants.customgrey2,
+                            fontSize: 14,
+                            marginTop: 2,
+                          }}>
+                          {t(option.description)}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    
+                    {/* Details inside the box when selected */}
+                    {PickupType === option.value && option.value === 'orderPickup' && (
+                <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
                   <Text
                     style={[
                       styles.boxtxt,
@@ -1123,11 +1127,11 @@ setLoading(true);
                   themeVariant="ligt"
 
                 /> */}
-                </View>
-              )}
+                      </View>
+                    )}
 
-              {PickupType === 'driveUp' && (
-                <View style={styles.totalcov}>
+                    {PickupType === option.value && option.value === 'driveUp' && (
+                <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
                   <Text
                     style={[
                       styles.boxtxt,
@@ -1224,11 +1228,11 @@ setLoading(true);
                   onCancel={() => handleDatePickerClose()}
                   themeVariant="light"
                 /> */}
-                </View>
-              )}
+                      </View>
+                    )}
 
-              {PickupType === 'localDelivery' && (
-                <View style={styles.totalcov}>
+                    {PickupType === option.value && option.value === 'localDelivery' && (
+                <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
                   {/* <Text
                   style={[
                     styles.boxtxt,
@@ -1514,11 +1518,11 @@ setLoading(true);
                       'Note: We currently deliver only to selected ZIP codes. Orders placed before 8 pm are eligible for next day delivery. Orders placed after 8pm will be available for delivery in 2 days.',
                     )}
                   </Text>
-                </View>
-              )}
+                      </View>
+                    )}
 
-              {PickupType === 'shipping' && (
-                <View style={styles.totalcov}>
+                    {PickupType === option.value && option.value === 'shipping' && (
+                <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
                   {/* <Text
                   style={[
                     styles.boxtxt,
@@ -1657,8 +1661,117 @@ setLoading(true);
                       'Note: We currently deliver to 49/50 U.S. states. Unfortunately, we do not deliver to Hawaii at this time.',
                     )}
                   </Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </RadioButton.Group>
+
+              {/* Coupon Section - Moved below shipping options */}
+              <View style={[styles.totalcov, { marginTop: 15 }]}>
+                <Text style={styles.boxtxtlg}>{t('Savings Corner')}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <TextInput
+                    value={couponCode}
+                    onChangeText={text => setCouponCode(text)}
+                    placeholder={t('Enter Promo Code')}
+                    placeholderTextColor={Constants.customgrey}
+                    style={{
+                      flex: 1,
+                      height: 45,
+                      borderWidth: 1,
+                      borderColor: Constants.customgrey3,
+                      borderRadius: 10,
+                      paddingHorizontal: 15,
+                      fontSize: 16,
+                      color: Constants.black,
+                      fontFamily: FONTS.Regular,
+                    }}
+                  />
+                  <TouchableOpacity
+                    onPress={async () => {
+                      if (couponCode.trim() === '') {
+                        Toast.show({
+                          type: 'error',
+                          text1: t('Please enter a coupon code'),
+                        });
+                        return;
+                      }
+
+                      if (!user._id) {
+                        Toast.show({
+                          type: 'error',
+                          text1: t('Please log in first'),
+                        });
+                        return;
+                      }
+                      
+                      try {
+                        const response = await Post(
+                          `ValidateCouponforUser`,
+                          {
+                            code: couponCode,
+                            cartValue: totaloff,
+                            userId: user._id,
+                          },
+                          {},
+                        );
+                        
+                        if (response.status) {
+                          setCoupon(true);
+                          setCouponDiscount(response.data.discount);
+                          setDiscountCode(couponCode);
+                          Toast.show({
+                            type: 'success',
+                            text1: t('Coupon applied successfully'),
+                          });
+                        } else {
+                          Toast.show({
+                            type: 'error',
+                            text1:
+                              response.message || t('Failed to apply coupon'),
+                          });
+                        }
+                      } catch (error) {
+                        console.warn(error);
+                        Toast.show({
+                          type: 'error',
+                          text1: t('Failed to apply coupon'),
+                        });
+                      }
+                    }}
+                    style={{
+                      backgroundColor: Constants.greennew,
+                      paddingHorizontal: 25,
+                      paddingVertical: 12,
+                      borderRadius: 10,
+                      height: 45,
+                      justifyContent: 'center',
+                    }}>
+                    <Text style={[styles.buttontxt, { fontSize: 16 }]}>
+                      {t('Apply')}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              )}
+                {coupon && couponDiscount > 0 && (
+                  <View style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={[styles.boxtxt, { color: Constants.green }]}>
+                      {t('Coupon applied')}: {discountCode}
+                    </Text>
+                    <Pressable
+                      onPress={() => {
+                        setCoupon(false);
+                        setCouponDiscount(0);
+                        setCouponCode('');
+                        setDiscountCode('');
+                      }}>
+                      <Text style={[styles.boxtxt, { color: Constants.red }]}>
+                        {t('Remove')}
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
 
               <View style={styles.totalcov}>
                 <Text style={styles.boxtxtlg}>{t('Cart Summary')}</Text>
@@ -1676,36 +1789,18 @@ setLoading(true);
                     </Text>
                   </View>
                 </View>
-                {/* Coupon */}
-                <View style={styles.total}>
-                  <Text style={styles.boxtxt}>{t('Coupon Discount')}</Text>
-                  {coupon && couponDiscount > 0 ? (
-                    <Pressable
-                      onPress={() => {
-                        setCoupon(false);
-                        setCouponDiscount(0);
-                      }}
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 5,
-                      }}>
+                {/* Coupon already shown above */}
+                {coupon && couponDiscount > 0 && (
+                  <View style={styles.total}>
+                    <Text style={styles.boxtxt}>{t('Coupon Discount')}</Text>
+                    <View style={styles.amount}>
                       <Text style={[styles.boxtxt, { fontFamily: FONTS.Medium }]}>
                         - {Currency}
                         {(Number(couponDiscount) || 0).toFixed(2)}
                       </Text>
-                      <CrossIcon height={10} width={10} />
-                    </Pressable>
-                  ) : (
-                    <Pressable
-                      onPress={() => setOpen(true)}
-                      style={styles.amount}>
-                      <Text style={[styles.boxtxt, { color: Constants.green }]}>
-                        {t('Apply Coupon')}
-                      </Text>
-                    </Pressable>
-                  )}
-                </View>
+                    </View>
+                  </View>
+                )}
                 {/* Delivery Tip */}
                 {PickupType === 'localDelivery' && (
                   <View style={styles.total}>

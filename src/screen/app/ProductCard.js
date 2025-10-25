@@ -262,45 +262,47 @@ const ProductCard = ({
 };
 
 const styles = StyleSheet.create({
-  card: {
-    flex: 1,
-    width: '100%',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    padding: 10,
-    borderRadius: 10,
-    backgroundColor: Constants.white,
-    shadowColor: Constants.black,
-    position: 'relative',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    borderWidth: 1,
-    borderColor: Constants.customgrey3,
-    shadowRadius: 3.84,
+card: {
+  flex: 1,
+  width: '100%',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: 10,
+  padding: 10,
+  borderRadius: 10,
+  backgroundColor: Constants.white,
+  shadowColor: Constants.black,
+  position: 'relative',  
+  minHeight: 220,  
+  shadowOffset: {
+    width: 0,
+    height: 2,
   },
+  shadowOpacity: 0.25,
+  borderWidth: 1,
+  borderColor: Constants.customgrey3,
+  shadowRadius: 3.84,
+},
   cardimg: {
      height: 150,
     width: 150,
     resizeMode: 'cover',
     borderRadius: 10,
   },
- cardContent: {
+cardContent: {
   flex: 1,
   flexDirection: 'column',
   padding: 5,
+  width: '100%', 
 },
-  cardContent2: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    // marginTop: 3,
-  },
+ cardContent2: {
+  flex: 1,
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',  // Changed from 'center' to 'flex-start'
+  marginTop: 5,
+},
   proname: {
     fontSize: 16,
     color: Constants.black,
@@ -329,10 +331,10 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Medium,
     textDecorationLine: 'line-through',
   },
- pluscov: {
+pluscov: {
   position: 'absolute',
-  bottom: 18,
-  right: -2,
+  bottom: 5,  
+  right: 1,   
   minWidth: 40,
   minHeight: 40,
   justifyContent: 'center',
@@ -340,10 +342,10 @@ const styles = StyleSheet.create({
   borderRadius: 20,
   backgroundColor: Constants.pink,
 },
- addcov: {
+addcov: {
   position: 'absolute',
-  bottom: 20,
-  right: -4,
+  bottom: 5,  
+  right: 5,   
   flexDirection: 'row',
   height: 35,
   borderRadius: 7,
