@@ -9,6 +9,7 @@ import {
   ScrollView,
   ImageBackground,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import React, { createRef, useContext, useEffect, useState } from 'react';
 import styles from './styles';
@@ -140,7 +141,9 @@ const SignIn = props => {
   };
 
   return (
-    <SafeAreaView style={newStyles.container}>
+     <KeyboardAvoidingView 
+    style={newStyles.container}
+    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <ScrollView
   style={newStyles.scrollView}
   showsVerticalScrollIndicator={false}
@@ -362,7 +365,7 @@ const SignIn = props => {
           </View>
         </ActionSheet>
       </ScrollView>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
