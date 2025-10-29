@@ -168,33 +168,34 @@ const Sale = ({ setIsSale }) => {
   }, [saleData]);
 
   return (
-    <>
-      {/* {sellProduct?.length > 0 && ( */}
-      <View style={{ marginBottom: 5, marginHorizontal: 15 }}>
-        <View style={styles.covline}>
-          {/* Left: Offer of the week Title + Status */}
-          <View style={styles.titleRow}>
-            <Text style={styles.categorytxt}>{t('Offer of the week')}</Text>
-            <View style={styles.liveStatus}>
-              <View style={styles.liveDot} />
-              <Text style={styles.liveText}>
-                {countdown[0]?.status || t('Sale is live')}
-              </Text>
-            </View>
+  <>
+    <View style={{ marginBottom: 5, marginHorizontal: 15 }}>
+      <View style={styles.covline}>
+        <View style={styles.titleRow}>
+          <Text style={styles.categorytxt}>{t('Offer of the week')}</Text>
+          <View style={styles.liveStatus}>
+            <View style={styles.liveDot} />
+            <Text style={styles.liveText}>
+              {countdown[saleData[0]?._id]?.status || t('Sale is live')}
+            </Text>
           </View>
         </View>
+      </View>
 
-        {saleData.map((item, i) => {
+      <FlatList
+        data={saleData}
+        keyExtractor={(item, index) => item._id || index.toString()}
+        numColumns={2}
+        scrollEnabled={false}
+        columnWrapperStyle={{ justifyContent: 'space-between' }}
+        renderItem={({ item, index }) => {
           const cartItem = Array.isArray(cartdetail)
             ? cartdetail.find(it => it?.productid === item?.product?._id)
             : undefined;
-          const itemQuantity = cartItem ? cartItem.qty : 0;
           const currentSale = countdown[item._id];
-          const isActive = currentSale?.status === 'active';
-          const isUpcoming = currentSale?.status === 'upcoming';
 
           return (
-            <View style={{ marginBottom: 10 }} key={i}>
+            <View style={{ flex: 1, marginBottom: 10, marginHorizontal: 5 }}>
               <ProductCard
                 item={item.product}
                 cartItem={cartItem}
@@ -207,11 +208,11 @@ const Sale = ({ setIsSale }) => {
               />
             </View>
           );
-        })}
-      </View>
-      {/* // )} */}
-    </>
-  );
+        }}
+      />
+    </View>
+  </>
+);
 };
 
 const styles = {

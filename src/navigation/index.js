@@ -40,6 +40,7 @@ import { ProductForm } from '../screen/Employee/ProductForm';
 import TestMap from '../screen/driver/TestMap';
 import CategoryFilter from '../screen/app/CategoryFilter';
 import OrderSuccessScreen from '../screen/app/OrderSuccessScreen';
+import Welcome from '../screen/app/Welcome';
 
 const Stack = createNativeStackNavigator();
 const AuthStack = createNativeStackNavigator();
@@ -63,7 +64,7 @@ export default function Navigation(props) {
         screenOptions={{ headerShown: false }}
         initialRouteName={props.initial}
       >
-
+        <Stack.Screen name="Welcome" component={Welcome} />
         <Stack.Screen name="App" component={TabNav} />
         <Stack.Screen name="Vendortab" component={Vendortab} />
         <Stack.Screen name="Drivertab" component={Drivertab} />

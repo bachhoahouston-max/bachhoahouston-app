@@ -116,40 +116,44 @@ const App = () => {
         CustomCurrentLocation();
     }, []);
     const setInitialRoute = async () => {
-        const userData = await AsyncStorage.getItem('userDetail');
-        const userDetail = JSON.parse(userData);
-        console.log('userDetail', userDetail);
-        console.log('userDetailid', userDetail?.token);
-        if (userDetail?.token) {
-            setuser(userDetail);
-            getProfile();
-            // }
-            if (userDetail.type === 'ADMIN') {
-                // setuser(userDetail);
-                // if (userDetail.status === 'Verified') {
-                //   setInitial('Vendortab');
-                // } else {
-                //   setInitial('VendorForm');
-                // }
-                setInitial('Employeetab');
-            } else if (userDetail.type === 'DRIVER') {
-                // setuser(userDetail);
-                if (userDetail.status === 'Verified') {
-                    setInitial('Drivertab');
-                } else {
-                    setInitial('Driverform');
-                }
+        // First show Welcome screen for all users
+        setInitial('Welcome');
+        
+        // Then check for existing user session in the background
+        try {
+            const userData = await AsyncStorage.getItem('userDetail');
+            const userDetail = userData ? JSON.parse(userData) : null;
+            
+            if (userDetail?.token) {
+                setuser(userDetail);
+                await getProfile();
+                
+                // After a short delay, navigate to the appropriate screen
+                setTimeout(() => {
+                    if (userDetail.type === 'ADMIN') {
+                        setInitial('Employeetab');
+                    } else if (userDetail.type === 'DRIVER') {
+                        if (userDetail.status === 'Verified') {
+                            setInitial('Drivertab');
+                        } else {
+                            setInitial('Driverform');
+                        }
+                    } else {
+                        setInitial('App');
+                    }
+                }, 2000); // 2 seconds delay on Welcome screen
             } else {
-                if (initial === '') {
-                    setInitial('App');
-                }
-
-                // setuser(userDetail);
+                // No user logged in, go to Auth after delay
+                setTimeout(() => {
+                    setInitial('Auth');
+                }, 2000);
             }
-        } else {
+        } catch (error) {
+            console.error('Error checking user session:', error);
+            // If there's an error, default to Auth screen
             setTimeout(() => {
                 setInitial('Auth');
-            }, 1000);
+            }, 2000);
         }
     };
 

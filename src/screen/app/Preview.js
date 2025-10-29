@@ -445,11 +445,17 @@ renderItem={({ item, index }) => (
 )}
           />
         </View>
-       <Text style={styles.proname}>{i18n.language === 'vi' ? (productdata?.vietnamiesName || productdata?.name) : productdata?.name}</Text>
-<Text style={[styles.dectitle, { marginLeft: 10, marginTop: -25 }]}>
+    <Text 
+  style={styles.proname}
+  numberOfLines={3}  // Add this line
+  ellipsizeMode="tail"  // Add this line
+>
+  {i18n.language === 'vi' ? (productdata?.vietnamiesName || productdata?.name) : productdata?.name}
+</Text>
+<Text style={[styles.dectitle, { marginLeft: 10, marginTop: 0 }]}>
   {productdata?.short_description}
 </Text>
-<View style={[styles.pricecov, {marginTop: 1, marginBottom: -35}]}>
+<View style={[styles.pricecov, {marginTop: 10, marginBottom: -25}]}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             {/* <Text style={styles.maintxt2}>
               {Currency} {selectedslot?.our_price}
@@ -789,6 +795,8 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     marginLeft: 10,
     backgroundColor: Constants.lightgreen,
+    flexWrap: 'wrap',  
+  flexShrink: 1,   
     
   },
   weight: {

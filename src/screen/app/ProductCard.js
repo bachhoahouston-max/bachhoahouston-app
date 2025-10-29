@@ -42,221 +42,182 @@ const ProductCard = ({
       disabled={item.Quantity <= 0}
       onPress={() => navigate('Preview', item.slug)}
       style={[styles.card]}>
-      <Image
-        source={{
-          uri: item?.varients?.[0]?.image?.[0] || '',
-        }}
-        style={styles.cardimg}
-      />
-     <View style={styles.cardContent}>
-  <View style={styles.cardContent2}>
-    <View
-      style={{
-        flexShrink: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 5,
-      }}>
-      {item?.price_slot?.[0]?.other_price && (
-        <Text style={styles.maintxt}>
-          {Currency}
-          {item.price_slot[0].other_price || ''}
+      
+      {/* Image with Timer Overlay */}
+      <View style={{ position: 'relative', width: '100%' }}>
+        <Image
+          source={{
+            uri: item?.varients?.[0]?.image?.[0] || '',
+          }}
+          style={styles.cardimg}
+        />
+        
+        {/* Timer Badge on Image */}
+        {currentSale && currentSale?.status !== 'expired' && (
+          <View
+            style={{
+              position: 'absolute',
+              bottom: 10,
+              left: 10,
+              backgroundColor: '#2E7D32',
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 8,
+            }}>
+            <Text
+              style={{
+                fontSize: 12,
+                fontWeight: '600',
+                color: '#FFFFFF',
+                marginBottom: 2,
+              }}>
+              {currentSale?.status === 'active'
+                ? 'Sale ends in'
+                : 'Sale starts in'}
+            </Text>
+            <View style={{ flexDirection: 'row', gap: 3, alignItems: 'center' }}>
+              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#FFFFFF' }}>
+                {currentSale?.days || 0}d
+              </Text>
+              <Text style={{ fontSize: 11, color: '#FFFFFF' }}>:</Text>
+              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#FFFFFF' }}>
+                {currentSale?.hours || 0}h
+              </Text>
+              <Text style={{ fontSize: 11, color: '#FFFFFF' }}>:</Text>
+              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#FFFFFF' }}>
+                {currentSale?.minutes || 0}m
+              </Text>
+              <Text style={{ fontSize: 11, color: '#FFFFFF' }}>:</Text>
+              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#FFFFFF' }}>
+                {currentSale?.seconds || 0}s
+              </Text>
+            </View>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.cardContent}>
+        <View style={styles.cardContent2}>
+          <View
+            style={{
+              flexShrink: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 5,
+            }}>
+            {item?.price_slot?.[0]?.other_price && (
+              <Text style={styles.maintxt}>
+                {Currency}
+                {item.price_slot[0].other_price || ''}
+              </Text>
+            )}
+            {salePrice !== null && (
+              <Text style={styles.maintxt}>
+                {Currency}
+                {saleVarient?.our_price || ''}
+              </Text>
+            )}
+            {(salePrice !== null
+              ? !!salePrice
+              : !!item?.price_slot?.[0]?.our_price) && (
+                <Text style={[styles.disctxt, { color: salePrice !== null ? '#FF0000' : Constants.black }]}>
+                  {Currency}
+                  {salePrice !== null
+                    ? salePrice || ''
+                    : item?.price_slot?.[0]?.our_price || ''}
+                </Text>
+              )}
+          </View>
+
+          <View>
+            {cartItem ? (
+              <View
+                style={[
+                  styles.addcov,
+                  { width: 90, height: 30, alignItems: 'center' },
+                ]}>
+                <TouchableOpacity
+                  style={styles.minus}
+                  onPress={() => {
+                    const updatedCart = cartdetail
+                      .map(_i =>
+                        _i.productid === item._id
+                          ? { ..._i, qty: _i.qty - 1 }
+                          : _i,
+                      )
+                      .filter(_i => _i.qty > 0);
+
+                    setcartdetail(updatedCart);
+                    AsyncStorage.setItem(
+                      'cartdata',
+                      JSON.stringify(updatedCart),
+                    );
+                  }}>
+                  <MinusIcon color={Constants.white} height={16} width={16} />
+                </TouchableOpacity>
+
+                <Text style={styles.qtyText}>{cartItem.qty}</Text>
+
+                <TouchableOpacity
+                  style={styles.plus3}
+                  onPress={() => {
+                    const updatedCart = cartdetail.map(_i =>
+                      _i.productid === item._id ? { ..._i, qty: _i.qty + 1 } : _i,
+                    );
+                    setcartdetail(updatedCart);
+                    AsyncStorage.setItem(
+                      'cartdata',
+                      JSON.stringify(updatedCart),
+                    );
+                  }}>
+                  <Plus2Icon color={Constants.white} height={16} width={16} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                disabled={item.Quantity <= 0}
+                style={styles.pluscov}
+                onPress={() => {
+                  const itemQuantity = Number(item?.Quantity ?? 0);
+
+                  if (itemQuantity <= 0) {
+                    Toast.show({
+                      type: 'error',
+                      text1: t('This item is currently out of stock.'),
+                    });
+                    return;
+                  }
+                  console.log(item);
+
+                  if (salePrice !== null && salePrice !== undefined) {
+                    cartdata({ ...item, salePrice });
+                  } else {
+                    cartdata(item);
+                  }
+                }}>
+                {item.Quantity <= 0 && <Text style={{ color: Constants.white, fontWeight: '700', fontSize: 16, paddingHorizontal: 10 }}>Out of stock</Text>}
+                {item.Quantity > 0 && <PlusIcon height={20} width={20} color="#fff" />}
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        <Text style={styles.proname} numberOfLines={2}>
+          {i18n.language === 'vi' ? (item?.vietnamiesName || item?.name) : item?.name}
         </Text>
-      )}
-      {salePrice !== null && (
-        <Text style={styles.maintxt}>
-          {Currency}
-          {saleVarient?.our_price || ''}
-        </Text>
-      )}
-      {(salePrice !== null
-        ? !!salePrice
-        : !!item?.price_slot?.[0]?.our_price) && (
-          <Text style={styles.disctxt}>
-            {Currency}
-            {salePrice !== null
-              ? salePrice || ''
-              : item?.price_slot?.[0]?.our_price || ''}
+        {!saleVarient?.value && item?.price_slot?.[0]?.value && (
+          <Text style={styles.weight}>
+            {item.price_slot[0].value || ''}{' '}
+            {item.price_slot[0].unit || ''}
           </Text>
         )}
-    </View>
-
-    <View>
-      {cartItem ? (
-        <View
-          style={[
-            styles.addcov,
-            { width: 90, height: 30, alignItems: 'center' },
-          ]}>
-          <TouchableOpacity
-            style={styles.minus}
-            onPress={() => {
-              const updatedCart = cartdetail
-                .map(_i =>
-                  _i.productid === item._id
-                    ? { ..._i, qty: _i.qty - 1 }
-                    : _i,
-                )
-                .filter(_i => _i.qty > 0);
-
-              setcartdetail(updatedCart);
-              AsyncStorage.setItem(
-                'cartdata',
-                JSON.stringify(updatedCart),
-              );
-            }}>
-            <MinusIcon color={Constants.white} height={16} width={16} />
-          </TouchableOpacity>
-
-          <Text style={styles.qtyText}>{cartItem.qty}</Text>
-
-          <TouchableOpacity
-            style={styles.plus3}
-            onPress={() => {
-              const updatedCart = cartdetail.map(_i =>
-                _i.productid === item._id ? { ..._i, qty: _i.qty + 1 } : _i,
-              );
-              setcartdetail(updatedCart);
-              AsyncStorage.setItem(
-                'cartdata',
-                JSON.stringify(updatedCart),
-              );
-            }}>
-            <Plus2Icon color={Constants.white} height={16} width={16} />
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <TouchableOpacity
-          disabled={item.Quantity <= 0}
-          style={styles.pluscov}
-          onPress={() => {
-            const itemQuantity = Number(item?.Quantity ?? 0);
-
-            if (itemQuantity <= 0) {
-              Toast.show({
-                type: 'error',
-                text1: t('This item is currently out of stock.'),
-              });
-              return;
-            }
-            console.log(item);
-
-            if (salePrice !== null && salePrice !== undefined) {
-              cartdata({ ...item, salePrice });
-            } else {
-              cartdata(item);
-            }
-          }}>
-          {item.Quantity <= 0 && <Text style={{ color: Constants.white, fontWeight: '700', fontSize: 16, paddingHorizontal: 10 }}>Out of stock</Text>}
-          {item.Quantity > 0 && <PlusIcon height={20} width={20} color="#fff" />}
-        </TouchableOpacity>
-      )}
-    </View>
-  </View>
-
-  {currentSale && currentSale?.status !== 'expired' && (
-    <View
-      style={{
-        flexDirection: 'row',
-        gap: 10,
-        alignItems: 'center',
-      }}>
-      <Text
-        style={{
-          fontSize: 14,
-          fontWeight: '600',
-          color: Constants.saffron,
-        }}>
-        {currentSale?.status === 'active'
-          ? 'Sale end in'
-          : 'sale start soon'}
-      </Text>
-      <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
-        <Text
-          style={{
-            fontSize: 14,
-            fontWeight: 'bold',
-            color: Constants.saffron,
-          }}>
-          {currentSale?.days || 0}d
-        </Text>
-        <Text
-          style={{
-            fontSize: 14,
-            fontWeight: 'bold',
-            color: Constants.saffron,
-          }}>
-          :
-        </Text>
-        <Text
-          style={{
-            fontSize: 14,
-            fontWeight: 'bold',
-            color: Constants.saffron,
-          }}>
-          {currentSale?.hours || 0}h
-        </Text>
-        <Text
-          style={{
-            fontSize: 14,
-            fontWeight: 'bold',
-            color: Constants.saffron,
-          }}>
-          :
-        </Text>
-        <Text
-          style={{
-            fontSize: 14,
-            fontWeight: 'bold',
-            color: Constants.saffron,
-          }}>
-          {currentSale?.minutes || 0}m
-        </Text>
-        <Text
-          style={{
-            fontSize: 14,
-            fontWeight: 'bold',
-            color: Constants.saffron,
-          }}>
-          :
-        </Text>
-        <Text
-          style={{
-            fontSize: 14,
-            fontWeight: 'bold',
-            color: Constants.saffron,
-          }}>
-          {currentSale?.seconds || 0}s
-        </Text>
+        {saleVarient?.value && (
+          <Text style={styles.weight}>
+            {saleVarient.value || ''}{' '}
+            {saleVarient.unit || ''}
+          </Text>
+        )}
       </View>
-    </View>
-  )}
-
-  <Text style={styles.proname} numberOfLines={2}>
-    {i18n.language === 'vi' ? (item?.vietnamiesName || item?.name) : item?.name}
-  </Text>
-  {!saleVarient?.value && item?.price_slot?.[0]?.value && (
-    <Text style={styles.weight}>
-      {item.price_slot[0].value || ''}{' '}
-      {item.price_slot[0].unit || ''}
-    </Text>
-  )}
-  {saleVarient?.value && (
-    <Text style={styles.weight}>
-      {saleVarient.value || ''}{' '}
-      {saleVarient.unit || ''}
-    </Text>
-  )}
-</View>
-      {/* {item.Quantity > 0 && <BlurView
-        style={styles.absolute}
-        blurType="light"
-        blurAmount={0}
-        reducedTransparencyFallbackColor="#ffffff80"
-      />} */}
-      {/* {item.Quantity <= 0 && <View style={{ position: 'absolute', backgroundColor: Constants.green, padding: 5, left: -10, top: 30, borderRadius: 10, transform: [{ rotate: "-45deg" }], }}>
-        <Text style={{ color: Constants.white, fontWeight: '700', fontSize: 16 }}>Out of stock</Text>
-      </View>} */}
     </Pressable>
   );
 };

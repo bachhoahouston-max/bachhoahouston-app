@@ -44,10 +44,11 @@ lightgreen:'#E8F5E9',
   // blue: '#122979',
   // lightblue: '#0D34BF',
   lightred: '#167DD8',
-  font100: 'Montserrat-Thin',
-  font300: 'Montserrat-Light',
-  font200: 'Montserrat-ExtraLight',
-  font400: 'Montserrat-Regular',
+  // Font weights for reference
+  font100: 'Poppins-Thin',
+  font200: 'Poppins-ExtraLight',
+  font300: 'Poppins-Light',
+  font400: 'Poppins-Regular',
   font500: 'Montserrat-Medium',
   font600: 'Montserrat-Semibold',
   font700: 'Montserrat-Bold',
@@ -77,10 +78,13 @@ lightgreen:'#E8F5E9',
   passwordValidation: /^(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,16}$/,
 };
 export const FONTS = {
-  Bold: 'Roboto-Bold',
-  Black: 'Roboto-Black',
-  Medium: 'Roboto-Medium',
-  Regular: 'Roboto-Regular',
+  Black: 'Poppins-Black',
+  Bold: 'Poppins-Bold',
+  SemiBold: 'Poppins-SemiBold',
+  Medium: 'Poppins-Medium',
+  Regular: 'Poppins-Regular',
+  Light: 'Poppins-Light',
+  Thin: 'Poppins-Thin'
 };
 
 export default Constants;

@@ -15,6 +15,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  
 } from 'react-native';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import Constants, { Currency, FONTS } from '../../Assets/Helpers/constant';
@@ -43,6 +44,22 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const { width: windowWidth } = Dimensions.get('window');
 
+// Simple component to test font
+const FontTest = () => {
+  // Log font information
+  console.log('=== Font Test ===');
+  console.log('FONTS.Bold:', FONTS.Bold);
+  
+  // Test font by rendering text with different fonts
+  return (
+    <View style={{ padding: 10, backgroundColor: '#f0f0f0', margin: 10 }}>
+      <Text style={{ fontFamily: FONTS.Bold, fontSize: 16 }}>Bold Text - {FONTS.Bold}</Text>
+      <Text style={{ fontFamily: FONTS.Regular, fontSize: 16 }}>Regular Text - {FONTS.Regular}</Text>
+      <Text style={{ fontSize: 16, marginTop: 10 }}>Default Font (No font family specified)</Text>
+    </View>
+  );
+};
+
 const Home = () => {
   const { t } = useTranslation();
   const [cartdetail, setcartdetail] = useContext(CartContext);
@@ -52,6 +69,8 @@ const Home = () => {
   const [topsellinglist, settopsellinglist] = useState([]);
   const [carosalimg, setcarosalimg] = useState([]);
   const [isSale, setIsSale] = useState(false);
+  const flatListRef = React.useRef(null);
+const [currentIndex, setCurrentIndex] = useState(0);
   // const dumydata = [
   //   {
   //     name: 'Tata Salt',
@@ -121,6 +140,22 @@ const Home = () => {
     }, [])
   );
 
+  useEffect(() => {
+  if (carosalimg && carosalimg.length > 1) {
+    const interval = setInterval(() => {
+      setCurrentIndex(prevIndex => {
+        const nextIndex = (prevIndex + 1) % carosalimg.length;
+        flatListRef.current?.scrollToIndex({
+          index: nextIndex,
+          animated: true,
+        });
+        return nextIndex;
+      });
+    }, 3000); // 3 seconds
+
+    return () => clearInterval(interval);
+  }
+}, [carosalimg]);
 
   const getCategory = () => {
     setLoading(true);
@@ -230,6 +265,7 @@ const Home = () => {
   return (
     <>
       <Header />
+      {/* <FontTest /> */}
       <TouchableOpacity style={{ backgroundColor: Constants.greennew, paddingBottom: 15 }}
         onPress={() => navigate('Searchpage')}
       >
@@ -269,37 +305,38 @@ const Home = () => {
             </LinearGradient> */}
 
             {/* Carousel */}
-            <View style={{ marginVertical: 20 }}>
-              <SwiperFlatList
-                autoplay
-                autoplayDelay={2}
-                autoplayLoop
-                data={carosalimg || []}
-                renderItem={({ item, index }) => (
-                  <TouchableOpacity
-                    style={{ width: width, alignItems: 'center' }}
-                    onPress={() => {
-                      item.product_id &&
-                        navigate(
-                          'posterDetail',
-                          item.product_id
-                        );
-                    }}>
-                    <Image
-                      source={{ uri: item.image }}
-                      style={{
-                        height: 180,
-                        width: width2,
-                        borderRadius: 20,
-                        alignSelf: 'center',
-                      }}
-                      resizeMode="stretch"
-                      key={index}
-                    />
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
+         <View style={{ marginVertical: 20, overflow: 'hidden' }}>
+  <SwiperFlatList
+    autoplay
+    autoplayDelay={2}
+    autoplayLoop
+    showPagination={false}
+    data={carosalimg || []}
+    renderItem={({ item, index }) => (
+      <TouchableOpacity
+        style={{ width: width, alignItems: 'center' }}
+        onPress={() => {
+          item.product_id &&
+            navigate(
+              'posterDetail',
+              item.product_id
+            );
+        }}>
+        <Image
+          source={{ uri: item.image }}
+          style={{
+            height: 180,
+            width: width2,
+            borderRadius: 20,
+            alignSelf: 'center',
+          }}
+          resizeMode="stretch"
+          key={index}
+        />
+      </TouchableOpacity>
+    )}
+  />
+</View>
 
             <Sale setIsSale={setIsSale} />
 <View style={styles.covline}>
