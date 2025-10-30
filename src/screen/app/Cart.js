@@ -315,6 +315,11 @@ const Cart = () => {
     fetchDeliveryFee();
   }, [PickupType]);
 
+  useEffect(() => {
+    console.log(couponDiscount)
+    AsyncStorage.setItem('couponDiscount', couponDiscount.toString())
+  }, [couponDiscount]);
+
   const initiatePurchase = () => {
     let newarr = cartdetail.map(item => {
       return {
@@ -545,6 +550,7 @@ const Cart = () => {
   const submitCheckoutWithStripeData = async stripePaymentResult => {
     const type = await AsyncStorage.getItem('pickupType');
     const date = await AsyncStorage.getItem('pickupDate');
+    const couponvalue = await AsyncStorage.getItem('couponDiscount')
     console.warn('data', type, date);
     console.warn('stripePaymentResult', stripePaymentResult);
 
@@ -591,7 +597,7 @@ const Cart = () => {
         subtotal: stripePaymentResult.subtotal || totaloff,
         Deliverytip: deliveryTip || 0,
         deliveryfee: deliveryFees || 0,
-        discount: couponDiscount || 0,
+        discount: couponvalue || 0,
         discountCode: couponCode || '',
         user: user._id,
         Email: user.email,
@@ -2083,6 +2089,7 @@ const Cart = () => {
                           setOpen(false);
                           setCouponDiscount(response.data.discount);
                           setDiscountCode(couponCode);
+
                           Toast.show({
                             type: 'success',
                             text1: t('Coupon applied successfully'),
