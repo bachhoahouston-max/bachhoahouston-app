@@ -172,7 +172,7 @@ const Sale = ({ setIsSale }) => {
     <View style={{ marginBottom: 5, marginHorizontal: 15 }}>
       <View style={styles.covline}>
         <View style={styles.titleRow}>
-          <Text style={styles.categorytxt}>{t('Offer of the week')}</Text>
+          <Text style={{ fontSize: 22, color: Constants.black, fontFamily: 'Poppins-Bold', fontWeight: '650' }}>{t('Offer of the week')}</Text>
           <View style={styles.liveStatus}>
             <View style={styles.liveDot} />
             <Text style={styles.liveText}>
