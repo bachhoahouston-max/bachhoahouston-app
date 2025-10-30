@@ -57,10 +57,10 @@ const ProductCard = ({
           <View
             style={{
               position: 'absolute',
-              bottom: 10,
-              left: 10,
-              backgroundColor: '#2E7D32',
-              paddingHorizontal: 10,
+              bottom: -20,
+              left: -4,
+              backgroundColor: '#E8F5E9',
+              paddingHorizontal: 5,
               paddingVertical: 6,
               borderRadius: 8,
             }}>
@@ -68,27 +68,27 @@ const ProductCard = ({
               style={{
                 fontSize: 12,
                 fontWeight: '600',
-                color: '#FFFFFF',
+                color: '#2E7D32',
                 marginBottom: 2,
               }}>
               {currentSale?.status === 'active'
                 ? 'Sale ends in'
                 : 'Sale starts in'}
             </Text>
-            <View style={{ flexDirection: 'row', gap: 3, alignItems: 'center' }}>
-              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#FFFFFF' }}>
+            <View style={{ flexDirection: 'row', gap: 2, alignItems: 'center' }}>
+              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#2E7D32' }}>
                 {currentSale?.days || 0}d
               </Text>
-              <Text style={{ fontSize: 11, color: '#FFFFFF' }}>:</Text>
-              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#FFFFFF' }}>
+              <Text style={{ fontSize: 11, color: '#2E7D32' }}>:</Text>
+              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#2E7D32' }}>
                 {currentSale?.hours || 0}h
               </Text>
-              <Text style={{ fontSize: 11, color: '#FFFFFF' }}>:</Text>
-              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#FFFFFF' }}>
+              <Text style={{ fontSize: 11, color: '#2E7D32' }}>:</Text>
+              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#2E7D32' }}>
                 {currentSale?.minutes || 0}m
               </Text>
-              <Text style={{ fontSize: 11, color: '#FFFFFF' }}>:</Text>
-              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#FFFFFF' }}>
+              <Text style={{ fontSize: 11, color: '#2E7D32' }}>:</Text>
+              <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#2E7D32' }}>
                 {currentSale?.seconds || 0}s
               </Text>
             </View>

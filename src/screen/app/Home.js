@@ -41,6 +41,7 @@ import { useTranslation } from 'react-i18next';
 import ProductCard from './ProductCard';
 import Sale from '../../Assets/Component/Sale';
 import { useFocusEffect } from '@react-navigation/native';
+import { ActivityIndicator } from 'react-native-paper';
 
 const { width: windowWidth } = Dimensions.get('window');
 
@@ -66,11 +67,15 @@ const Home = () => {
   const [toast, setToast] = useContext(ToastContext);
   const [loading, setLoading] = useContext(LoadContext);
   const [categorylist, setcategorylist] = useState();
-  const [topsellinglist, settopsellinglist] = useState([]);
+  // const [topsellinglist, settopsellinglist] = useState([]);
   const [carosalimg, setcarosalimg] = useState([]);
   const [isSale, setIsSale] = useState(false);
   const flatListRef = React.useRef(null);
 const [currentIndex, setCurrentIndex] = useState(0);
+const [topsellinglist, settopsellinglist] = useState([]);
+const [page, setPage] = useState(1);
+const [hasMore, setHasMore] = useState(true);
+const [loadingMore, setLoadingMore] = useState(false);
   // const dumydata = [
   //   {
   //     name: 'Tata Salt',
@@ -109,7 +114,7 @@ const [currentIndex, setCurrentIndex] = useState(0);
   // ];
   useEffect(() => {
     getCategory();
-    getTopSoldProduct();
+   getTopSoldProduct(1, false);
     getSetting();
     console.log('cartdetail', cartdetail);
     AsyncStorage.getItem('cartdata').then(res => {
@@ -124,7 +129,7 @@ const [currentIndex, setCurrentIndex] = useState(0);
   useFocusEffect(
     useCallback(() => {
       getCategory();
-      getTopSoldProduct();
+     getTopSoldProduct(1, false);
       getSetting();
       console.log('cartdetail', cartdetail);
 
@@ -174,22 +179,43 @@ const [currentIndex, setCurrentIndex] = useState(0);
       },
     );
   };
-  const getTopSoldProduct = () => {
+const getTopSoldProduct = (pageNum = 1, append = false) => {
+  if (pageNum === 1) {
     setLoading(true);
-    GetApi(`getTopSoldProduct?limit=6`, {}).then(
-      async res => {
-        setLoading(false);
-        console.log(res);
-        if (res.status) {
+  } else {
+    setLoadingMore(true);
+  }
+  
+  GetApi(`getProduct?limit=12&page=${pageNum}`, {}).then(
+    async res => {
+      setLoading(false);
+      setLoadingMore(false);
+      console.log(res);
+      if (res.status) {
+        if (append) {
+          settopsellinglist(prev => [...prev, ...res.data]);
+        } else {
           settopsellinglist(res.data);
         }
-      },
-      err => {
-        setLoading(false);
-        console.log(err);
-      },
-    );
-  };
+        
+        // Agar data ki length 12 se kam hai to aur products nahi hain
+        if (res.data.length < 12) {
+          setHasMore(false);
+        } else {
+          setHasMore(true); // Ye line add karo
+        }
+      } else {
+        setHasMore(false);
+      }
+    },
+    err => {
+      setLoading(false);
+      setLoadingMore(false);
+      setHasMore(false);
+      console.log(err);
+    },
+  );
+};
   const getSetting = () => {
     setLoading(true);
     GetApi(`getsetting`, {}).then(
@@ -281,16 +307,24 @@ const [currentIndex, setCurrentIndex] = useState(0);
             placeholderTextColor={Constants.light_black}></TextInput> */}
         </View>
       </TouchableOpacity>
-      <FlatList
-        data={topsellinglist}
-        keyExtractor={(item, index) => item._id || index.toString()}
-        showsVerticalScrollIndicator={false}
-         numColumns={2}
-          columnWrapperStyle={{ paddingHorizontal: 10 }}
-        contentContainerStyle={{
-          paddingBottom: Platform.OS === 'android' ? 70 : 40,
-          backgroundColor: "#E8F5E9"
-        }}
+     <FlatList
+  data={topsellinglist}
+  keyExtractor={(item, index) => item._id || index.toString()}
+  showsVerticalScrollIndicator={false}
+  numColumns={2}
+  columnWrapperStyle={{ paddingHorizontal: 10 }}
+  onEndReached={() => {
+    if (hasMore && !loadingMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      getTopSoldProduct(nextPage, true);
+    }
+  }}
+  onEndReachedThreshold={0.5}
+  contentContainerStyle={{
+    paddingBottom: Platform.OS === 'android' ? 70 : 40,
+    backgroundColor: "#E8F5E9"
+  }}
         ListHeaderComponent={
           <>
             {/* Header Banner */}
@@ -337,8 +371,6 @@ const [currentIndex, setCurrentIndex] = useState(0);
     )}
   />
 </View>
-
-            <Sale setIsSale={setIsSale} />
 <View style={styles.covline}>
               <Text style={styles.categorytxt}>
                 {t('Explore By Categories')}
@@ -385,15 +417,18 @@ const [currentIndex, setCurrentIndex] = useState(0);
                 </TouchableOpacity>
               )}
             />
+
+            <Sale setIsSale={setIsSale} />
+
             {/* Top Selling Header */}
             <View style={styles.covline}>
-              <Text style={styles.categorytxt}>{t('Top Selling Items')}</Text>
+              <Text style={styles.categorytxt}>{t('All Products')}</Text>
               <TouchableOpacity
                 style={{ flexDirection: 'row' }}
                 onPress={() =>
                   navigate('Products', {
-                    name: 'Top Selling Items',
-                    type: 'topselling',
+                    name: 'All Products',
+                    type: 'all',
                   })
                 }>
                 <Text style={styles.seealltxt}>{t('See all')}</Text>
@@ -434,10 +469,17 @@ const [currentIndex, setCurrentIndex] = useState(0);
           );
         }}
         ListFooterComponent={
-          <>
-            {/* Explore Categories Header */}
-            
-          </>
+           <>
+    {/* Explore Categories Header */}
+    {loadingMore && (
+      <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={Constants.pink} />
+        <Text style={{ color: Constants.black, fontSize: 14, fontFamily: FONTS.Medium, marginTop: 10 }}>
+          Loading...
+        </Text>
+      </View>
+    )}
+  </>
         }
       />
     </>
