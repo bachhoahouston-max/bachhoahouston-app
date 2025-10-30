@@ -560,7 +560,170 @@ const Cart = () => {
   }, [couponDiscount]);
 
 
+  const submitCheckoutWithStripeData = async stripePaymentResult => {
+    const type = await AsyncStorage.getItem('pickupType');
+    const date = await AsyncStorage.getItem('pickupDate');
+    const couponvalue = await AsyncStorage.getItem('couponDiscount')
+    console.warn('data', type, date);
+    console.warn('stripePaymentResult', stripePaymentResult);
 
+    setLoading(true);
+    let cart = await AsyncStorage.getItem('cartdata');
+    let carDetails = JSON.parse(cart)
+    try {
+      let newarr = carDetails.map(item => {
+        return {
+          product: item.productid,
+          image: item.image,
+          productname: item.productname,
+          price: item.offer,
+          qty: item.qty,
+          seller_id: item.seller_id,
+          price_slot: item.price_slot,
+          BarCode: item.BarCode,
+          color: item.selectedColor?.color || '',
+          total: item.total,
+          isShipmentAvailable: item.isShipmentAvailable,
+          isInStoreAvailable: item.isInStoreAvailable,
+          isCurbSidePickupAvailable: item.isCurbSidePickupAvailable,
+          isNextDayDeliveryAvailable: item.isNextDayDeliveryAvailable,
+          slug: item.slug,
+        };
+      });
+
+      const isLocalDelivery = type === 'localDelivery';
+      const isOrderPickup = type === 'orderPickup';
+      const isDriveUp = type === 'driveUp';
+      const isShipmentDelivery = type === 'shipping';
+
+      const dateString = date;
+      const formattedDate = moment(dateString, 'YYYY-MM-DD').format();
+
+      console.log('Formatted Date:', formattedDate);
+
+      const data = {
+        productDetail: newarr,
+        shipping_address: user.address,
+        location: user.address?.location,
+        total: stripePaymentResult.total || totalFinal,
+        totalTax: stripePaymentResult.tax || 0,
+        subtotal: stripePaymentResult.subtotal || totaloff,
+        Deliverytip: deliveryTip || 0,
+        deliveryfee: deliveryFees || 0,
+        discount: couponvalue || 0,
+        discountCode: couponCode || '',
+        user: user._id,
+        Email: user.email,
+        paymentmode: 'online',
+        isOrderPickup: isOrderPickup,
+        isDriveUp: isDriveUp,
+        isLocalDelivery: isLocalDelivery,
+        isShipmentDelivery: isShipmentDelivery,
+        dateOfDelivery: formattedDate,
+        isOnce,
+        ussageType: 'once',
+        paymentId: stripePaymentResult.paymentId || stripePaymentResult.id,
+        paymentIntentId: stripePaymentResult.paymentIntentId,
+        paymentStatus: 'completed',
+        paymentAmount: stripePaymentResult.total,
+        paymentCurrency: stripePaymentResult.currency || 'usd',
+        paymentTimestamp: new Date().toISOString(),
+        stripeSessionId: stripePaymentResult.sessionId,
+        autoTaxCalculated: true,
+
+        ...(isShipmentDelivery || isLocalDelivery
+          ? {
+            Local_address: {
+              address: user.address || '',
+              ...localDeliveryAddress,
+              name: user?.username,
+              phoneNumber: user?.number,
+              email: user?.email,
+              lastname: user?.lastname,
+              ApartmentNo: user?.ApartmentNo,
+              SecurityGateCode: user?.SecurityGateCode,
+              BusinessAddress: user?.BusinessAddress,
+              dateOfDelivery: formattedDate,
+              location: {
+                type: 'Point',
+                coordinates: Array.isArray(user?.location?.coordinates)
+                  ? [
+                    user.location.coordinates[0] ?? null,
+                    user.location.coordinates[1] ?? null,
+                  ]
+                  : [null, null],
+              },
+            },
+          }
+          : {}),
+      };
+
+      if (user?._id) {
+        data.user = user._id;
+        data.Email = user?.email;
+      }
+
+      console.log('Submitting order with Stripe auto-calculated tax:', {
+        paymentId: data.paymentId,
+        total: data.total,
+        tax: data.totalTax,
+        paymentStatus: data.paymentStatus,
+      });
+
+      console.log('Order data:', data);
+
+      const response = await Post('createProductRquest', data, {});
+      setLoading(false);
+      console.log('Order creation response:', response);
+      if (!response.status) {
+        Toast.show({
+          type: 'error',
+          text1: 'Some thing went wrong.',
+          text2: ' Please contact support',
+        })
+        return
+      }
+
+      console.log('Order created successfully:', response);
+
+      setLoading(false);
+      setTimeout(() => {
+        setModalView(true);
+      }, 500);
+
+      // Clear cart and reset state
+      AsyncStorage.removeItem('cartdata');
+      AsyncStorage.removeItem('pickupType');
+      AsyncStorage.removeItem('pickupDate');
+      setcartdetail([]);
+      setPickupType(null);
+      setPickupDate(null);
+      setDeliveryTip(0);
+      setCoupon(false);
+      setCouponDiscount(0);
+      setOpen(false);
+      setCouponCode('');
+      setDiscountCode('');
+      setBusinessAddress({
+        businessAddress: user?.BusinessAddress || '',
+      });
+      setLocalDeliveryAddress({
+        ApartmentNo: user?.ApartmentNo || '',
+        SecurityGateCode: user?.SecurityGateCode || '',
+        zipcode: user?.zipcode || '',
+      });
+      setDeliveryFees(0);
+      setTotalFinal(0);
+      setTotalTax(0);
+    } catch (error) {
+      console.warn('Error submitting order:', error);
+      setLoading(false);
+      Toast.show({
+        type: 'error',
+        text1: t('Failed to complete order. Please try again.'),
+      });
+    }
+  };
 
 
   const processOrder = async () => {
