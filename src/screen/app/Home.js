@@ -15,7 +15,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  
+
 } from 'react-native';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import Constants, { Currency, FONTS } from '../../Assets/Helpers/constant';
@@ -49,7 +49,7 @@ const FontTest = () => {
   // Log font information
   console.log('=== Font Test ===');
   console.log('FONTS.Bold:', FONTS.Bold);
-  
+
   // Test font by rendering text with different fonts
   return (
     <View style={{ padding: 10, backgroundColor: '#f0f0f0', margin: 10 }}>
@@ -70,7 +70,7 @@ const Home = () => {
   const [carosalimg, setcarosalimg] = useState([]);
   const [isSale, setIsSale] = useState(false);
   const flatListRef = React.useRef(null);
-const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   // const dumydata = [
   //   {
   //     name: 'Tata Salt',
@@ -141,21 +141,21 @@ const [currentIndex, setCurrentIndex] = useState(0);
   );
 
   useEffect(() => {
-  if (carosalimg && carosalimg.length > 1) {
-    const interval = setInterval(() => {
-      setCurrentIndex(prevIndex => {
-        const nextIndex = (prevIndex + 1) % carosalimg.length;
-        flatListRef.current?.scrollToIndex({
-          index: nextIndex,
-          animated: true,
+    if (carosalimg && carosalimg.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex(prevIndex => {
+          const nextIndex = (prevIndex + 1) % carosalimg.length;
+          flatListRef.current?.scrollToIndex({
+            index: nextIndex,
+            animated: true,
+          });
+          return nextIndex;
         });
-        return nextIndex;
-      });
-    }, 3000); // 3 seconds
+      }, 3000); // 3 seconds
 
-    return () => clearInterval(interval);
-  }
-}, [carosalimg]);
+      return () => clearInterval(interval);
+    }
+  }, [carosalimg]);
 
   const getCategory = () => {
     setLoading(true);
@@ -285,8 +285,8 @@ const [currentIndex, setCurrentIndex] = useState(0);
         data={topsellinglist}
         keyExtractor={(item, index) => item._id || index.toString()}
         showsVerticalScrollIndicator={false}
-         numColumns={2}
-          columnWrapperStyle={{ paddingHorizontal: 10 }}
+        numColumns={2}
+        columnWrapperStyle={{ paddingHorizontal: 10 }}
         contentContainerStyle={{
           paddingBottom: Platform.OS === 'android' ? 70 : 40,
           backgroundColor: "#E8F5E9"
@@ -305,41 +305,41 @@ const [currentIndex, setCurrentIndex] = useState(0);
             </LinearGradient> */}
 
             {/* Carousel */}
-         <View style={{ marginVertical: 20, overflow: 'hidden' }}>
-  <SwiperFlatList
-    autoplay
-    autoplayDelay={2}
-    autoplayLoop
-    showPagination={false}
-    data={carosalimg || []}
-    renderItem={({ item, index }) => (
-      <TouchableOpacity
-        style={{ width: width, alignItems: 'center' }}
-        onPress={() => {
-          item.product_id &&
-            navigate(
-              'posterDetail',
-              item.product_id
-            );
-        }}>
-        <Image
-          source={{ uri: item.image }}
-          style={{
-            height: 180,
-            width: width2,
-            borderRadius: 20,
-            alignSelf: 'center',
-          }}
-          resizeMode="stretch"
-          key={index}
-        />
-      </TouchableOpacity>
-    )}
-  />
-</View>
+            <View style={{ marginVertical: 20, overflow: 'hidden' }}>
+              <SwiperFlatList
+                autoplay
+                autoplayDelay={2}
+                autoplayLoop
+                showPagination={false}
+                data={carosalimg || []}
+                renderItem={({ item, index }) => (
+                  <TouchableOpacity
+                    style={{ width: width, alignItems: 'center' }}
+                    onPress={() => {
+                      item.product_id &&
+                        navigate(
+                          'posterDetail',
+                          item.product_id
+                        );
+                    }}>
+                    <Image
+                      source={{ uri: item.image }}
+                      style={{
+                        height: width2,
+                        width: width2,
+                        borderRadius: 20,
+                        alignSelf: 'center',
+                      }}
+                      resizeMode="stretch"
+                      key={index}
+                    />
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
 
             <Sale setIsSale={setIsSale} />
-<View style={styles.covline}>
+            <View style={styles.covline}>
               <Text style={styles.categorytxt}>
                 {t('Explore By Categories')}
               </Text>
@@ -356,7 +356,7 @@ const [currentIndex, setCurrentIndex] = useState(0);
               </TouchableOpacity>
             </View>
 
-          
+
             <FlatList
               data={categorylist}
               scrollEnabled={false}
@@ -417,7 +417,7 @@ const [currentIndex, setCurrentIndex] = useState(0);
               key={item._id || index.toString()}
               style={[
                 styles.box,
-                 { flex: 1 }
+                { flex: 1 }
                 // {
                 //   marginRight:
                 //     topsellinglist.length === index + 1 ? 20 : 10,
@@ -436,7 +436,7 @@ const [currentIndex, setCurrentIndex] = useState(0);
         ListFooterComponent={
           <>
             {/* Explore Categories Header */}
-            
+
           </>
         }
       />
@@ -503,13 +503,13 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   box: {
-  flex: 1,
-  margin: 8,
-  
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 3,
-},
+    flex: 1,
+    margin: 8,
+
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   cardimg: {
     height: 130,
     width: '100%',

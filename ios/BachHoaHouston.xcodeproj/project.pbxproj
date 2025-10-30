@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 55;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -11,6 +11,7 @@
 		26611F399EA8D259EB99AD36 /* libPods-OneSignalNotificationServiceExtension.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6641B93AB9AEA5A25CDBCA19 /* libPods-OneSignalNotificationServiceExtension.a */; };
 		5B7BDD292BCFA9BAC9B5F0B0 /* libPods-BachHoaHouston.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5CAB63677F16D342646F0E92 /* libPods-BachHoaHouston.a */; };
 		61302F972E3A1E2D006859CA /* OneSignalNotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 61302F902E3A1E2D006859CA /* OneSignalNotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		616C73022EB268DC009AC1AB /* Storyboard.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 616C73012EB268DC009AC1AB /* Storyboard.storyboard */; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		AEE58EAFB1CE43078CB584AD /* Roboto-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD66CE35EBFE4A4CA69FD2BF /* Roboto-Bold.ttf */; };
@@ -54,6 +55,7 @@
 		5CAB63677F16D342646F0E92 /* libPods-BachHoaHouston.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BachHoaHouston.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		61302F8B2E3A1D7F006859CA /* BachHoaHouston.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = BachHoaHouston.entitlements; path = BachHoaHouston/BachHoaHouston.entitlements; sourceTree = "<group>"; };
 		61302F902E3A1E2D006859CA /* OneSignalNotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneSignalNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		616C73012EB268DC009AC1AB /* Storyboard.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Storyboard.storyboard; sourceTree = "<group>"; };
 		6408AE11334D92820C6961CC /* Pods-BachHoaHouston.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BachHoaHouston.release.xcconfig"; path = "Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston.release.xcconfig"; sourceTree = "<group>"; };
 		65318F8441A74F5491122DDD /* Roboto-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Regular.ttf"; path = "../src/Assets/fonts/Roboto-Regular.ttf"; sourceTree = "<group>"; };
 		6641B93AB9AEA5A25CDBCA19 /* libPods-OneSignalNotificationServiceExtension.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-OneSignalNotificationServiceExtension.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -67,7 +69,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		61302F982E3A1E2D006859CA /* Exceptions for "OneSignalNotificationServiceExtension" folder in "OneSignalNotificationServiceExtension" target */ = {
+		61302F982E3A1E2D006859CA /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -77,18 +79,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		61302F912E3A1E2D006859CA /* OneSignalNotificationServiceExtension */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				61302F982E3A1E2D006859CA /* Exceptions for "OneSignalNotificationServiceExtension" folder in "OneSignalNotificationServiceExtension" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = OneSignalNotificationServiceExtension;
-			sourceTree = "<group>";
-		};
+		61302F912E3A1E2D006859CA /* OneSignalNotificationServiceExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (61302F982E3A1E2D006859CA /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = OneSignalNotificationServiceExtension; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,6 +122,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
+				616C73012EB268DC009AC1AB /* Storyboard.storyboard */,
 			);
 			name = BachHoaHouston;
 			sourceTree = "<group>";
@@ -282,6 +274,7 @@
 				B411D16C5CB44DABA7DFBD35 /* Roboto-Black.ttf in Resources */,
 				AEE58EAFB1CE43078CB584AD /* Roboto-Bold.ttf in Resources */,
 				B15D13083A3640E49965BBD1 /* Roboto-Medium.ttf in Resources */,
+				616C73022EB268DC009AC1AB /* Storyboard.storyboard in Resources */,
 				F8DC2B201FDB440CB388E08B /* Roboto-Regular.ttf in Resources */,
 				C64BA28E57D3A18090050607 /* PrivacyInfo.xcprivacy in Resources */,
 			);
@@ -365,9 +358,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -382,9 +379,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -650,10 +651,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
@@ -723,10 +721,7 @@
 					"-DFOLLY_CFG_NO_COROUTINES=1",
 					"-DFOLLY_HAVE_CLOCK_GETTIME=1",
 				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					" ",
-				);
+				OTHER_LDFLAGS = "$(inherited)  ";
 				REACT_NATIVE_PATH = "${PODS_ROOT}/../../node_modules/react-native";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;

@@ -28,6 +28,7 @@ const LocationDropdown = props => {
   const [address, setAddress] = useState('');
   const [location, setLocation] = useState({});
   const refInput = useRef(null);
+
   useEffect(() => {
     setAddress(props.value);
   }, [props.value]);
@@ -35,6 +36,7 @@ const LocationDropdown = props => {
   useEffect(() => {
     getLocation();
   }, []);
+
   useEffect(() => {
     if (props?.focus) {
       console.log(props?.focus);
