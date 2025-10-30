@@ -516,16 +516,16 @@ const Cart = () => {
     setLoading(true);
     setShowStripePayment(true);
     const testPaymentResult = {
-  paymentId: `test_${Date.now()}`,
-  paymentIntentId: `pi_test_${Date.now()}`,
-  sessionId: `sess_test_${Date.now()}`,
-  total: totalFinal,
-  subtotal: totaloff,
-  tax: 0,
-  currency: 'usd',
-};
-setLoading(true);
-// submitCheckoutWithStripeData(testPaymentResult);
+      paymentId: `test_${Date.now()}`,
+      paymentIntentId: `pi_test_${Date.now()}`,
+      sessionId: `sess_test_${Date.now()}`,
+      total: totalFinal,
+      subtotal: totaloff,
+      tax: 0,
+      currency: 'usd',
+    };
+    setLoading(true);
+    // submitCheckoutWithStripeData(testPaymentResult);
     console.log('newarr:', newarr);
     console.warn('pickup', PickupType);
     console.warn('pickupDate', pickupDate);
@@ -554,11 +554,15 @@ setLoading(true);
     setLoading(false);
   };
 
-  const submitCheckoutWithStripeData = async stripePaymentResult => {
-  };
+  useEffect(() => {
+    console.log(couponDiscount)
+    AsyncStorage.setItem('couponDiscount', couponDiscount.toString())
+  }, [couponDiscount]);
 
- 
-  
+
+
+
+
   const processOrder = async () => {
     setLoading(true);
     try {
@@ -738,7 +742,7 @@ setLoading(true);
         </View>
         {cartdetail && cartdetail.length > 0 ? (
           <ScrollView showsVerticalScrollIndicator={false}>
-              <View style={{ backgroundColor: Constants.lightgreen }}>
+            <View style={{ backgroundColor: Constants.lightgreen }}>
               {cartdetail.map((item, i) => (
                 <View style={[styles.box, { borderBottomWidth: 1 }]} key={i}>
                   <View style={styles.firstpart}>
@@ -1009,44 +1013,44 @@ setLoading(true);
                         </Text>
                       </View>
                     </TouchableOpacity>
-                    
+
                     {/* Details inside the box when selected */}
                     {PickupType === option.value && option.value === 'orderPickup' && (
-                <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
-                  <Text
-                    style={[
-                      styles.boxtxt,
-                      { marginBottom: 10, fontSize: 16, fontWeight: '900' },
-                    ]}>
-                    {t('Pick up in 2 Hours')}
-                  </Text>
-                  <Pressable
-                    onPress={handleDatePickerOpen}
-                    style={{
-                      borderWidth: 1,
-                      borderColor: Constants.customgrey2,
-                      borderRadius: 25,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      paddingHorizontal: 10,
-                    }}>
-                    <Text
-                      style={{
-                        // flex: 1,
-                        height: 40,
-                        color: pickupDate
-                          ? Constants.black
-                          : Constants.customgrey,
-                        fontSize: 16,
-                        fontFamily: FONTS.Regular,
-                        paddingTop: 10,
-                      }}>
-                      {pickupDate
-                        ? moment(pickupDate).format('MM/DD/YYYY')
-                        : t('Select Delivery Date')}
-                    </Text>
-                    {/* <TextInput
+                      <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
+                        <Text
+                          style={[
+                            styles.boxtxt,
+                            { marginBottom: 10, fontSize: 16, fontWeight: '900' },
+                          ]}>
+                          {t('Pick up in 2 Hours')}
+                        </Text>
+                        <Pressable
+                          onPress={handleDatePickerOpen}
+                          style={{
+                            borderWidth: 1,
+                            borderColor: Constants.customgrey2,
+                            borderRadius: 25,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            paddingHorizontal: 10,
+                          }}>
+                          <Text
+                            style={{
+                              // flex: 1,
+                              height: 40,
+                              color: pickupDate
+                                ? Constants.black
+                                : Constants.customgrey,
+                              fontSize: 16,
+                              fontFamily: FONTS.Regular,
+                              paddingTop: 10,
+                            }}>
+                            {pickupDate
+                              ? moment(pickupDate).format('MM/DD/YYYY')
+                              : t('Select Delivery Date')}
+                          </Text>
+                          {/* <TextInput
                     value={
                       pickupDate ? moment(pickupDate).format('MM/DD/YYYY') : ''
                     }
@@ -1062,41 +1066,41 @@ setLoading(true);
                       fontFamily: FONTS.Regular,
                     }}
                   /> */}
-                    <Calendar color="black" />
-                  </Pressable>
-                  <Text
-                    style={[
-                      styles.boxtxt,
-                      {
-                        fontFamily: FONTS.Regular,
-                        marginBottom: 5,
-                        marginTop: 5,
-                        fontSize: 14,
-                        color: Constants.customgrey,
-                        flexDirection: 'column',
-                      },
-                    ]}>
-                    {t(
-                      '*Note: Bach Hoa Houston will hold your order until close of the next business day if your order isn’t picked up within your scheduled pick up date, after that your order will be cancelled and refunded less 5% restocking fee.',
-                    )}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.boxtxt,
-                      {
-                        fontFamily: FONTS.Regular,
-                        marginBottom: 10,
-                        marginTop: 5,
-                        fontSize: 14,
-                        color: Constants.customgrey,
-                        flexDirection: 'column',
-                      },
-                    ]}>
-                    {t(
-                      '*Note: Orders placed before 2 PM are eligible for same-day pickup. Orders placed after 2 PM will be available for pickup the next day.',
-                    )}
-                  </Text>
-                  {/* <DatePicker
+                          <Calendar color="black" />
+                        </Pressable>
+                        <Text
+                          style={[
+                            styles.boxtxt,
+                            {
+                              fontFamily: FONTS.Regular,
+                              marginBottom: 5,
+                              marginTop: 5,
+                              fontSize: 14,
+                              color: Constants.customgrey,
+                              flexDirection: 'column',
+                            },
+                          ]}>
+                          {t(
+                            '*Note: Bach Hoa Houston will hold your order until close of the next business day if your order isn’t picked up within your scheduled pick up date, after that your order will be cancelled and refunded less 5% restocking fee.',
+                          )}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.boxtxt,
+                            {
+                              fontFamily: FONTS.Regular,
+                              marginBottom: 10,
+                              marginTop: 5,
+                              fontSize: 14,
+                              color: Constants.customgrey,
+                              flexDirection: 'column',
+                            },
+                          ]}>
+                          {t(
+                            '*Note: Orders placed before 2 PM are eligible for same-day pickup. Orders placed after 2 PM will be available for pickup the next day.',
+                          )}
+                        </Text>
+                        {/* <DatePicker
                   modal
                   mode="datetime"
                   open={openDatePicker}
@@ -1112,7 +1116,7 @@ setLoading(true);
                   cancelText={t('Cancel')}
                   theme="light"
                 /> */}
-                  {/* <DateTimePickerModal
+                        {/* <DateTimePickerModal
                   isVisible={openDatePicker}
                   mode="date"
                   minimumDate={minDate}
@@ -1131,41 +1135,41 @@ setLoading(true);
                     )}
 
                     {PickupType === option.value && option.value === 'driveUp' && (
-                <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
-                  <Text
-                    style={[
-                      styles.boxtxt,
-                      { marginBottom: 10, fontSize: 16, fontWeight: '900' },
-                    ]}>
-                    {t('Pick up in 2 Hours')}
-                  </Text>
-                  <Pressable
-                    onPress={handleDatePickerOpen}
-                    style={{
-                      borderWidth: 1,
-                      borderColor: Constants.customgrey2,
-                      borderRadius: 25,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      paddingHorizontal: 10,
-                    }}>
-                    <Text
-                      style={{
-                        // flex: 1,
-                        height: 40,
-                        color: pickupDate
-                          ? Constants.black
-                          : Constants.customgrey,
-                        fontSize: 16,
-                        fontFamily: FONTS.Regular,
-                        paddingTop: 10,
-                      }}>
-                      {pickupDate
-                        ? moment(pickupDate).format('MM/DD/YYYY')
-                        : t('Select Delivery Date')}
-                    </Text>
-                    {/* <TextInput
+                      <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
+                        <Text
+                          style={[
+                            styles.boxtxt,
+                            { marginBottom: 10, fontSize: 16, fontWeight: '900' },
+                          ]}>
+                          {t('Pick up in 2 Hours')}
+                        </Text>
+                        <Pressable
+                          onPress={handleDatePickerOpen}
+                          style={{
+                            borderWidth: 1,
+                            borderColor: Constants.customgrey2,
+                            borderRadius: 25,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            paddingHorizontal: 10,
+                          }}>
+                          <Text
+                            style={{
+                              // flex: 1,
+                              height: 40,
+                              color: pickupDate
+                                ? Constants.black
+                                : Constants.customgrey,
+                              fontSize: 16,
+                              fontFamily: FONTS.Regular,
+                              paddingTop: 10,
+                            }}>
+                            {pickupDate
+                              ? moment(pickupDate).format('MM/DD/YYYY')
+                              : t('Select Delivery Date')}
+                          </Text>
+                          {/* <TextInput
                     value={
                       pickupDate ? moment(pickupDate).format('MM/DD/YYYY') : ''
                     }
@@ -1181,40 +1185,40 @@ setLoading(true);
                       fontFamily: FONTS.Regular,
                     }}
                   /> */}
-                    <Calendar color="black" />
-                  </Pressable>
-                  <Text
-                    style={[
-                      styles.boxtxt,
-                      {
-                        fontFamily: FONTS.Regular,
-                        marginBottom: 5,
-                        marginTop: 5,
-                        fontSize: 14,
-                        color: Constants.customgrey,
-                      },
-                    ]}>
-                    {t(
-                      '*Note: Bach Hoa Houston will hold your order until close of the next business day if your order isn’t picked up within your scheduled pick up date, after that your order will be cancelled and refunded less 5% restocking fee.',
-                    )}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.boxtxt,
-                      {
-                        fontFamily: FONTS.Regular,
-                        marginBottom: 10,
-                        marginTop: 5,
-                        fontSize: 14,
-                        color: Constants.customgrey,
-                        flexDirection: 'column',
-                      },
-                    ]}>
-                    {t(
-                      '*Note: Orders placed before 2 PM are eligible for same-day pickup. Orders placed after 2 PM will be available for pickup the next day.',
-                    )}
-                  </Text>
-                  {/* <DateTimePickerModal
+                          <Calendar color="black" />
+                        </Pressable>
+                        <Text
+                          style={[
+                            styles.boxtxt,
+                            {
+                              fontFamily: FONTS.Regular,
+                              marginBottom: 5,
+                              marginTop: 5,
+                              fontSize: 14,
+                              color: Constants.customgrey,
+                            },
+                          ]}>
+                          {t(
+                            '*Note: Bach Hoa Houston will hold your order until close of the next business day if your order isn’t picked up within your scheduled pick up date, after that your order will be cancelled and refunded less 5% restocking fee.',
+                          )}
+                        </Text>
+                        <Text
+                          style={[
+                            styles.boxtxt,
+                            {
+                              fontFamily: FONTS.Regular,
+                              marginBottom: 10,
+                              marginTop: 5,
+                              fontSize: 14,
+                              color: Constants.customgrey,
+                              flexDirection: 'column',
+                            },
+                          ]}>
+                          {t(
+                            '*Note: Orders placed before 2 PM are eligible for same-day pickup. Orders placed after 2 PM will be available for pickup the next day.',
+                          )}
+                        </Text>
+                        {/* <DateTimePickerModal
                   isVisible={openDatePicker}
                   mode="date"
                   minimumDate={minDate}
@@ -1232,38 +1236,38 @@ setLoading(true);
                     )}
 
                     {PickupType === option.value && option.value === 'localDelivery' && (
-                <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
-                  {/* <Text
+                      <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
+                        {/* <Text
                   style={[
                     styles.boxtxt,
                     {marginBottom: 10, fontSize: 16, fontWeight: '900'},
                   ]}>
                   {t('Pick up in 2 Hours')}
                 </Text> */}
-                  <View style={styles.paycovtxt}>
-                    {user?.address ? (
-                      <Text style={styles.locationtxt} numberOfLines={1}>
-                        {user?.ApartmentNo
-                          ? `${user?.ApartmentNo}, ${user?.address}`
-                          : user?.address}
-                      </Text>
-                    ) : (
-                      <Text style={styles.locationtxt} numberOfLines={1}>
-                        {locationadd}
-                      </Text>
-                    )}
-                    <TouchableOpacity
-                      style={{ flexDirection: 'row', width: '40%' }}
-                      onPress={() => navigate('Shipping')}>
-                      <LocationIcon
-                        height={20}
-                        width={20}
-                        color={Constants.pink}
-                      />
-                      <Text style={styles.changadd}>{t('CHANGE ADDRESS')}</Text>
-                    </TouchableOpacity>
-                  </View>
-                  {/* <TextInput
+                        <View style={styles.paycovtxt}>
+                          {user?.address ? (
+                            <Text style={styles.locationtxt} numberOfLines={1}>
+                              {user?.ApartmentNo
+                                ? `${user?.ApartmentNo}, ${user?.address}`
+                                : user?.address}
+                            </Text>
+                          ) : (
+                            <Text style={styles.locationtxt} numberOfLines={1}>
+                              {locationadd}
+                            </Text>
+                          )}
+                          <TouchableOpacity
+                            style={{ flexDirection: 'row', width: '40%' }}
+                            onPress={() => navigate('Shipping')}>
+                            <LocationIcon
+                              height={20}
+                              width={20}
+                              color={Constants.pink}
+                            />
+                            <Text style={styles.changadd}>{t('CHANGE ADDRESS')}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        {/* <TextInput
                   value={localDeliveryAddress.ApartmentNo}
                   onChangeText={text =>
                     setLocalDeliveryAddress({
@@ -1289,7 +1293,7 @@ setLoading(true);
                     marginBottom: 10,
                   }}
                 /> */}
-                  {/* <TextInput
+                        {/* <TextInput
                   value={localDeliveryAddress.securityNo}
                   onChangeText={text =>
                     setLocalDeliveryAddress({
@@ -1315,33 +1319,33 @@ setLoading(true);
                     marginBottom: 10,
                   }}
                 /> */}
-                  <Pressable
-                    onPress={handleDatePickerOpen}
-                    style={{
-                      borderWidth: 1,
-                      borderColor: Constants.customgrey2,
-                      borderRadius: 25,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      paddingHorizontal: 10,
-                    }}>
-                    <Text
-                      style={{
-                        // flex: 1,
-                        height: 40,
-                        color: pickupDate
-                          ? Constants.black
-                          : Constants.customgrey,
-                        fontSize: 16,
-                        fontFamily: FONTS.Regular,
-                        paddingTop: 10,
-                      }}>
-                      {pickupDate
-                        ? moment(pickupDate).format('MM/DD/YYYY')
-                        : t('Select Delivery Date')}
-                    </Text>
-                    {/* <TextInput
+                        <Pressable
+                          onPress={handleDatePickerOpen}
+                          style={{
+                            borderWidth: 1,
+                            borderColor: Constants.customgrey2,
+                            borderRadius: 25,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            paddingHorizontal: 10,
+                          }}>
+                          <Text
+                            style={{
+                              // flex: 1,
+                              height: 40,
+                              color: pickupDate
+                                ? Constants.black
+                                : Constants.customgrey,
+                              fontSize: 16,
+                              fontFamily: FONTS.Regular,
+                              paddingTop: 10,
+                            }}>
+                            {pickupDate
+                              ? moment(pickupDate).format('MM/DD/YYYY')
+                              : t('Select Delivery Date')}
+                          </Text>
+                          {/* <TextInput
                     value={
                       pickupDate ? moment(pickupDate).format('MM/DD/YYYY') : ''
                     }
@@ -1357,10 +1361,10 @@ setLoading(true);
                       fontFamily: FONTS.Regular,
                     }}
                   /> */}
-                    <Calendar color="black" />
-                  </Pressable>
+                          <Calendar color="black" />
+                        </Pressable>
 
-                  {/* <TextInput
+                        {/* <TextInput
                   value={localDeliveryAddress?.zipcode}
                   onChangeText={text =>
                     setLocalDeliveryAddress(prev => ({
@@ -1386,82 +1390,82 @@ setLoading(true);
                     marginTop: 10,
                   }}
                 /> */}
-                  <Dropdown
-                    data={[
-                      ...(!availableZipCodes.some(
-                        zip =>
-                          String(zip.pincode) ===
-                          String(localDeliveryAddress.zipcode),
-                      ) && localDeliveryAddress.zipcode
-                        ? [
-                          {
-                            label: String(localDeliveryAddress.zipcode),
-                            value: String(localDeliveryAddress.zipcode),
-                            isTemporary: true,
-                          },
-                        ]
-                        : []),
-                      ...availableZipCodes.map(zip => ({
-                        label: String(zip.pincode),
-                        value: String(zip.pincode),
-                      })),
-                    ]}
-                    value={String(localDeliveryAddress?.zipcode)}
-                    onChange={item => {
-                      setLocalDeliveryAddress({
-                        ...localDeliveryAddress,
-                        zipcode: String(item.value),
-                      });
-                    }}
-                    placeholder={t('Select Zip Code')}
-                    placeholderStyle={{ color: Constants.customgrey }}
-                    selectedTextStyle={{ color: Constants.black }}
-                    
-                    maxHeight={200}
-                    labelField="label"
-                    valueField="value"
-                    renderItem={item => {
-                      if (item?.isTemporary) return null;
-                      return (
-                        <Text style={{ padding: 10, color: Constants.black }}>
-                          {item.label}
-                        </Text>
-                      );
-                    }}
-                    style={{
-                      flex: 1,
-                      height: 40,
-                      color: Constants.black,
-                      fontSize: 16,
-                      fontFamily: FONTS.Regular,
-                      borderWidth: 1,
-                      borderColor: Constants.customgrey2,
-                      borderRadius: 25,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      paddingHorizontal: 10,
-                      marginTop: 10,
-                    }}
-                  />
+                        <Dropdown
+                          data={[
+                            ...(!availableZipCodes.some(
+                              zip =>
+                                String(zip.pincode) ===
+                                String(localDeliveryAddress.zipcode),
+                            ) && localDeliveryAddress.zipcode
+                              ? [
+                                {
+                                  label: String(localDeliveryAddress.zipcode),
+                                  value: String(localDeliveryAddress.zipcode),
+                                  isTemporary: true,
+                                },
+                              ]
+                              : []),
+                            ...availableZipCodes.map(zip => ({
+                              label: String(zip.pincode),
+                              value: String(zip.pincode),
+                            })),
+                          ]}
+                          value={String(localDeliveryAddress?.zipcode)}
+                          onChange={item => {
+                            setLocalDeliveryAddress({
+                              ...localDeliveryAddress,
+                              zipcode: String(item.value),
+                            });
+                          }}
+                          placeholder={t('Select Zip Code')}
+                          placeholderStyle={{ color: Constants.customgrey }}
+                          selectedTextStyle={{ color: Constants.black }}
 
-                  {localDeliveryAddress?.zipcode &&
-                    availableZipCodes.length > 0 &&
-                    !availableZipCodes.some(
-                      zip => zip.pincode === localDeliveryAddress?.zipcode,
-                    ) && (
-                      <Text
-                        style={{
-                          color: Constants.red,
-                          fontSize: 14,
-                          marginTop: 5,
-                        }}>
-                        {t(
-                          'Selected Zip Code is not available for delivery. Please select a valid Zip Code.',
-                        )}
-                      </Text>
-                    )}
-                  {/* <View
+                          maxHeight={200}
+                          labelField="label"
+                          valueField="value"
+                          renderItem={item => {
+                            if (item?.isTemporary) return null;
+                            return (
+                              <Text style={{ padding: 10, color: Constants.black }}>
+                                {item.label}
+                              </Text>
+                            );
+                          }}
+                          style={{
+                            flex: 1,
+                            height: 40,
+                            color: Constants.black,
+                            fontSize: 16,
+                            fontFamily: FONTS.Regular,
+                            borderWidth: 1,
+                            borderColor: Constants.customgrey2,
+                            borderRadius: 25,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            paddingHorizontal: 10,
+                            marginTop: 10,
+                          }}
+                        />
+
+                        {localDeliveryAddress?.zipcode &&
+                          availableZipCodes.length > 0 &&
+                          !availableZipCodes.some(
+                            zip => zip.pincode === localDeliveryAddress?.zipcode,
+                          ) && (
+                            <Text
+                              style={{
+                                color: Constants.red,
+                                fontSize: 14,
+                                marginTop: 5,
+                              }}>
+                              {t(
+                                'Selected Zip Code is not available for delivery. Please select a valid Zip Code.',
+                              )}
+                            </Text>
+                          )}
+                        {/* <View
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -1503,57 +1507,57 @@ setLoading(true);
                     }}
                   />
                 )} */}
-                  <Text
-                    style={[
-                      styles.boxtxt,
-                      {
-                        fontFamily: FONTS.Regular,
-                        marginBottom: 10,
-                        marginTop: 5,
-                        fontSize: 14,
-                        color: Constants.customgrey,
-                      },
-                    ]}>
-                    {t(
-                      'Note: We currently deliver only to selected ZIP codes. Orders placed before 8 pm are eligible for next day delivery. Orders placed after 8pm will be available for delivery in 2 days.',
-                    )}
-                  </Text>
+                        <Text
+                          style={[
+                            styles.boxtxt,
+                            {
+                              fontFamily: FONTS.Regular,
+                              marginBottom: 10,
+                              marginTop: 5,
+                              fontSize: 14,
+                              color: Constants.customgrey,
+                            },
+                          ]}>
+                          {t(
+                            'Note: We currently deliver only to selected ZIP codes. Orders placed before 8 pm are eligible for next day delivery. Orders placed after 8pm will be available for delivery in 2 days.',
+                          )}
+                        </Text>
                       </View>
                     )}
 
                     {PickupType === option.value && option.value === 'shipping' && (
-                <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
-                  {/* <Text
+                      <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
+                        {/* <Text
                   style={[
                     styles.boxtxt,
                     {marginBottom: 10, fontSize: 16, fontWeight: '900'},
                   ]}>
                   {t('Pick up in 2 Hours')}
                 </Text> */}
-                  <View style={styles.paycovtxt}>
-                    {user?.address ? (
-                      <Text style={styles.locationtxt} numberOfLines={1}>
-                        {user?.ApartmentNo
-                          ? `${user?.ApartmentNo}, ${user?.address}`
-                          : user?.address}
-                      </Text>
-                    ) : (
-                      <Text style={styles.locationtxt} numberOfLines={1}>
-                        {locationadd}
-                      </Text>
-                    )}
-                    <TouchableOpacity
-                      style={{ flexDirection: 'row', width: '40%' }}
-                      onPress={() => navigate('Shipping')}>
-                      <LocationIcon
-                        height={20}
-                        width={20}
-                        color={Constants.pink}
-                      />
-                      <Text style={styles.changadd}>{t('CHANGE ADDRESS')}</Text>
-                    </TouchableOpacity>
-                  </View>
-                  {/* <TextInput
+                        <View style={styles.paycovtxt}>
+                          {user?.address ? (
+                            <Text style={styles.locationtxt} numberOfLines={1}>
+                              {user?.ApartmentNo
+                                ? `${user?.ApartmentNo}, ${user?.address}`
+                                : user?.address}
+                            </Text>
+                          ) : (
+                            <Text style={styles.locationtxt} numberOfLines={1}>
+                              {locationadd}
+                            </Text>
+                          )}
+                          <TouchableOpacity
+                            style={{ flexDirection: 'row', width: '40%' }}
+                            onPress={() => navigate('Shipping')}>
+                            <LocationIcon
+                              height={20}
+                              width={20}
+                              color={Constants.pink}
+                            />
+                            <Text style={styles.changadd}>{t('CHANGE ADDRESS')}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        {/* <TextInput
                   value={localDeliveryAddress.ApartmentNo}
                   onChangeText={text =>
                     setLocalDeliveryAddress({
@@ -1579,7 +1583,7 @@ setLoading(true);
                     marginBottom: 10,
                   }}
                 /> */}
-                  {/* <TextInput
+                        {/* <TextInput
                   value={localDeliveryAddress.securityNo}
                   onChangeText={text =>
                     setLocalDeliveryAddress({
@@ -1605,7 +1609,7 @@ setLoading(true);
                     marginBottom: 10,
                   }}
                 /> */}
-                  {/* <View
+                        {/* <View
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -1646,21 +1650,21 @@ setLoading(true);
                     }}
                   />
                 )} */}
-                  <Text
-                    style={[
-                      styles.boxtxt,
-                      {
-                        fontFamily: FONTS.Regular,
-                        marginBottom: 10,
-                        marginTop: 5,
-                        fontSize: 14,
-                        color: Constants.customgrey,
-                      },
-                    ]}>
-                    {t(
-                      'Note: We currently deliver to 49/50 U.S. states. Unfortunately, we do not deliver to Hawaii at this time.',
-                    )}
-                  </Text>
+                        <Text
+                          style={[
+                            styles.boxtxt,
+                            {
+                              fontFamily: FONTS.Regular,
+                              marginBottom: 10,
+                              marginTop: 5,
+                              fontSize: 14,
+                              color: Constants.customgrey,
+                            },
+                          ]}>
+                          {t(
+                            'Note: We currently deliver to 49/50 U.S. states. Unfortunately, we do not deliver to Hawaii at this time.',
+                          )}
+                        </Text>
                       </View>
                     )}
                   </View>
@@ -1705,7 +1709,7 @@ setLoading(true);
                         });
                         return;
                       }
-                      
+
                       try {
                         const response = await Post(
                           `ValidateCouponforUser`,
@@ -1716,7 +1720,7 @@ setLoading(true);
                           },
                           {},
                         );
-                        
+
                         if (response.status) {
                           setCoupon(true);
                           setCouponDiscount(response.data.discount);
@@ -2399,26 +2403,26 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Constants.white,
   },
- box: {
-  paddingTop: 24,
-  paddingHorizontal: 20,
-  paddingBottom: 10,
-  borderBottomWidth: 1,
-  borderColor: Constants.customgrey3,
-  marginHorizontal: 10,
-  // Add these new styles:
-  marginVertical: 8,
-  borderRadius: 15,
-  backgroundColor: Constants.white,
-  shadowColor: 'black',
-  shadowOffset: {
-    width: 0,
-    height: 2,
+  box: {
+    paddingTop: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderColor: Constants.customgrey3,
+    marginHorizontal: 10,
+    // Add these new styles:
+    marginVertical: 8,
+    borderRadius: 15,
+    backgroundColor: Constants.white,
+    shadowColor: 'black',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 1,
-},
   firstpart: {
     flexDirection: 'row',
     // alignItems: 'center',
@@ -2516,27 +2520,27 @@ const styles = StyleSheet.create({
     // backgroundColor: Constants.lightgreen,
     // flex: 1,
     paddingBottom: 70,
-   
+
   },
   totalcov: {
     backgroundColor: Constants.white,
     // marginVertical: 10,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius:30,
-    marginTop:10,
-     backgroundColor: Constants.white,
-  borderWidth: 1,
-  borderColor: Constants.customgrey3,
+    borderRadius: 30,
+    marginTop: 10,
+    backgroundColor: Constants.white,
+    borderWidth: 1,
+    borderColor: Constants.customgrey3,
 
-  // 👇 Shadow for Android
-  elevation: 8, // try 8–12 for stronger effect
+    // 👇 Shadow for Android
+    elevation: 8, // try 8–12 for stronger effect
 
-  // 👇 For iOS (optional)
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.25,
-  shadowRadius: 4,
+    // 👇 For iOS (optional)
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
   paycov: {
     backgroundColor: Constants.white,
@@ -2732,25 +2736,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: FONTS.Bold,
   },
-radioView: {
-  marginVertical: 5,
-  paddingVertical: 10,
-  paddingHorizontal: 10,
-  marginHorizontal: 5,
-  borderRadius: 20,
-  backgroundColor: Constants.white,
-  borderWidth: 1,
-  borderColor: Constants.customgrey3,
+  radioView: {
+    marginVertical: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    marginHorizontal: 5,
+    borderRadius: 20,
+    backgroundColor: Constants.white,
+    borderWidth: 1,
+    borderColor: Constants.customgrey3,
 
 
-  elevation: 6,
+    elevation: 6,
 
- 
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.25,
-  shadowRadius: 4,
-},
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
 
 
 
