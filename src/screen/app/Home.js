@@ -611,6 +611,7 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     width: Dimensions.get('window').width < 500 ? 120 : 150,
     // textTransform: 'capitalize',
+    // 
     paddingHorizontal: 2,
   },
 });
