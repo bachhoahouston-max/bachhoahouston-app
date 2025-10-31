@@ -1,4 +1,4 @@
-import React, {useCallback, useRef} from 'react';
+import React, {useCallback, useContext, useRef} from 'react';
 import {
   Animated,
   Dimensions,
@@ -9,7 +9,8 @@ import {
   View,
 } from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {HistoryIcon, ProductsIcon, WorkIcon} from '../../Theme';
+import {useNavigationState, useIsFocused} from '@react-navigation/native';
+import {ClipboardList, History as HistoryIcon, Package} from 'lucide-react-native';
 import Constants, {FONTS} from '../Assets/Helpers/constant';
 import {useTranslation} from 'react-i18next';
 import Orders from '../screen/Employee/Order';
@@ -22,65 +23,56 @@ export const Employeetab = () => {
   const {t} = useTranslation();
   const TabArr = [
     {
-      iconActive: (
-        <WorkIcon color={Constants.linearcolor} height={35} width={35} />
-      ),
-      iconInActive: (
-        <WorkIcon color={Constants.customgrey3} height={35} width={35} />
-      ),
+      icon: ClipboardList,
       component: Orders,
       routeName: 'Orders',
       name: 'Orders',
     },
     {
-      iconActive: (
-        <HistoryIcon color={Constants.linearcolor} height={35} width={35} />
-      ),
-      iconInActive: (
-        <HistoryIcon color={Constants.customgrey3} height={35} width={35} />
-      ),
+      icon: HistoryIcon,
       component: History,
       routeName: 'History',
       name: 'History',
     },
     {
-      iconActive: (
-        <ProductsIcon color={Constants.linearcolor} height={30} width={30} />
-      ),
-      iconInActive: (
-        <ProductsIcon color={Constants.customgrey3} height={30} width={30} />
-      ),
+      icon: Package,
       component: Products,
       routeName: 'Products',
       name: 'Products',
     },
   ];
 
-  const TabButton = useCallback(
-    ({accessibilityState, onPress, onclick, item, index}) => {
-      const isSelected = accessibilityState?.selected;
-      return (
-        <View style={styles.tabBtnView}>
+  const TabButton = ({onPress, onclick, item, index}) => {
+    const isFocused = useIsFocused();
+    const IconComponent = item.icon;
+
+    return (
+      <View style={styles.tabBtnView}>
+        <View style={styles.iconContainer}>
           <TouchableOpacity
             onPress={onclick ? onclick : onPress}
+            activeOpacity={0.7}
             style={[
               styles.tabBtn,
-              // isSelected ? styles.tabBtnActive : styles.tabBtnInActive,
+              isFocused && styles.tabBtnActive,
             ]}>
-            {isSelected ? item.iconActive : item.iconInActive}
+            <IconComponent 
+              color={isFocused ? '#2E7D32' : Constants.customgrey3} 
+              size={26}
+              strokeWidth={isFocused ? 2.5 : 2}
+            />
           </TouchableOpacity>
-         <Text
-  style={[
-    styles.tabtxt,
-    {color: Constants.white},
-  ]}>
-            {t(item.name)}
-          </Text>
         </View>
-      );
-    },
-    [],
-  );
+        <Text
+          style={[
+            styles.tabtxt,
+            { color: isFocused ? Constants.white : Constants.customgrey3 },
+          ]}>
+          {t(item.name)}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <Tab.Navigator
@@ -91,16 +83,15 @@ export const Employeetab = () => {
         tabBarStyle: {
           position: 'absolute',
           width: '100%',
-          height: 80,  // Increased height
+          minHeight: Platform?.OS === 'android' ? 95 : 95,
           backgroundColor: Constants.greennew,
           borderTopRightRadius: 15,
           borderTopLeftRadius: 15,
           borderTopWidth: 0,
-          paddingTop: 10,  // Added padding at the top
-          justifyContent: 'flex-start',  // Align items to the start
+          paddingTop: 20,
         },
         tabBarItemStyle: {
-          paddingTop: 8,  // Added padding to each tab item
+          // Removed custom padding to use default styling
         },
       }}>
       {TabArr.map((item, index) => {
@@ -124,28 +115,36 @@ export const Employeetab = () => {
 
 const styles = StyleSheet.create({
   tabBtnView: {
-    // backgroundColor: isSelected ? 'blue' : '#FFFF',
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    marginHorizontal: 5,
+  },
+  iconContainer: {
+    position: 'relative',
   },
   tabBtn: {
-    height: 40,
-    width: 40,
-    borderRadius: 15,
+    height: 50,
+    width: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 4, // Added top margin to the icon container
+    backgroundColor: 'transparent',
   },
   tabBtnActive: {
-    backgroundColor: 'transparent',
-  },
-  tabBtnInActive: {
-    backgroundColor: 'transparent',
+    backgroundColor: '#FFFFFF',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   tabtxt: {
-    color: 'white',
+    color: Constants.white,
     fontFamily: FONTS.Medium,
-    
+    marginTop: 4,
   },
 });

@@ -141,7 +141,7 @@ export default Categories;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Constants.lightgreen,
+    backgroundColor: Constants.lightgrbeen,
   },
   inpcov: {
     // borderWidth: 1,

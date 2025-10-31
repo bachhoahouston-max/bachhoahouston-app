@@ -2544,16 +2544,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Constants.lightgreen,
   },
-  toppart: {
-    backgroundColor: Constants.greennew,
-    paddingTop: 10,
-    // paddingBottom: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    // padding: 10,
-    paddingBottom: 10,
-  },
+toppart: {
+  backgroundColor: Constants.greennew,
+  paddingTop: 20,
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingBottom: 15,
+
+ 
+  borderBottomLeftRadius: 15,
+  borderBottomRightRadius: 15,
+
+  
+  overflow: 'hidden',
+},
   addbtn: {
     backgroundColor: Constants.pink,
     color: Constants.white,

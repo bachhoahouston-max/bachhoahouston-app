@@ -408,12 +408,11 @@ box: {
 
     dropdown: {
         height: 50,
-        borderColor: 'gray',
-        borderWidth: 0.5,
-        borderRadius: 0,
-        paddingHorizontal: 8,
-        backgroundColor: Constants.green
-    },
+    paddingHorizontal: 8,
+    backgroundColor: '#2E7D32',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+},
     icon: {
         marginRight: 5,
     },
@@ -428,6 +427,7 @@ box: {
     },
     placeholderStyle: {
         fontSize: 16,
+         color: Constants.white,
     },
     selectedTextStyle: {
         fontSize: 16,

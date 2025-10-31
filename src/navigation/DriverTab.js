@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useContext, useRef } from 'react';
 import {
   Animated,
   Dimensions,
@@ -9,13 +9,13 @@ import {
   View,
 } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { HistoryIcon, ProductsIcon, WorkIcon } from '../../Theme';
+import { useNavigationState, useIsFocused } from '@react-navigation/native';
+import { ClipboardList, History as HistoryIcon, Award } from 'lucide-react-native';
 import Constants, { FONTS } from '../Assets/Helpers/constant';
 import Work from '../screen/driver/Work';
 import History from '../screen/driver/History';
 import Rewards from '../screen/driver/Rewards';
 import { useTranslation } from 'react-i18next';
-import TestMap from '../screen/driver/TestMap';
 
 const Tab = createBottomTabNavigator();
 
@@ -23,63 +23,57 @@ export const Drivertab = () => {
   const { t } = useTranslation();
   const TabArr = [
     {
-      iconActive: (
-        <WorkIcon color={Constants.white} height={35} width={35} />
-      ),
-      iconInActive: (
-        <WorkIcon color={Constants.white} height={35} width={35} />
-      ),
+      icon: ClipboardList,
       component: Work,
-      // component: TestMap,
       routeName: 'Work',
       name: 'Assigned Orders',
     },
     {
-      iconActive: (
-        <HistoryIcon color={Constants.white} height={35} width={35} />
-      ),
-      iconInActive: (
-        <HistoryIcon color={Constants.white} height={35} width={35} />
-      ),
+      icon: HistoryIcon,
       component: History,
       routeName: 'History',
       name: 'History',
     },
+    // Uncomment and update if you want to include Rewards tab
     // {
-    //   iconActive: <HistoryIcon color={Constants.linearcolor} height={35} width={35} />,
-    //   iconInActive: <HistoryIcon color={Constants.tabgrey} height={35} width={35} />,
+    //   icon: Award,
     //   component: Rewards,
     //   routeName: 'Rewards',
     //   name: 'Rewards',
     // },
   ];
 
-  const TabButton = useCallback(
-    ({ accessibilityState, onPress, onclick, item, index }) => {
-      const isSelected = accessibilityState?.selected;
-      return (
-        <View style={styles.tabBtnView}>
+  const TabButton = ({ onPress, onclick, item, index }) => {
+    const isFocused = useIsFocused();
+    const IconComponent = item.icon;
+
+    return (
+      <View style={styles.tabBtnView}>
+        <View style={styles.iconContainer}>
           <TouchableOpacity
             onPress={onclick ? onclick : onPress}
+            activeOpacity={0.7}
             style={[
               styles.tabBtn,
-              // isSelected ? styles.tabBtnActive : styles.tabBtnInActive,
+              isFocused && styles.tabBtnActive,
             ]}>
-            {isSelected ? item.iconActive : item.iconInActive}
+            <IconComponent 
+              color={isFocused ? '#2E7D32' : Constants.customgrey3} 
+              size={26}
+              strokeWidth={isFocused ? 2.5 : 2}
+            />
           </TouchableOpacity>
-         <Text
-  style={[
-    styles.tabtxt,
-    { color: Constants.white },
-  ]}>
-  {t(item.name)}
-</Text>
         </View>
-      );
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+        <Text
+          style={[
+            styles.tabtxt,
+            { color: isFocused ? Constants.white : Constants.customgrey3 },
+          ]}>
+          {t(item.name)}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <Tab.Navigator
@@ -90,13 +84,12 @@ export const Drivertab = () => {
         tabBarStyle: {
           position: 'absolute',
           width: '100%',
-          minHeight: Platform?.OS === 'android' ? 70 : 90,
+          minHeight: Platform?.OS === 'android' ? 95 : 95,
           backgroundColor: Constants.greennew,
           borderTopRightRadius: 15,
           borderTopLeftRadius: 15,
           borderTopWidth: 0,
-          paddingTop: 10,
-          //   paddingTop: Platform.OS === 'ios' ? 10 : 0,
+          paddingTop: 20,
         },
       }}>
       {TabArr.map((item, index) => {
@@ -120,27 +113,36 @@ export const Drivertab = () => {
 
 const styles = StyleSheet.create({
   tabBtnView: {
-    // backgroundColor: isSelected ? 'blue' : '#FFFF',
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    marginHorizontal: 5,
+  },
+  iconContainer: {
+    position: 'relative',
   },
   tabBtn: {
-    height: 40,
-    width: 40,
-    borderRadius: 15,
+    height: 50,
+    width: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
   tabBtnActive: {
-    backgroundColor: Constants.white,
-  },
-  tabBtnInActive: {
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   tabtxt: {
-    color: Constants.black,
-    // fontWeight:'400',
+    color: Constants.white,
     fontFamily: FONTS.Medium,
+    marginTop: 4,
   },
 });

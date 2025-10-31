@@ -292,9 +292,15 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
     <>
       <Header />
       {/* <FontTest /> */}
-      <TouchableOpacity style={{ backgroundColor: Constants.greennew, paddingBottom: 15 }}
-        onPress={() => navigate('Searchpage')}
-      >
+      <TouchableOpacity 
+  style={{ 
+    backgroundColor: '#2E7D32', 
+    paddingBottom: 25,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20
+  }}
+  onPress={() => navigate('Searchpage')}
+>
         <View
           style={[styles.inpcov, { height: 45 }]}
         >
@@ -359,7 +365,7 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
         <Image
           source={{ uri: item.image }}
           style={{
-            height: 180,
+            height: 230,
             width: width2,
             borderRadius: 20,
             alignSelf: 'center',
@@ -379,12 +385,12 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
                 style={{ flexDirection: 'row' }}
                 onPress={() => navigate('CategoryFilter', { item: 'All', name: 'All Categories' })}>
                 <Text style={styles.seealltxt}>{t('See all')}</Text>
-                <RightarrowIcon
+                {/* <RightarrowIcon
                   height={17}
                   width={17}
                   style={{ alignSelf: 'center' }}
-                  color={Constants.pink}
-                />
+                  color={'#2E7D32'}
+                /> */}
               </TouchableOpacity>
             </View>
 
@@ -417,12 +423,15 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
                 </TouchableOpacity>
               )}
             />
-
+<View style={{ height: 24, backgroundColor: '#E8E8E8', marginVertical: 15 }} />
             <Sale setIsSale={setIsSale} />
-
+<View style={{ height: 24, backgroundColor: '#E8E8E8', marginVertical: 15 }} />
             {/* Top Selling Header */}
             <View style={styles.covline}>
-              <Text style={styles.categorytxt}>{t('All Products')}</Text>
+               <Text style={[styles.categorytxt, { marginLeft: 8 }]}>
+    {t('All Products')}
+  </Text>
+              
               <TouchableOpacity
                 style={{ flexDirection: 'row' }}
                 onPress={() =>
@@ -432,12 +441,12 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
                   })
                 }>
                 <Text style={styles.seealltxt}>{t('See all')}</Text>
-                <RightarrowIcon
+                {/* <RightarrowIcon
                   height={17}
                   width={17}
                   style={{ alignSelf: 'center' }}
                   color={Constants.pink}
-                />
+                /> */}
               </TouchableOpacity>
             </View>
           </>
@@ -570,16 +579,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     // backgroundColor:Constants.red
   },
-  seealltxt: {
-    fontSize: 18,
-    color: Constants.pink,
-    fontFamily: FONTS.Bold,
-    marginHorizontal: 10,
-  },
+ seealltxt: {
+  fontSize: 18,
+  color: '#2E7D32',
+  fontFamily: FONTS.Bold,
+  marginHorizontal: 10,
+  borderWidth: 1,
+  borderColor: '#2E7D32',
+  borderRadius: 20,
+  paddingHorizontal: 15,
+  paddingVertical: 2,
+},
   categorytxt: {
     fontSize: 20,
     color: Constants.black,
-    fontFamily: FONTS.Bold,
+    // fontFamily: FONTS.Bold,
+    fontWeight: '500', 
   },
   covline: {
     flexDirection: 'row',

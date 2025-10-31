@@ -50,6 +50,7 @@ const ProductCard = ({
             uri: item?.varients?.[0]?.image?.[0] || '',
           }}
           style={styles.cardimg}
+            resizeMode="contain"
         />
         
         {/* Timer Badge on Image */}
@@ -105,28 +106,31 @@ const ProductCard = ({
               alignItems: 'center',
               gap: 5,
             }}>
-            {item?.price_slot?.[0]?.other_price && (
-              <Text style={styles.maintxt}>
-                {Currency}
-                {item.price_slot[0].other_price || ''}
-              </Text>
-            )}
-            {salePrice !== null && (
-              <Text style={styles.maintxt}>
-                {Currency}
-                {saleVarient?.our_price || ''}
-              </Text>
-            )}
-            {(salePrice !== null
-              ? !!salePrice
-              : !!item?.price_slot?.[0]?.our_price) && (
-                <Text style={[styles.disctxt, { color: salePrice !== null ? '#FF0000' : Constants.black }]}>
-                  {Currency}
-                  {salePrice !== null
-                    ? salePrice || ''
-                    : item?.price_slot?.[0]?.our_price || ''}
-                </Text>
-              )}
+           {item?.price_slot?.[0]?.other_price && (
+  <Text style={[styles.maintxt, { fontFamily: FONTS.Bold }]}>
+    {`${Currency} `}
+    {item.price_slot[0].other_price || ''}
+  </Text>
+)}
+{salePrice !== null && (
+  <Text style={[styles.maintxt, { fontFamily: FONTS.Bold }]}>
+    {`${Currency} `}
+    {saleVarient?.our_price || ''}
+  </Text>
+)}
+{(salePrice !== null
+  ? !!salePrice
+  : !!item?.price_slot?.[0]?.our_price) && (
+    <Text style={[styles.disctxt, { 
+      color: salePrice !== null ? '#FF0000' : Constants.black,
+      fontFamily: FONTS.Bold 
+    }]}>
+      {`${Currency} `}
+      {salePrice !== null
+        ? salePrice || ''
+        : item?.price_slot?.[0]?.our_price || ''}
+    </Text>
+  )}
           </View>
 
           <View>
@@ -247,8 +251,8 @@ card: {
 },
   cardimg: {
      height: 150,
-    width: 150,
-    resizeMode: 'cover',
+    width: '100%',
+    resizeMode: 'stretch',
     borderRadius: 10,
   },
 cardContent: {
@@ -284,24 +288,24 @@ cardContent: {
   disctxt: {
     fontSize: 16,
     color: Constants.black,
-    fontFamily: FONTS.Bold,
+    fontWeight: '900',
   },
   maintxt: {
     fontSize: 16,
     color: Constants.customgrey,
-    fontFamily: FONTS.Medium,
+    fontFamily: FONTS.Bold,
     textDecorationLine: 'line-through',
   },
 pluscov: {
   position: 'absolute',
   bottom: 5,  
-  right: 1,   
+  right: -6,   
   minWidth: 40,
   minHeight: 40,
   justifyContent: 'center',
   alignItems: 'center',
   borderRadius: 20,
-  backgroundColor: Constants.pink,
+  backgroundColor:'#2E7D32',
 },
 addcov: {
   position: 'absolute',
@@ -313,7 +317,7 @@ addcov: {
   overflow: 'hidden',
 },
   minus: {
-    backgroundColor: Constants.pink,
+    backgroundColor: '#2E7D32',
     width: 30,
     height: '100%',
     justifyContent: 'center',
@@ -338,7 +342,7 @@ addcov: {
     // alignSelf: 'center'
   },
   plus3: {
-    backgroundColor: Constants.pink,
+    backgroundColor: '#2E7D32',
     width: 30,
     height: '100%',
     justifyContent: 'center',

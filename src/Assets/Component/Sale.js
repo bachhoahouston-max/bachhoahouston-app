@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity ,Image} from 'react-native';
 import React, { use, useCallback, useContext, useEffect, useState } from 'react';
 import { RightarrowIcon } from '../../../Theme';
 import Constants, { FONTS } from '../Helpers/constant';
@@ -169,17 +169,39 @@ const Sale = ({ setIsSale }) => {
 
   return (
   <>
-    <View style={{ marginBottom: 5, marginHorizontal: 15 }}>
+    <View style={{ marginBottom: 5, marginHorizontal: 13 }}>
+      
       <View style={styles.covline}>
-        <View style={styles.titleRow}>
-          <Text style={{ fontSize: 22, color: Constants.black, fontFamily: 'Poppins-Bold', fontWeight: '650' }}>{t('Offer of the week')}</Text>
-          <View style={styles.liveStatus}>
-            <View style={styles.liveDot} />
-            <Text style={styles.liveText}>
-              {countdown[saleData[0]?._id]?.status || t('Sale is live')}
+        
+       <View style={styles.titleRow}>
+        <View style={{ alignItems: 'flex-start' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ fontSize: 22, color: Constants.black,  fontWeight: '500' }}>
+              {t('Offer of the week')}
             </Text>
+            <Image 
+              source={require('../Images/zap.png')} 
+              style={{ 
+                width: 20, 
+                height: 20,
+                marginLeft: 5,
+                opacity: (!saleData || saleData.length === 0) ? 0.5 : 1
+              }}
+              resizeMode="contain"
+            />
           </View>
+          {(!saleData || saleData.length === 0) && (
+            <Text style={{ 
+              fontSize: 14, 
+              color: Constants.grey, 
+              fontFamily: 'Poppins-Regular',
+              marginTop: 2
+            }}>
+              {t('No sale is live')}
+            </Text>
+          )}
         </View>
+      </View>
       </View>
 
       <FlatList
@@ -227,7 +249,8 @@ const styles = {
   categorytxt: {
     fontSize: 20,
     color: Constants.black,
-    fontFamily: FONTS.Bold,
+    // fontFamily: FONTS.Bold,
+    fontWeight: '500',
   },
   seealltxt: {
     fontSize: 18,

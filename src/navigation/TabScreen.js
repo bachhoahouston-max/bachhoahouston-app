@@ -9,21 +9,10 @@ import {
   View,
 } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import {
-  CartFilledIcon,
-  CartIcon,
-  CategoriesFilledIcon,
-  CategoriesIcon,
-  HomeFilledIcon,
-  HomeIcon,
-  OrdersFilledIcon,
-  OrdersIcon,
-  OrdersIconFilled,
-  OrdersIconNone,
-  ReferalIcon,
-} from '../../Theme';
+import { useNavigationState, useIsFocused } from '@react-navigation/native';
+import { Home, LayoutDashboard, BringToFront, ShoppingCart } from 'lucide-react-native';
 import Constants, { FONTS } from '../Assets/Helpers/constant';
-import Home from '../screen/app/Home';
+import HomeScreen from '../screen/app/Home';
 import Categories from '../screen/app/Categories';
 import Referal from '../screen/app/Referal';
 import Cart from '../screen/app/Cart';
@@ -39,7 +28,7 @@ const Stack = createStackNavigator();
 
 const HomeStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="HomeScreen" component={Home} />
+    <Stack.Screen name="HomeScreen" component={HomeScreen} />
     <Stack.Screen name="Products" component={Products} />
   </Stack.Navigator>
 );
@@ -69,77 +58,72 @@ export const TabNav = () => {
 
 const TabArr = [
   {
-    iconActive: <HomeFilledIcon color="#2E7D32" height={24} />, // Filled icon active pe
-    iconInActive: <HomeIcon color={Constants.customgrey3} height={24} />, // Outline icon inactive pe
+    icon: Home,
     component: HomeStack,
     routeName: 'Home',
     name: 'Home',
   },
   {
-    iconActive: <CategoriesFilledIcon color="#2E7D32" height={25} />,
-    iconInActive: (
-      <CategoriesIcon color={Constants.customgrey3} height={24} />
-    ),
+    icon: LayoutDashboard,
     component: CategoriesStack,
     routeName: 'Categories',
     name: 'Categories',
   },
   {
-    iconActive: <OrdersIconFilled color="#2E7D32" height={33} />,
-    iconInActive: (
-      <OrdersIconNone color={Constants.customgrey3} height={30} />
-    ),
+    icon: BringToFront,
     component: OrdersStack,
     routeName: 'Orders',
     name: 'Orders',
   },
   {
-    iconActive: <CartFilledIcon color="#2E7D32" height={26} />,
-    iconInActive: <CartIcon color={Constants.customgrey3} height={26} />,
+    icon: ShoppingCart,
     component: CartStack,
     routeName: 'Cart',
     name: 'Cart',
   },
 ];
 
-  const TabButton = useCallback(
-    ({ accessibilityState, onPress, onclick, item, index }) => {
-      const isSelected = accessibilityState?.selected;
-      const isCartTab = item.routeName === 'Cart';
-      const cartCount = cartdetail?.length || 0;
+  const TabButton = ({ onPress, onclick, item, index }) => {
+    const isFocused = useIsFocused();
+    const isCartTab = item.routeName === 'Cart';
+    const cartCount = cartdetail?.length || 0;
+    
+    const IconComponent = item.icon;
 
-      return (
-        <View style={styles.tabBtnView}>
-          <View style={styles.iconContainer}>
-            <TouchableOpacity
-              onPress={onclick ? onclick : onPress}
-              style={[
-                styles.tabBtn,
-               isSelected && { backgroundColor: 'white' },
-              ]}>
-              {isSelected ? item.iconActive : item.iconInActive}
-            </TouchableOpacity>
-            {isCartTab && cartCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>
-                  {cartCount > 99 ? '99+' : cartCount}
-                </Text>
-              </View>
-            )}
-          </View>
-          <Text
+    return (
+      <View style={styles.tabBtnView}>
+        <View style={styles.iconContainer}>
+          <TouchableOpacity
+            onPress={onclick ? onclick : onPress}
+            activeOpacity={0.7}
             style={[
-              styles.tabtxt,
-              { color: isSelected ? Constants.white : Constants.customgrey3 },
+              styles.tabBtn,
+              isFocused && styles.tabBtnActive,
             ]}>
-            {t(item.name)}
-          </Text>
+            <IconComponent 
+              color={isFocused ? '#2E7D32' : Constants.customgrey3} 
+              size={26}
+              strokeWidth={isFocused ? 2.5 : 2}
+            />
+          </TouchableOpacity>
+          {isCartTab && cartCount > 0 && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>
+                {cartCount > 99 ? '99+' : cartCount}
+              </Text>
+            </View>
+          )}
         </View>
-      );
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cartdetail],
-  );
+        <Text
+          style={[
+            styles.tabtxt,
+            { color: isFocused ? Constants.white : Constants.customgrey3 },
+          ]}>
+          {t(item.name)}
+        </Text>
+      </View>
+    );
+  };
 
   return (
     <Tab.Navigator
@@ -150,14 +134,12 @@ const TabArr = [
         tabBarStyle: {
           position: 'absolute',
           width: '100%',
-          minHeight: Platform?.OS === 'android' ? 70 : 90,
-          backgroundColor: Constants.greennew,
+          minHeight: Platform?.OS === 'android' ? 95 : 95,
+          backgroundColor: '#2E7D32',
           borderTopRightRadius: 15,
           borderTopLeftRadius: 15,
           borderTopWidth: 0,
           paddingTop: 20,
-
-          //   paddingTop: Platform.OS === 'ios' ? 10 : 0,
         },
       }}>
       {TabArr.map((item, index) => {
@@ -181,31 +163,37 @@ const TabArr = [
 
 const styles = StyleSheet.create({
   tabBtnView: {
-    // backgroundColor: isSelected ? 'blue' : '#FFFF',
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    marginHorizontal: 5,
   },
   iconContainer: {
     position: 'relative',
   },
   tabBtn: {
-    height: 40,
-    width: 40,
-    borderRadius: 20,
+    height: 50,
+    width: 50,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
   tabBtnActive: {
-    backgroundColor: Constants.white,
-  },
-  tabBtnInActive: {
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   tabtxt: {
     color: Constants.black,
-    // fontWeight:'400',
     fontFamily: FONTS.Medium,
+    marginTop: 4,
   },
   badge: {
     position: 'absolute',

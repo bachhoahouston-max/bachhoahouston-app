@@ -193,7 +193,7 @@ const Account = props => {
               <Text style={styles.protxt}>{t('My orders')}</Text>
             </View>
             <RightarrowIcon
-              color={Constants.saffron}
+              color={'#2E7D32'}
               height={15}
               width={15}
               style={styles.aliself}
@@ -209,7 +209,7 @@ const Account = props => {
               <Text style={styles.protxt}>{t('My address')}</Text>
             </View>
             <RightarrowIcon
-              color={Constants.saffron}
+              color={'#2E7D32'}
               height={15}
               width={15}
               style={styles.aliself}
@@ -237,7 +237,7 @@ const Account = props => {
               <Text style={styles.protxt}>{t('Notifications')}</Text>
             </View>
             <RightarrowIcon
-              color={Constants.saffron}
+              color={'#2E7D32'}
               height={15}
               width={15}
               style={styles.aliself}
@@ -253,7 +253,7 @@ const Account = props => {
               <Text style={styles.protxt}>{t('Return Policy')}</Text>
             </View>
             <RightarrowIcon
-              color={Constants.saffron}
+              color={'#2E7D32'}
               height={15}
               width={15}
               style={styles.aliself}
@@ -269,7 +269,7 @@ const Account = props => {
               <Text style={styles.protxt}>{t('Help Center')}</Text>
             </View>
             <RightarrowIcon
-              color={Constants.saffron}
+              color={'#2E7D32'}
               height={15}
               width={15}
               style={styles.aliself}
@@ -300,7 +300,7 @@ const Account = props => {
                 <Text style={styles.protxt}>{t('App Language')}</Text>
               </View>
               <RightarrowIcon
-                color={Constants.saffron}
+                color={'#2E7D32'}
                 height={15}
                 width={15}
                 style={styles.aliself}
@@ -318,7 +318,7 @@ const Account = props => {
               <Text style={styles.protxt}>{t('Delete Account')}</Text>
             </View>
             <RightarrowIcon
-              color={Constants.saffron}
+              color={'#2E7D32'}
               height={15}
               width={15}
               style={styles.aliself}
@@ -336,7 +336,7 @@ const Account = props => {
               <Text style={styles.protxt}>{t('Log Out')}</Text>
             </View>
             <RightarrowIcon
-              color={Constants.saffron}
+              color={'#2E7D32'}
               height={15}
               width={15}
               style={styles.aliself}
@@ -479,7 +479,7 @@ const styles = StyleSheet.create({
     // backgroundColor:Constants.saffron
   },
   protxt: {
-    color: Constants.saffron,
+    color: '#2E7D32',
     fontSize: 16,
     // fontWeight: '700',
     fontFamily: FONTS.Bold,
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     // borderRadius: 20,
     marginTop: 10,
-    backgroundColor: Constants.saffron + 20,
+    backgroundColor: '#E8F5E9' ,
     width: '93%',
     borderRadius: 5,
     alignSelf: 'center',
@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
     height: 70,
     width: 70,
     borderRadius: 70,
-    backgroundColor: Constants.saffron + 50,
+    backgroundColor: '#E8F5E9',
   },
   /////////logout model //////
   centeredView: {
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   iconcov: {
-    backgroundColor: Constants.lightpink,
+    backgroundColor:'#2E7D32',
     borderRadius: 8,
     padding: 10,
   },

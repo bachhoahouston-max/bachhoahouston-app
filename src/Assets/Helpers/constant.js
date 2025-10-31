@@ -1,6 +1,6 @@
 // const prodUrl = 'https://marketapi.moveex.co/v1/api/';
 // const prodUrl = 'http://192.168.220.173:3000/v1/api/';
-// const prodUrl = 'http://10.20.212.226:8000/v1/api/';
+//  const prodUrl = 'http://192.168.56.1:8000/v1/api/';
 const prodUrl = 'https://api.bachhoahouston.com/v1/api/';
 
 let apiUrl = prodUrl;
