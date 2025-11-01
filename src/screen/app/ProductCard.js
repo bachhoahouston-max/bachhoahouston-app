@@ -43,16 +43,16 @@ const ProductCard = ({
       onPress={() => navigate('Preview', item.slug)}
       style={[styles.card]}>
       
-      {/* Image with Timer Overlay */}
+    
       <View style={{ position: 'relative', width: '100%', overflow: 'hidden', borderRadius: 10 }}>
   <Image
     source={{
       uri: item?.varients?.[0]?.image?.[0] || '',
     }}
     style={[styles.cardimg, { borderRadius: 10 }]}
-    resizeMode="stretch"
+    resizeMode="contain"
   />
-        {/* Timer Badge on Image */}
+       
         {currentSale && currentSale?.status !== 'expired' && (
           <View
             style={{

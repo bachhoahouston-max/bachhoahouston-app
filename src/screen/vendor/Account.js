@@ -148,7 +148,7 @@ const VendorAccount = props => {
           <TouchableOpacity style={[styles.box, styles.shadowProp]} onPress={() => navigate('Notification')}>
             <Text style={styles.protxt}>{t('Notifications')}</Text>
             <RightarrowIcon
-              color={Constants.saffron}
+              color={'#2E7D32'}
               height={15}
               width={15}
               style={styles.aliself}
@@ -157,7 +157,7 @@ const VendorAccount = props => {
           <TouchableOpacity style={[styles.box, styles.shadowProp]} >
             <Text style={styles.protxt}>{t('Help Center')}</Text>
             <RightarrowIcon
-              color={Constants.saffron}
+              color={'#2E7D32'}
               height={15}
               width={15}
               style={styles.aliself}
@@ -166,7 +166,7 @@ const VendorAccount = props => {
           <TouchableOpacity style={[styles.box, styles.shadowProp]} onPress={() => setModalVisible2(true)}>
             <Text style={styles.protxt}>{t('Delete Account')}</Text>
             <RightarrowIcon
-              color={Constants.saffron}
+              color={'#2E7D32'}
               height={15}
               width={15}
               style={styles.aliself}
@@ -177,7 +177,7 @@ const VendorAccount = props => {
           }}>
             <Text style={styles.protxt}>{t('Log Out')}</Text>
             <RightarrowIcon
-              color={Constants.saffron}
+              color={'#2E7D32'}
               height={15}
               width={15}
               style={styles.aliself}
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     // backgroundColor:Constants.saffron
   },
   protxt: {
-    color: Constants.saffron,
+    color: '#2E7D32',
     fontSize: 16,
     // fontWeight: '700',
     fontFamily: FONTS.Bold,
@@ -324,19 +324,19 @@ const styles = StyleSheet.create({
   box: {
     paddingHorizontal: 15,
     paddingVertical: 16,
-    // borderRadius: 20,
-    marginVertical: 10,
-    backgroundColor: Constants.white,
-    width: '90%',
+    marginTop: 10,
+    backgroundColor: '#E8F5E9',
+    width: '93%',
+    borderRadius: 5,
     alignSelf: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
   shadowProp: {
-    shadowOffset: { width: -2, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 15,
-    elevation: 5,
+    // shadowOffset: { width: -2, height: 4 },
+    // shadowOpacity: 0.2,
+    // shadowRadius: 15,
+    // elevation: 5,
   },
   aliself: {
     alignSelf: 'center',
@@ -365,6 +365,7 @@ const styles = StyleSheet.create({
     height: 70,
     width: 70,
     borderRadius: 70,
+    backgroundColor: '#E8F5E9',
   },
   /////////logout model //////
   centeredView: {

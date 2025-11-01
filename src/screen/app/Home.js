@@ -365,7 +365,7 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
         <Image
           source={{ uri: item.image }}
           style={{
-            height: 320,
+            height: width2,
             width: width2,
             borderRadius: 20,
             alignSelf: 'center',
