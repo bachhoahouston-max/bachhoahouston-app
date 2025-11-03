@@ -1,5 +1,5 @@
-import {StyleSheet, Dimensions, Platform} from 'react-native';
-import Constants, {FONTS} from '../../Assets/Helpers/constant';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
+import Constants, { FONTS } from '../../Assets/Helpers/constant';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Constants.white,
   },
-  codeFieldRoot2: {width: Dimensions.get('window').width - 40},
+  codeFieldRoot2: { width: Dimensions.get('window').width - 40 },
   cell: {
     width: 70,
     height: 70,
@@ -369,5 +369,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+
 });
 export default styles;

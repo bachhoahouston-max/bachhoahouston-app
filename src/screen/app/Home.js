@@ -15,7 +15,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  
+
 } from 'react-native';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import Constants, { Currency, FONTS } from '../../Assets/Helpers/constant';
@@ -50,7 +50,7 @@ const FontTest = () => {
   // Log font information
   console.log('=== Font Test ===');
   console.log('FONTS.Bold:', FONTS.Bold);
-  
+
   // Test font by rendering text with different fonts
   return (
     <View style={{ padding: 10, backgroundColor: '#f0f0f0', margin: 10 }}>
@@ -71,11 +71,11 @@ const Home = () => {
   const [carosalimg, setcarosalimg] = useState([]);
   const [isSale, setIsSale] = useState(false);
   const flatListRef = React.useRef(null);
-const [currentIndex, setCurrentIndex] = useState(0);
-const [topsellinglist, settopsellinglist] = useState([]);
-const [page, setPage] = useState(1);
-const [hasMore, setHasMore] = useState(true);
-const [loadingMore, setLoadingMore] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [topsellinglist, settopsellinglist] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   // const dumydata = [
   //   {
   //     name: 'Tata Salt',
@@ -114,7 +114,7 @@ const [loadingMore, setLoadingMore] = useState(false);
   // ];
   useEffect(() => {
     getCategory();
-   getTopSoldProduct(1, false);
+    getTopSoldProduct(1, false);
     getSetting();
     console.log('cartdetail', cartdetail);
     AsyncStorage.getItem('cartdata').then(res => {
@@ -129,7 +129,7 @@ const [loadingMore, setLoadingMore] = useState(false);
   useFocusEffect(
     useCallback(() => {
       getCategory();
-     getTopSoldProduct(1, false);
+      getTopSoldProduct(1, false);
       getSetting();
       console.log('cartdetail', cartdetail);
 
@@ -146,21 +146,21 @@ const [loadingMore, setLoadingMore] = useState(false);
   );
 
   useEffect(() => {
-  if (carosalimg && carosalimg.length > 1) {
-    const interval = setInterval(() => {
-      setCurrentIndex(prevIndex => {
-        const nextIndex = (prevIndex + 1) % carosalimg.length;
-        flatListRef.current?.scrollToIndex({
-          index: nextIndex,
-          animated: true,
+    if (carosalimg && carosalimg.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex(prevIndex => {
+          const nextIndex = (prevIndex + 1) % carosalimg.length;
+          flatListRef.current?.scrollToIndex({
+            index: nextIndex,
+            animated: true,
+          });
+          return nextIndex;
         });
-        return nextIndex;
-      });
-    }, 3000); // 3 seconds
+      }, 3000); // 3 seconds
 
-    return () => clearInterval(interval);
-  }
-}, [carosalimg]);
+      return () => clearInterval(interval);
+    }
+  }, [carosalimg]);
 
   const getCategory = () => {
     setLoading(true);
@@ -179,43 +179,43 @@ const [loadingMore, setLoadingMore] = useState(false);
       },
     );
   };
-const getTopSoldProduct = (pageNum = 1, append = false) => {
-  if (pageNum === 1) {
-    setLoading(true);
-  } else {
-    setLoadingMore(true);
-  }
-  
-  GetApi(`getProduct?limit=12&page=${pageNum}`, {}).then(
-    async res => {
-      setLoading(false);
-      setLoadingMore(false);
-      console.log(res);
-      if (res.status) {
-        if (append) {
-          settopsellinglist(prev => [...prev, ...res.data]);
+  const getTopSoldProduct = (pageNum = 1, append = false) => {
+    if (pageNum === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
+    GetApi(`getTopSoldProduct?limit=12&page=${pageNum}`, {}).then(
+      async res => {
+        setLoading(false);
+        setLoadingMore(false);
+        console.log(res);
+        if (res.status) {
+          if (append) {
+            settopsellinglist(prev => [...prev, ...res.data]);
+          } else {
+            settopsellinglist(res.data);
+          }
+
+          // Agar data ki length 12 se kam hai to aur products nahi hain
+          if (res.data.length < 12) {
+            setHasMore(false);
+          } else {
+            setHasMore(true); // Ye line add karo
+          }
         } else {
-          settopsellinglist(res.data);
-        }
-        
-        // Agar data ki length 12 se kam hai to aur products nahi hain
-        if (res.data.length < 12) {
           setHasMore(false);
-        } else {
-          setHasMore(true); // Ye line add karo
         }
-      } else {
+      },
+      err => {
+        setLoading(false);
+        setLoadingMore(false);
         setHasMore(false);
-      }
-    },
-    err => {
-      setLoading(false);
-      setLoadingMore(false);
-      setHasMore(false);
-      console.log(err);
-    },
-  );
-};
+        console.log(err);
+      },
+    );
+  };
   const getSetting = () => {
     setLoading(true);
     GetApi(`getsetting`, {}).then(
@@ -292,15 +292,15 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
     <>
       <Header />
       {/* <FontTest /> */}
-      <TouchableOpacity 
-  style={{ 
-    backgroundColor: '#2E7D32', 
-    paddingBottom: 25,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20
-  }}
-  onPress={() => navigate('Searchpage')}
->
+      <TouchableOpacity
+        style={{
+          backgroundColor: '#2E7D32',
+          paddingBottom: 25,
+          borderBottomLeftRadius: 20,
+          borderBottomRightRadius: 20
+        }}
+        onPress={() => navigate('Searchpage')}
+      >
         <View
           style={[styles.inpcov, { height: 45 }]}
         >
@@ -313,24 +313,24 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
             placeholderTextColor={Constants.light_black}></TextInput> */}
         </View>
       </TouchableOpacity>
-     <FlatList
-  data={topsellinglist}
-  keyExtractor={(item, index) => item._id || index.toString()}
-  showsVerticalScrollIndicator={false}
-  numColumns={2}
-  columnWrapperStyle={{ paddingHorizontal: 10 }}
-  onEndReached={() => {
-    if (hasMore && !loadingMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      getTopSoldProduct(nextPage, true);
-    }
-  }}
-  onEndReachedThreshold={0.5}
-  contentContainerStyle={{
-    paddingBottom: Platform.OS === 'android' ? 70 : 40,
-    backgroundColor: "#E8F5E9"
-  }}
+      <FlatList
+        data={topsellinglist}
+        keyExtractor={(item, index) => item._id || index.toString()}
+        showsVerticalScrollIndicator={false}
+        numColumns={2}
+        columnWrapperStyle={{ paddingHorizontal: 10 }}
+        onEndReached={() => {
+          if (hasMore && !loadingMore) {
+            const nextPage = page + 1;
+            setPage(nextPage);
+            getTopSoldProduct(nextPage, true);
+          }
+        }}
+        onEndReachedThreshold={0.5}
+        contentContainerStyle={{
+          paddingBottom: Platform.OS === 'android' ? 70 : 40,
+          backgroundColor: "#E8F5E9"
+        }}
         ListHeaderComponent={
           <>
             {/* Header Banner */}
@@ -345,39 +345,39 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
             </LinearGradient> */}
 
             {/* Carousel */}
-         <View style={{ marginVertical: 20, overflow: 'hidden' }}>
-  <SwiperFlatList
-    autoplay
-    autoplayDelay={2}
-    autoplayLoop
-    showPagination={false}
-    data={carosalimg || []}
-    renderItem={({ item, index }) => (
-      <TouchableOpacity
-        style={{ width: width, alignItems: 'center' }}
-        onPress={() => {
-          item.product_id &&
-            navigate(
-              'posterDetail',
-              item.product_id
-            );
-        }}>
-        <Image
-          source={{ uri: item.image }}
-          style={{
-            height: width2,
-            width: width2,
-            borderRadius: 20,
-            alignSelf: 'center',
-          }}
-          resizeMode="stretch"
-          key={index}
-        />
-      </TouchableOpacity>
-    )}
-  />
-</View>
-<View style={styles.covline}>
+            <View style={{ marginVertical: 20, overflow: 'hidden' }}>
+              <SwiperFlatList
+                autoplay
+                autoplayDelay={2}
+                autoplayLoop
+                showPagination={false}
+                data={carosalimg || []}
+                renderItem={({ item, index }) => (
+                  <TouchableOpacity
+                    style={{ width: width, alignItems: 'center' }}
+                    onPress={() => {
+                      item.product_id &&
+                        navigate(
+                          'posterDetail',
+                          item.product_id
+                        );
+                    }}>
+                    <Image
+                      source={{ uri: item.image }}
+                      style={{
+                        height: width2,
+                        width: width2,
+                        borderRadius: 20,
+                        alignSelf: 'center',
+                      }}
+                      resizeMode="stretch"
+                      key={index}
+                    />
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+            <View style={styles.covline}>
               <Text style={styles.categorytxt}>
                 {t('Explore By Categories')}
               </Text>
@@ -394,13 +394,13 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
               </TouchableOpacity>
             </View>
 
-          
+
             <FlatList
               data={categorylist}
               scrollEnabled={false}
               numColumns={Dimensions.get('window').width < 500 ? 4 : 6}
               keyExtractor={(item, index) => item._id || index.toString()}
-              style={{ width: '100%', gap: 5, marginVertical: 10, marginBottom: 100 }}
+              style={{ width: '100%', gap: 5, marginVertical: 10 }}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={{ flex: 1, marginVertical: 10 }}
@@ -423,15 +423,15 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
                 </TouchableOpacity>
               )}
             />
-<View style={{ height: 24, backgroundColor: '#E8E8E8', marginVertical: 15 }} />
+            <View style={{ height: 24, backgroundColor: '#E8E8E8', marginVertical: 15 }} />
             <Sale setIsSale={setIsSale} />
-<View style={{ height: 24, backgroundColor: '#E8E8E8', marginVertical: 15 }} />
+            <View style={{ height: 24, backgroundColor: '#E8E8E8', marginVertical: 15 }} />
             {/* Top Selling Header */}
             <View style={styles.covline}>
-               <Text style={[styles.categorytxt, { marginLeft: 8 }]}>
-    {t('All Products')}
-  </Text>
-              
+              <Text style={[styles.categorytxt, { marginLeft: 8 }]}>
+                {t('All Products')}
+              </Text>
+
               <TouchableOpacity
                 style={{ flexDirection: 'row' }}
                 onPress={() =>
@@ -461,7 +461,7 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
               key={item._id || index.toString()}
               style={[
                 styles.box,
-                 { flex: 1 }
+                { flex: 1 }
                 // {
                 //   marginRight:
                 //     topsellinglist.length === index + 1 ? 20 : 10,
@@ -478,17 +478,17 @@ const getTopSoldProduct = (pageNum = 1, append = false) => {
           );
         }}
         ListFooterComponent={
-           <>
-    {/* Explore Categories Header */}
-    {loadingMore && (
-      <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={Constants.pink} />
-        <Text style={{ color: Constants.black, fontSize: 14, fontFamily: FONTS.Medium, marginTop: 10 }}>
-          Loading...
-        </Text>
-      </View>
-    )}
-  </>
+          <>
+            {/* Explore Categories Header */}
+            {loadingMore && (
+              <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={Constants.pink} />
+                <Text style={{ color: Constants.black, fontSize: 14, fontFamily: FONTS.Medium, marginTop: 10 }}>
+                  Loading...
+                </Text>
+              </View>
+            )}
+          </>
         }
       />
     </>
@@ -554,13 +554,13 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   box: {
-  flex: 1,
-  margin: 8,
-  
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 3,
-},
+    flex: 1,
+    margin: 8,
+
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   cardimg: {
     height: 130,
     width: '100%',
@@ -579,22 +579,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     // backgroundColor:Constants.red
   },
- seealltxt: {
-  fontSize: 18,
-  color: '#2E7D32',
-  fontFamily: FONTS.Bold,
-  marginHorizontal: 10,
-  borderWidth: 1,
-  borderColor: '#2E7D32',
-  borderRadius: 20,
-  paddingHorizontal: 15,
-  paddingVertical: 2,
-},
+  seealltxt: {
+    fontSize: 18,
+    color: '#2E7D32',
+    fontFamily: FONTS.Bold,
+    marginHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#2E7D32',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 2,
+  },
   categorytxt: {
     fontSize: 20,
     color: Constants.black,
     // fontFamily: FONTS.Bold,
-    fontWeight: '500', 
+    fontWeight: '500',
   },
   covline: {
     flexDirection: 'row',

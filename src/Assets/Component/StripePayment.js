@@ -131,7 +131,7 @@ const StripeCheckoutButton = ({
           sessionId: paymentResult.sessionId,
         });
 
-        setLoading(false);
+        // setLoading(false);
         onPaymentSuccess && onPaymentSuccess(paymentResult);
       } catch (error) {
         console.error('Failed to process payment success:', error);
@@ -519,10 +519,10 @@ const StripeCheckoutButton = ({
           const result = await InAppBrowser.InAppBrowser.open(response.url, browserOptions);
           console.log('InAppBrowser result:', result);
 
-          if (result.type === 'cancel' || result.type === 'dismiss') {
-            console.log('InAppBrowser was closed/dismissed');
-            handlePaymentCancel();
-          }
+          // if (result.type === 'cancel' || result.type === 'dismiss') {
+          //   console.log('InAppBrowser was closed/dismissed');
+          //   handlePaymentCancel();
+          // }
         } catch (browserError) {
           console.log('InAppBrowser failed, falling back to system browser:', browserError);
           // Fallback to system browser if InAppBrowser fails

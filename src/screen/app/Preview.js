@@ -364,12 +364,12 @@ const Preview = props => {
         onRequestClose={() => setVisibleImg(false)}
       />
       <DriverHeader item={t('Product Detail')} showback={true} showCart={true} />
-     <ScrollView
-  showsVerticalScrollIndicator={false}
-  style={{ paddingHorizontal: 20, backgroundColor: Constants.lightgreen }} 
-  contentContainerStyle={{ paddingBottom: 50, backgroundColor: Constants.lightgreen }} 
-  ref={scrollRef}>
-       <View style={{ marginTop: 0, marginHorizontal: -20 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        style={{ paddingHorizontal: 20, backgroundColor: Constants.lightgreen }}
+        contentContainerStyle={{ paddingBottom: 50, backgroundColor: Constants.lightgreen }}
+        ref={scrollRef}>
+        <View style={{ marginTop: 0, marginHorizontal: -20 }}>
           <SwiperFlatList
             // autoplay
             // autoplayDelay={2}
@@ -378,16 +378,16 @@ const Preview = props => {
             showPagination
             paginationActiveColor="green"
             paginationStyle={{
-    bottom: 5,
-    backgroundColor: 'white', 
-    paddingHorizontal: 5,
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignSelf: 'center',
-  }}
-   paginationStyleItem={{
-    marginTop: -8, 
-  }}
+              bottom: 5,
+              backgroundColor: 'white',
+              paddingHorizontal: 5,
+              paddingVertical: 15,
+              borderRadius: 10,
+              alignSelf: 'center',
+            }}
+            paginationStyleItem={{
+              marginTop: -8,
+            }}
 
             data={productdata?.varients[0].image || []}
             // renderItem={({item}) => (
@@ -395,67 +395,67 @@ const Preview = props => {
             //     <Text style={styles.text}>{item}</Text>
             //   </View>
             // )}
-renderItem={({ item, index }) => (
-  <View style={{ 
-    paddingBottom: 55, 
-    width: Dimensions.get('window').width, 
-    alignItems: 'center', 
-    backgroundColor:'#F3F4F6',
-    paddingHorizontal: 20,
-  }}>
-    <View style={{
-      backgroundColor: 'white',
-      borderRadius: 15,
-      padding: 15,  
-      width: '100%',
-      height: 230,  
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: 15,
-      // Shadow properties
-      shadowColor: '#000',
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,  // Android ke liye
-    }}>
-      <Pressable onPress={() => {
-        const newImageArray = productdata?.varients[0].image.map(f => { return { uri: f } })
-        setImages(newImageArray);
-        setImageIndex(index);
-        setVisibleImg(true)
-      }}
-        style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-        <Image
-          source={{ uri: `${item}` }}
-          style={{
-            height: '100%',
-            width: '100%',
-            borderRadius: 15,
-          }}
-          resizeMode="contain"
-          key={index}
-        />
-      </Pressable>
-    </View>
-  </View>
-)}
+            renderItem={({ item, index }) => (
+              <View style={{
+                paddingBottom: 55,
+                width: Dimensions.get('window').width,
+                alignItems: 'center',
+                backgroundColor: '#F3F4F6',
+                paddingHorizontal: 20,
+              }}>
+                <View style={{
+                  backgroundColor: 'white',
+                  borderRadius: 15,
+                  padding: 15,
+                  width: '100%',
+                  height: 230,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginTop: 15,
+                  // Shadow properties
+                  shadowColor: '#000',
+                  shadowOffset: {
+                    width: 0,
+                    height: 2,
+                  },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 3.84,
+                  elevation: 5,  // Android ke liye
+                }}>
+                  <Pressable onPress={() => {
+                    const newImageArray = productdata?.varients[0].image.map(f => { return { uri: f } })
+                    setImages(newImageArray);
+                    setImageIndex(index);
+                    setVisibleImg(true)
+                  }}
+                    style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
+                    <Image
+                      source={{ uri: `${item}` }}
+                      style={{
+                        height: '100%',
+                        width: '100%',
+                        borderRadius: 15,
+                      }}
+                      resizeMode="contain"
+                      key={index}
+                    />
+                  </Pressable>
+                </View>
+              </View>
+            )}
           />
         </View>
-    <Text 
-  style={styles.proname}
-  numberOfLines={3}  // Add this line
-  ellipsizeMode="tail"  // Add this line
->
-  {i18n.language === 'vi' ? (productdata?.vietnamiesName || productdata?.name) : productdata?.name}
-</Text>
-<Text style={[styles.dectitle, { marginLeft: 10, marginTop: 0 }]}>
-  {productdata?.short_description}
-</Text>
-<View style={[styles.pricecov, {marginTop: 10, marginBottom: -25}]}>
+        <Text
+          style={styles.proname}
+          numberOfLines={3}  // Add this line
+          ellipsizeMode="tail"  // Add this line
+        >
+          {i18n.language === 'vi' ? (productdata?.vietnamiesName || productdata?.name) : productdata?.name}
+        </Text>
+        <Text style={[styles.dectitle, { marginLeft: 10, marginTop: 0 }]}>
+          {productdata?.short_description}
+        </Text>
+        <View style={[styles.pricecov, { marginTop: 10, marginBottom: 0 }]}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             {/* <Text style={styles.maintxt2}>
               {Currency} {selectedslot?.our_price}
@@ -592,7 +592,7 @@ renderItem={({ item, index }) => (
             </TouchableOpacity>
           )}
         </View>
-      <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={{marginTop: 5}}>
+        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={{ marginTop: 5 }}>
           {productdata?.price_slot &&
             productdata?.price_slot.length > 0 &&
             productdata?.price_slot[0].unit &&
@@ -642,23 +642,23 @@ renderItem={({ item, index }) => (
                     {item?.value}
                     {item.unit}
                   </Text>
-                  <View style={{marginTop: -5}}>
-  <Text style={styles.maintxt}>
-    {Currency}
-    {item.our_price}
-  </Text>
-  {/* <Text style={[styles.disctxt, {marginTop: -3}]}>
+                  <View style={{ marginTop: -5 }}>
+                    <Text style={styles.maintxt}>
+                      {Currency}
+                      {item.our_price}
+                    </Text>
+                    {/* <Text style={[styles.disctxt, {marginTop: -3}]}>
     {formatPricePerUnit(
       item.our_price,
       item?.value,
       item.unit,
     )}
   </Text> */}
-</View>
+                  </View>
                 </TouchableOpacity>
               ))}
         </ScrollView>
-    
+
         <View style={styles.line} />
         <View style={styles.productinfocov}>
           <Text style={styles.proddec}>{t('Product Information')}</Text>
@@ -670,7 +670,7 @@ renderItem={({ item, index }) => (
           </View> */}
         </View>
         {productdata?.long_description && (
-          <View style={{ marginTop: 10, backgroundColor: Constants.lightgreen, paddingHorizontal: -10  }}>
+          <View style={{ marginTop: 10, backgroundColor: Constants.lightgreen, paddingHorizontal: -10 }}>
             <RenderHTML
               contentWidth={width}
               tagsStyles={mixedStyle}
@@ -727,32 +727,32 @@ renderItem={({ item, index }) => (
         </View> */}
         {/* Frequently bought product */}
         <Text style={[styles.proddec, { marginTop: 10 }]}>
-  {t('Frequently Bought Products')}
-</Text>
-<View style={{ marginTop: 5, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-  {productList.map((item, index) => {
-    const cartItem = Array.isArray(cartdetail)
-      ? cartdetail.find(it => it?.productid === item?._id)
-      : undefined;
+          {t('Frequently Bought Products')}
+        </Text>
+        <View style={{ marginTop: 5, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          {productList.map((item, index) => {
+            const cartItem = Array.isArray(cartdetail)
+              ? cartdetail.find(it => it?.productid === item?._id)
+              : undefined;
 
-    return (
-      <View
-        key={item._id || index.toString()}
-        style={[
-          styles.box2,
-          { width: '48%' }
-        ]}>
-        <ProductCard
-          item={item}
-          cartItem={cartItem}
-          cartdata={cartdata2}
-          setcartdetail={setcartdetail}
-          cartdetail={cartdetail}
-        />
-      </View>
-    );
-  })}
-</View>
+            return (
+              <View
+                key={item._id || index.toString()}
+                style={[
+                  styles.box2,
+                  { width: '48%' }
+                ]}>
+                <ProductCard
+                  item={item}
+                  cartItem={cartItem}
+                  cartdata={cartdata2}
+                  setcartdetail={setcartdetail}
+                  cartdetail={cartdetail}
+                />
+              </View>
+            );
+          })}
+        </View>
       </ScrollView>
       <View style={styles.line} />
 
@@ -795,9 +795,9 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     marginLeft: 10,
     backgroundColor: Constants.lightgreen,
-    flexWrap: 'wrap',  
-  flexShrink: 1,   
-    
+    flexWrap: 'wrap',
+    flexShrink: 1,
+
   },
   weight: {
     fontSize: 14,
@@ -828,18 +828,18 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Bold,
     // textDecorationLine: 'line-through',
   },
- box: {
-  backgroundColor: Constants.lightgreen,
-  width: 150,
-  padding: 8,
-  paddingVertical: 6,
-  borderRadius: 7,
-  borderWidth: 1,
-  borderColor: Constants.linearcolor,
-  marginLeft: 10,
-  marginTop: 10,
-  marginBottom: 5,
-},
+  box: {
+    backgroundColor: Constants.lightgreen,
+    width: 150,
+    padding: 8,
+    paddingVertical: 6,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: Constants.linearcolor,
+    marginLeft: 10,
+    marginTop: 0,
+    marginBottom: 5,
+  },
   box2: {
     // width: 180,
     marginVertical: 5,
@@ -907,7 +907,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 10,
-     backgroundColor: Constants.lightgreen,
+    backgroundColor: Constants.lightgreen,
   },
   expirycard: {
     backgroundColor: '#EDEDED',

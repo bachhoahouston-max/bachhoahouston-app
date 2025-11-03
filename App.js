@@ -117,17 +117,17 @@ const App = () => {
     }, []);
     const setInitialRoute = async () => {
         // First show Welcome screen for all users
-        setInitial('Welcome');
-        
+
+
         // Then check for existing user session in the background
         try {
             const userData = await AsyncStorage.getItem('userDetail');
             const userDetail = userData ? JSON.parse(userData) : null;
-            
+
             if (userDetail?.token) {
                 setuser(userDetail);
                 await getProfile();
-                
+
                 // After a short delay, navigate to the appropriate screen
                 setTimeout(() => {
                     if (userDetail.type === 'ADMIN') {
@@ -145,14 +145,16 @@ const App = () => {
             } else {
                 // No user logged in, go to Auth after delay
                 setTimeout(() => {
-                    setInitial('Auth');
+                    setInitial('Welcome');
+                    // setInitial('Auth');
                 }, 2000);
             }
         } catch (error) {
             console.error('Error checking user session:', error);
             // If there's an error, default to Auth screen
             setTimeout(() => {
-                setInitial('Auth');
+                setInitial('Welcome');
+                // setInitial('Auth');
             }, 2000);
         }
     };
@@ -343,6 +345,7 @@ const App = () => {
     }, [user?.token]);
 
     useEffect(() => {
+        AsyncStorage.setItem('userDetail', JSON.stringify(user))
         clearInterval(interval);
         let int;
         if (user?.type === 'DRIVER') {

@@ -42,17 +42,17 @@ const ProductCard = ({
       disabled={item.Quantity <= 0}
       onPress={() => navigate('Preview', item.slug)}
       style={[styles.card]}>
-      
-    
-      <View style={{ position: 'relative', width: '100%', overflow: 'hidden', borderRadius: 10 }}>
-  <Image
-    source={{
-      uri: item?.varients?.[0]?.image?.[0] || '',
-    }}
-    style={[styles.cardimg, { borderRadius: 10 }]}
-    resizeMode="contain"
-  />
-       
+
+
+      <View style={{ position: 'relative', width: '100%', overflow: 'visible', borderRadius: 10 }}>
+        <Image
+          source={{
+            uri: item?.varients?.[0]?.image?.[0] || '',
+          }}
+          style={[styles.cardimg, { borderRadius: 10 }]}
+          resizeMode="contain"
+        />
+
         {currentSale && currentSale?.status !== 'expired' && (
           <View
             style={{
@@ -105,31 +105,31 @@ const ProductCard = ({
               alignItems: 'center',
               gap: 5,
             }}>
-           {item?.price_slot?.[0]?.other_price && (
-  <Text style={[styles.maintxt, { fontFamily: FONTS.Bold }]}>
-    {`${Currency} `}
-    {item.price_slot[0].other_price || ''}
-  </Text>
-)}
-{salePrice !== null && (
-  <Text style={[styles.maintxt, { fontFamily: FONTS.Bold }]}>
-    {`${Currency} `}
-    {saleVarient?.our_price || ''}
-  </Text>
-)}
-{(salePrice !== null
-  ? !!salePrice
-  : !!item?.price_slot?.[0]?.our_price) && (
-    <Text style={[styles.disctxt, { 
-      color: salePrice !== null ? '#FF0000' : Constants.black,
-      fontFamily: FONTS.Bold 
-    }]}>
-      {`${Currency} `}
-      {salePrice !== null
-        ? salePrice || ''
-        : item?.price_slot?.[0]?.our_price || ''}
-    </Text>
-  )}
+            {item?.price_slot?.[0]?.other_price && (
+              <Text style={[styles.maintxt, { fontFamily: FONTS.Bold }]}>
+                {`${Currency} `}
+                {item.price_slot[0].other_price || ''}
+              </Text>
+            )}
+            {salePrice !== null && (
+              <Text style={[styles.maintxt, { fontFamily: FONTS.Bold }]}>
+                {`${Currency} `}
+                {saleVarient?.our_price || ''}
+              </Text>
+            )}
+            {(salePrice !== null
+              ? !!salePrice
+              : !!item?.price_slot?.[0]?.our_price) && (
+                <Text style={[styles.disctxt, {
+                  color: salePrice !== null ? '#FF0000' : Constants.black,
+                  fontFamily: FONTS.Bold
+                }]}>
+                  {`${Currency} `}
+                  {salePrice !== null
+                    ? salePrice || ''
+                    : item?.price_slot?.[0]?.our_price || ''}
+                </Text>
+              )}
           </View>
 
           <View>
@@ -226,47 +226,47 @@ const ProductCard = ({
 };
 
 const styles = StyleSheet.create({
-card: {
-  flex: 1,
-  width: '100%',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  alignItems: 'center',
-  gap: 10,
-  padding: 10,
-  borderRadius: 10,
-  backgroundColor: Constants.white,
-  shadowColor: Constants.black,
-  position: 'relative',  
-  minHeight: 220,  
-  shadowOffset: {
-    width: 0,
-    height: 2,
+  card: {
+    flex: 1,
+    width: '100%',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: Constants.white,
+    shadowColor: Constants.black,
+    position: 'relative',
+    minHeight: 220,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    borderWidth: 1,
+    borderColor: Constants.customgrey3,
+    shadowRadius: 3.84,
   },
-  shadowOpacity: 0.25,
-  borderWidth: 1,
-  borderColor: Constants.customgrey3,
-  shadowRadius: 3.84,
-},
   cardimg: {
-     height: 150,
+    height: 150,
     width: '100%',
     // resizeMode: 'contain',
     // borderRadius: 20,
   },
-cardContent: {
-  flex: 1,
-  flexDirection: 'column',
-  padding: 5,
-  width: '100%', 
-},
- cardContent2: {
-  flex: 1,
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'flex-start',  // Changed from 'center' to 'flex-start'
-  marginTop: 5,
-},
+  cardContent: {
+    flex: 1,
+    flexDirection: 'column',
+    padding: 5,
+    width: '100%',
+  },
+  cardContent2: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',  // Changed from 'center' to 'flex-start'
+    marginTop: 5,
+  },
   proname: {
     fontSize: 16,
     color: Constants.black,
@@ -295,26 +295,26 @@ cardContent: {
     fontFamily: FONTS.Bold,
     textDecorationLine: 'line-through',
   },
-pluscov: {
-  position: 'absolute',
-  bottom: 5,  
-  right: -6,   
-  minWidth: 40,
-  minHeight: 40,
-  justifyContent: 'center',
-  alignItems: 'center',
-  borderRadius: 20,
-  backgroundColor:'#2E7D32',
-},
-addcov: {
-  position: 'absolute',
-  bottom: 5,  
-  right: 5,   
-  flexDirection: 'row',
-  height: 35,
-  borderRadius: 7,
-  overflow: 'hidden',
-},
+  pluscov: {
+    position: 'absolute',
+    bottom: 5,
+    right: -6,
+    minWidth: 40,
+    minHeight: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: '#2E7D32',
+  },
+  addcov: {
+    position: 'absolute',
+    bottom: 5,
+    right: 5,
+    flexDirection: 'row',
+    height: 35,
+    borderRadius: 7,
+    overflow: 'hidden',
+  },
   minus: {
     backgroundColor: '#2E7D32',
     width: 30,

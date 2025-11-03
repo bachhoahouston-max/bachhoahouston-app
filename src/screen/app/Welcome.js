@@ -1,16 +1,19 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import { navigate } from '../../../navigationRef';
 
 const { width } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const navigation = useNavigation();
-  
+  const { t } = useTranslation();
+
   const handleAuthPress = () => {
     navigation.navigate('Auth');
   };
-  
+
   return (
     <View style={styles.container}>
       {/* Top Section with Light Green Background */}
@@ -23,7 +26,7 @@ export default function WelcomeScreen() {
 
         <View style={styles.logoContainer}>
           <Image
-            source={require('../../Assets/Images/newlogo.png')} 
+            source={require('../../Assets/Images/newlogo.png')}
             style={styles.logoImage}
             resizeMode="contain"
           />
@@ -38,16 +41,20 @@ export default function WelcomeScreen() {
           style={styles.backgroundImage}
           resizeMode="stretch"
         />
-        
+
         {/* Content Overlay */}
         <View style={styles.contentOverlay}>
           <Text style={styles.welcomeText}>Welcome!</Text>
           <Text style={styles.subtitleText}>Vietnamese Grocery Delivery Service</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.linkButton}
             onPress={handleAuthPress}
           >
             <Text style={styles.linkText}>Click here to Sign In/Sign Up</Text>
+
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigate('App')}>
+            <Text style={styles.skipText}>{t('Skip')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -121,6 +128,14 @@ const styles = StyleSheet.create({
   linkText: {
     fontSize: 14,
     color: '#FFFFFF',
+    textDecorationLine: 'underline',
+  },
+  skipText: {
+    fontSize: 15,
+    color: 'white',
+    alignSelf: 'center',
+    fontStyle: 'italic',
+    marginTop: 20,
     textDecorationLine: 'underline',
   },
 });
