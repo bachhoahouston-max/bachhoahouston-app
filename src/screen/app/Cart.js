@@ -2085,8 +2085,8 @@ const Cart = () => {
             }}>
             {/* <BucketIcon color={Constants.black} height={100} width={100} /> */}
             <Image
-              source={require('../../Assets/Images/empty.png')}
-              style={{ height: 100, width: 100 }}
+              source={require('../../Assets/Images/emptycart.png')}
+              style={{ height: 200, width: 200, resizeMode: 'contain' }}
             />
             <Text style={styles.carttxt2}>{t('Your Cart is empty')}</Text>
             <Text style={styles.browsprod} onPress={() => navigate('Categories')}>

@@ -1,5 +1,6 @@
 import GoogleMaps
 import GoogleMapsUtils
+import RNBootSplash
 // import RCTLinkingManager
 import React
 import ReactAppDependencyProvider
@@ -40,5 +41,8 @@ class AppDelegate: RCTAppDelegate {
       Bundle.main.url(forResource: "main", withExtension: "jsbundle")
     #endif
   }
-
+  override func customize(_ rootView: RCTRootView!) {
+    super.customize(rootView)
+    RNBootSplash.initWithStoryboard("LaunchScreen", rootView: rootView)  // ⬅️ initialize the splash screen
+  }
 }

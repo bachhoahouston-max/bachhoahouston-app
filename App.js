@@ -80,6 +80,8 @@ import { navigate } from './navigationRef';
 import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
+import BootSplash from "react-native-bootsplash";
+
 
 
 
@@ -110,6 +112,7 @@ const App = () => {
 
     useEffect(() => {
         SplashScreen.hide();
+
         setInitialRoute();
         checkLng();
         getCartDetail();
@@ -129,7 +132,7 @@ const App = () => {
                 await getProfile();
 
                 // After a short delay, navigate to the appropriate screen
-                setTimeout(() => {
+                setTimeout(async () => {
                     if (userDetail.type === 'ADMIN') {
                         setInitial('Employeetab');
                     } else if (userDetail.type === 'DRIVER') {
@@ -141,19 +144,25 @@ const App = () => {
                     } else {
                         setInitial('App');
                     }
+                    await BootSplash.hide({ fade: true });
+
                 }, 2000); // 2 seconds delay on Welcome screen
             } else {
                 // No user logged in, go to Auth after delay
-                setTimeout(() => {
+                setTimeout(async () => {
                     setInitial('Welcome');
+                    await BootSplash.hide({ fade: true });
+
                     // setInitial('Auth');
                 }, 2000);
             }
         } catch (error) {
             console.error('Error checking user session:', error);
             // If there's an error, default to Auth screen
-            setTimeout(() => {
+            setTimeout(async () => {
                 setInitial('Welcome');
+                await BootSplash.hide({ fade: true });
+
                 // setInitial('Auth');
             }, 2000);
         }
