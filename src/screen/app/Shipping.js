@@ -11,8 +11,9 @@ import {
   Dimensions,
   Platform,
   PermissionsAndroid,
+  KeyboardAvoidingView,
 } from 'react-native';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import Constants, { FONTS } from '../../Assets/Helpers/constant';
 import { goBack, navigate } from '../../../navigationRef';
 import { GetApi, Post } from '../../Assets/Helpers/Service';
@@ -32,6 +33,8 @@ import DriverHeader from '../../Assets/Component/DriverHeader';
 import { Checkbox } from 'react-native-paper';
 import GetLatLongFromAddress from '../../Assets/Helpers/GetLatLongFromAddress';
 import Toast from 'react-native-toast-message';
+import PhoneInput from '@linhnguyen96114/react-native-phone-input';
+
 
 const Shipping = props => {
   const { t } = useTranslation();
@@ -59,6 +62,8 @@ const Shipping = props => {
   const [businessAddress, setBusinessAddress] = useState({
     businessAddress: user?.BusinessAddress || '',
   });
+  const phoneInput = useRef(null);
+
 
 
 
@@ -301,6 +306,11 @@ const Shipping = props => {
 
 
   const submit = () => {
+    const isValid = phoneInput.current?.isValidNumber(addressdata.number);
+    if (addressdata.number && !isValid) {
+      setToast(t('Please enter a valid phone number'));
+      return;
+    }
     const isEmpty = val => !val || val.trim() === '';
 
     const requiredFields = [
@@ -376,7 +386,7 @@ const Shipping = props => {
       SecurityGateCode: finalAddressData.SecurityGateCode,
       number: finalAddressData.number,
       userId: user?._id,
-      name: finalAddressData.name,
+      username: finalAddressData.name,
       lastname: finalAddressData.lastname,
     };
 
@@ -409,7 +419,7 @@ const Shipping = props => {
       if (Platform.OS === 'ios') {
         request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE).then(result => {
           console.log(result);
-          if (result === 'granted') {
+          if (result === 'granted' || result === 'limited') {
             Geolocation.getCurrentPosition(
               position => {
                 // setlocation(position);
@@ -469,122 +479,128 @@ const Shipping = props => {
     }
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}
+
+    >
       {/* <Header back={true} item={'Shipping'} /> */}
       <DriverHeader item={t('Shipping Address')} showback={true} />
       {/* <View style={styles.toppart}>
         <Text style={styles.carttxt}>{t('Shipping Address')} </Text>
       </View> */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        style={{ marginTop: 20, marginHorizontal: 20 }}>
-        <Text style={styles.headtxt}>{t('Shipping Address')}</Text>
-        <View style={styles.box}>
-          <Text style={styles.name}>{t('First Name')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t('Enter First Name')}
-            placeholderTextColor={Constants.customgrey}
-            value={addressdata?.name}
-            onChangeText={name => setaddressdata({ ...addressdata, name })}
-          />
-        </View>
-        {submitted && addressdata.name === '' && (
-          <Text style={styles.require}>{t('Name is required')}</Text>
-        )}
-        {/* {availableZipCodes?.map((zip) => (
+      <KeyboardAvoidingView style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} // tweak as needed
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
+          style={{ marginTop: 20, marginHorizontal: 20 }}>
+          <Text style={styles.headtxt}>{t('Shipping Address')}</Text>
+          <View style={styles.box}>
+            <Text style={styles.name}>{t('First Name')}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={t('Enter First Name')}
+              placeholderTextColor={Constants.customgrey}
+              value={addressdata?.name}
+              onChangeText={name => setaddressdata({ ...addressdata, name })}
+            />
+          </View>
+          {submitted && addressdata.name === '' && (
+            <Text style={styles.require}>{t('Name is required')}</Text>
+          )}
+          {/* {availableZipCodes?.map((zip) => (
           <Text key={zip}>
             {zip?.pincode}
           </Text>
         ))} */}
-        <View style={styles.box}>
-          <Text style={styles.name}>{t('Last Name')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t('Enter Last Name')}
-            placeholderTextColor={Constants.customgrey}
-            value={addressdata?.lastname}
-            onChangeText={lastname =>
-              setaddressdata({ ...addressdata, lastname })
-            }
-          />
-        </View>
-        {submitted && addressdata.lastname === '' && (
-          <Text style={styles.require}>{t('Last Name is required')}</Text>
-        )}
-        <View style={styles.box2}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{t('Address')}</Text>
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: Constants.customgrey3,
-                color: Constants.black,
-                fontWeight: '500',
-                borderRadius: 10,
-                textAlign: 'left',
-                fontSize: 16,
-                fontFamily: FONTS.Regular,
-                marginTop: 5,
-                paddingHorizontal: 10,
-                // flex: 1,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                height: 50,
-                width: '100%',
-              }}>
-              <LocationDropdown
-                value={addressdata?.address || locationadd || ''}
-                focus={from === 'location'}
-                setIsFocus={setFrom}
-                from="location"
-                getLocationValue={(lat, add, city, country, state) =>
-                  getLocationValue(lat, add, city, country, state)
-                }
-              />
+          <View style={styles.box}>
+            <Text style={styles.name}>{t('Last Name')}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={t('Enter Last Name')}
+              placeholderTextColor={Constants.customgrey}
+              value={addressdata?.lastname}
+              onChangeText={lastname =>
+                setaddressdata({ ...addressdata, lastname })
+              }
+            />
+          </View>
+          {submitted && addressdata.lastname === '' && (
+            <Text style={styles.require}>{t('Last Name is required')}</Text>
+          )}
+          <View style={styles.box2}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.name}>{t('Address')}</Text>
+              <View
+                style={{
+                  borderWidth: 1,
+                  borderColor: Constants.customgrey3,
+                  color: Constants.black,
+                  fontWeight: '500',
+                  borderRadius: 10,
+                  textAlign: 'left',
+                  fontSize: 16,
+                  fontFamily: FONTS.Regular,
+                  marginTop: 5,
+                  paddingHorizontal: 10,
+                  // flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  height: 50,
+                  width: '100%',
+                }}>
+                <LocationDropdown
+                  value={addressdata?.address || locationadd || ''}
+                  focus={from === 'location'}
+                  setIsFocus={setFrom}
+                  from="location"
+                  getLocationValue={(lat, add, city, country, state) =>
+                    getLocationValue(lat, add, city, country, state)
+                  }
+                />
+              </View>
             </View>
           </View>
-        </View>
-        {submitted && addressdata.address === '' && !locationadd && (
-          <Text style={styles.require}>{t('Address is required')}</Text>
-        )}
-        <View style={styles.box}>
-          <Text style={styles.name}>{t('Apartment No.')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t('Enter Apartment No (Optional)')}
-            placeholderTextColor={Constants.customgrey}
-            value={addressdata?.ApartmentNo}
-            onChangeText={ApartmentNo =>
-              setaddressdata({ ...addressdata, ApartmentNo })
-            }
-          />
-        </View>
-        <View style={styles.box}>
-          <Text style={styles.name}>{t('Security Gate No.')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t('Enter Security Gate No. (Optional)')}
-            placeholderTextColor={Constants.customgrey}
-            value={addressdata?.SecurityGateCode}
-            onChangeText={SecurityGateCode =>
-              setaddressdata({ ...addressdata, SecurityGateCode })
-            }
-          />
-        </View>
-        <View style={styles.box}>
-          <Text style={styles.name}>{t('Zip / Post Code')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t('Enter Zip / Post Code')}
-            keyboardType="number-pad"
-            placeholderTextColor={Constants.customgrey}
-            value={addressdata?.zipcode}
-            onChangeText={zipcode => setaddressdata({ ...addressdata, zipcode })}
-          />
-          {/* <Dropdown
+          {submitted && addressdata.address === '' && !locationadd && (
+            <Text style={styles.require}>{t('Address is required')}</Text>
+          )}
+          <View style={styles.box}>
+            <Text style={styles.name}>{t('Apartment No.')}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={t('Enter Apartment No (Optional)')}
+              placeholderTextColor={Constants.customgrey}
+              value={addressdata?.ApartmentNo}
+              onChangeText={ApartmentNo =>
+                setaddressdata({ ...addressdata, ApartmentNo })
+              }
+            />
+          </View>
+          <View style={styles.box}>
+            <Text style={styles.name}>{t('Security Gate No.')}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={t('Enter Security Gate No. (Optional)')}
+              placeholderTextColor={Constants.customgrey}
+              value={addressdata?.SecurityGateCode}
+              onChangeText={SecurityGateCode =>
+                setaddressdata({ ...addressdata, SecurityGateCode })
+              }
+            />
+          </View>
+          <View style={styles.box}>
+            <Text style={styles.name}>{t('Zip / Post Code')}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={t('Enter Zip / Post Code')}
+              keyboardType="number-pad"
+              placeholderTextColor={Constants.customgrey}
+              value={addressdata?.zipcode}
+              onChangeText={zipcode => setaddressdata({ ...addressdata, zipcode })}
+            />
+            {/* <Dropdown
             style={styles.input}
             // search={true}
             data={availableZipCodes.map(zip => ({
@@ -613,28 +629,48 @@ const Shipping = props => {
               </Text>
             )}
           />*/}
-        </View>
-        {submitted && addressdata.zipcode === '' && (
-          <Text style={styles.require}>{t('Zip/Post code is required')}</Text>
-        )}
-        {/* {error && (
+          </View>
+          {submitted && addressdata.zipcode === '' && (
+            <Text style={styles.require}>{t('Zip/Post code is required')}</Text>
+          )}
+          {/* {error && (
           <Text style={styles.require}>{t('Not serviceable area')}</Text>
         )} */}
-        <View style={styles.box}>
-          <Text style={styles.name}>{t('Mobile Number')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t('Enter Number')}
-            keyboardType="number-pad"
-            placeholderTextColor={Constants.customgrey}
-            value={addressdata?.number}
-            onChangeText={number => setaddressdata({ ...addressdata, number })}
+          <View style={styles.box}>
+            <Text style={styles.name}>{t('Mobile Number')}</Text>
+            {/* <TextInput
+              style={styles.input}
+              placeholder={t('Enter Number')}
+              keyboardType="number-pad"
+              placeholderTextColor={Constants.customgrey}
+              value={addressdata?.number}
+              onChangeText={number => setaddressdata({ ...addressdata, number })}
+            /> */}
+          </View>
+          <PhoneInput
+            ref={phoneInput}
+            defaultValue={addressdata?.number.replace('+1', '')}
+            defaultCode="US"
+            flagButtonStyle={{
+              display: 'none',
+            }}
+            onChangeText={(value) => { console.log(value) }}
+            containerStyle={styles.input}
+            textContainerStyle={{
+              borderRadius: 30,
+              backgroundColor: '#fff',
+              paddingHorizontal: 15,
+            }}
+            onChangeFormattedText={text => {
+              console.log(text);
+              setaddressdata({ ...addressdata, number: text });
+              console.log(phoneInput.current?.isValidNumber(text))
+            }}
           />
-        </View>
-        {submitted && addressdata.number === '' && (
-          <Text style={styles.require}>{t('Number is required')}</Text>
-        )}
-        {/* <View style={styles.box}>
+          {submitted && addressdata.number === '' && (
+            <Text style={styles.require}>{t('Number is required')}</Text>
+          )}
+          {/* <View style={styles.box}>
           <Text style={styles.name}>{t('City')}</Text>
           <TextInput
             style={styles.input}
@@ -660,62 +696,63 @@ const Shipping = props => {
         {submitted && addressdata.country === '' && (
           <Text style={styles.require}>{t('Country is required')}</Text>
         )} */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginTop: 5,
-            marginLeft: -20
-          }}>
-          <Checkbox.Item status={isBusiness ? 'checked' : 'unchecked'}
-            onPress={() => setIsBusiness(!isBusiness)}
-            color={Constants.saffron}
-            uncheckedColor={Constants.customgrey}
-            mode='android'
-            label={t('This is business address')}
-            position='leading'
-          />
-          {/* <Checkbox
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginTop: 5,
+              marginLeft: -20
+            }}>
+            <Checkbox.Item status={isBusiness ? 'checked' : 'unchecked'}
+              onPress={() => setIsBusiness(!isBusiness)}
+              color={Constants.greennew}
+              uncheckedColor={Constants.customgrey}
+              mode='android'
+              label={t('This is business address')}
+              position='leading'
+            />
+            {/* <Checkbox
             status={isBusiness ? 'checked' : 'unchecked'}
             onPress={() => setIsBusiness(!isBusiness)}
             color={Constants.saffron}
             uncheckedColor={Constants.customgrey}
             mode='android'
           /> */}
-          {/* <Text
+            {/* <Text
             style={{
               fontSize: 16,
               fontFamily: FONTS.Regular,
             }}>
             {t('This is business address')}
           </Text> */}
-        </View>
-        {isBusiness && (
-          <View style={styles.box}>
-            <Text style={styles.name}>{t('Business Name')}</Text>
-            <TextInput
-              style={styles.input}
-              placeholder={t('Enter Business Name')}
-              placeholderTextColor={Constants.customgrey}
-              value={businessAddress?.businessAddress}
-              onChangeText={text =>
-                setBusinessAddress({ ...businessAddress, businessAddress: text })
-              }
-            />
           </View>
-        )}
-        {submitted && isBusiness && !businessAddress?.businessAddress && (
-          <Text style={styles.require}>{t('Business Name is required')}</Text>
-        )}
-        <TouchableOpacity style={styles.btn} onPress={() => submit()}>
-          <Text style={styles.btntxt}>
-            {propdata?.type === 'checkout'
-              ? t('Continue')
-              : t('Update Address')}
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+          {isBusiness && (
+            <View style={styles.box}>
+              <Text style={styles.name}>{t('Business Name')}</Text>
+              <TextInput
+                style={styles.input}
+                placeholder={t('Enter Business Name')}
+                placeholderTextColor={Constants.customgrey}
+                value={businessAddress?.businessAddress}
+                onChangeText={text =>
+                  setBusinessAddress({ ...businessAddress, businessAddress: text })
+                }
+              />
+            </View>
+          )}
+          {submitted && isBusiness && !businessAddress?.businessAddress && (
+            <Text style={styles.require}>{t('Business Name is required')}</Text>
+          )}
+          <TouchableOpacity style={styles.btn} onPress={() => submit()}>
+            <Text style={styles.btntxt}>
+              {propdata?.type === 'checkout'
+                ? t('Continue')
+                : t('Update Address')}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -800,7 +837,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginVertical: 30,
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
     width: '100%',
     alignSelf: 'center',
     marginBottom: 40,

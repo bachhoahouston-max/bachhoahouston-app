@@ -44,7 +44,20 @@ const SignIn = props => {
 
   useEffect(() => {
     checkLng();
+    checkAuthDetails();
   }, []);
+
+  const checkAuthDetails = async () => {
+    const authDetails = await AsyncStorage.getItem('authDetails');
+    if (authDetails != null) {
+      let details = JSON.parse(authDetails);
+      setUserDetail({
+        ...userDetail,
+        username: details.username,
+        password: details.password,
+      });
+    }
+  }
   const checkLng = async () => {
     const x = await AsyncStorage.getItem('LANG');
     if (x != null) {
@@ -70,7 +83,7 @@ const SignIn = props => {
       return;
     }
 
-    const data = {
+    let data = {
       username: userDetail.username.toLowerCase().trim(),
       password: userDetail.password,
     };
@@ -90,6 +103,7 @@ const SignIn = props => {
           });
           setLoading(false);
           await AsyncStorage.setItem('userDetail', JSON.stringify(res.data));
+          await AsyncStorage.setItem('authDetails', JSON.stringify(data));
           setuser(res.data);
           if (res.data.type === 'SELLER') {
             setLoading(false);
@@ -141,20 +155,20 @@ const SignIn = props => {
   };
 
   return (
-     <KeyboardAvoidingView 
-    style={newStyles.container}
-    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-    <ScrollView
-  style={newStyles.scrollView}
-  showsVerticalScrollIndicator={false}
-  contentContainerStyle={[newStyles.scrollContent, { overflow: 'visible' }]}>
-        
+    <KeyboardAvoidingView
+      style={newStyles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        style={newStyles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[newStyles.scrollContent, { overflow: 'visible' }]}>
+
         {/* Header with Background Image */}
         <ImageBackground
           source={require('../../Assets/Images/ron.png')}
           style={newStyles.headerBackground}
           resizeMode="cover">
-          
+
           {/* Language Switcher */}
           <View style={newStyles.languageSwitcher}>
             <TouchableOpacity
@@ -373,23 +387,23 @@ const newStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#E8F5E9',
-    overflow: 'visible', 
+    overflow: 'visible',
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    overflow: 'visible', 
+    overflow: 'visible',
   },
   headerBackground: {
     width: '100%',
     height: 230,
     paddingTop: Platform.OS === 'ios' ? 50 : 20,
     zIndex: 10,
-     position: 'relative',
+    position: 'relative',
 
-   
+
   },
   languageSwitcher: {
     flexDirection: 'row',
@@ -434,11 +448,11 @@ const newStyles = StyleSheet.create({
   mainContent: {
     flex: 1,
     backgroundColor: '#E8F5E9',
-   
+
     paddingHorizontal: 20,
     paddingTop: 80,
     zIndex: 5,
-     marginTop: 10,
+    marginTop: 10,
   },
   characterImage: {
     width: 180,
@@ -457,20 +471,20 @@ const newStyles = StyleSheet.create({
     marginLeft: 5,
   },
   input: {
-  backgroundColor: '#FFFFFF',
-  borderRadius: 25,
-  paddingHorizontal: 20,
-  paddingVertical: 15,
-  fontSize: 15,
-  color: '#374151',  
-  borderWidth: 1,  
-  borderColor: '#4B5563',  
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.05,
-  shadowRadius: 3,
-  elevation: 2,
-},
+    backgroundColor: '#FFFFFF',
+    borderRadius: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    fontSize: 15,
+    color: '#374151',
+    borderWidth: 1,
+    borderColor: '#4B5563',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
   passwordWrapper: {
     position: 'relative',
   },

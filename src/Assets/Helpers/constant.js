@@ -15,6 +15,7 @@ const Constants = {
   lightgreen: '#E8F5E9',
   yellow: '#5CB446',
   custom_black: '#06161C',
+  lightgreen: "#E8F5E9",
   dark_black: '#000000',
   light_black: '#98A2B3',
   black: '#000000',

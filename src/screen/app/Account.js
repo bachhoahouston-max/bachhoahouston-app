@@ -114,7 +114,7 @@ const Account = props => {
         await InAppBrowser.open('https://www.bachhoahouston.com/ReturnPolicy', {
           // Customization options
           dismissButtonStyle: 'cancel',
-          preferredBarTintColor: Constants.saffron,
+          preferredBarTintColor: Constants.greennew,
           preferredControlTintColor: 'white',
           readerMode: false,
           animated: true,
@@ -136,7 +136,7 @@ const Account = props => {
         await InAppBrowser.open('https://www.bachhoahouston.com/ContactUs', {
           // Customization options
           dismissButtonStyle: 'cancel',
-          preferredBarTintColor: Constants.saffron,
+          preferredBarTintColor: Constants.greennew,
           preferredControlTintColor: 'white',
           readerMode: false,
           animated: true,
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     // borderRadius: 20,
     marginTop: 10,
-    backgroundColor: '#E8F5E9' ,
+    backgroundColor: '#E8F5E9',
     width: '93%',
     borderRadius: 5,
     alignSelf: 'center',
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   iconcov: {
-    backgroundColor:'#2E7D32',
+    backgroundColor: '#2E7D32',
     borderRadius: 8,
     padding: 10,
   },

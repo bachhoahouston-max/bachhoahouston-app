@@ -433,9 +433,9 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.SemiBold,
   },
   toppart: {
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
     paddingTop: 5,
-    paddingBottom: 20,
+    // paddingBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

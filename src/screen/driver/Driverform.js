@@ -307,7 +307,7 @@ const Driverform = props => {
       if (Platform.OS === 'ios') {
         request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE).then(result => {
           console.log(result);
-          if (result === 'granted') {
+          if (result === 'granted' || result === 'limited') {
             Geolocation.getCurrentPosition(
               position => {
                 // setlocation(position);

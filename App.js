@@ -126,33 +126,14 @@ const App = () => {
         try {
             const userData = await AsyncStorage.getItem('userDetail');
             const userDetail = userData ? JSON.parse(userData) : null;
-
+            console.log('userDetail====>', userDetail);
             if (userDetail?.token) {
-                setuser(userDetail);
-                await getProfile();
-
-                // After a short delay, navigate to the appropriate screen
-                setTimeout(async () => {
-                    if (userDetail.type === 'ADMIN') {
-                        setInitial('Employeetab');
-                    } else if (userDetail.type === 'DRIVER') {
-                        if (userDetail.status === 'Verified') {
-                            setInitial('Drivertab');
-                        } else {
-                            setInitial('Driverform');
-                        }
-                    } else {
-                        setInitial('App');
-                    }
-                    await BootSplash.hide({ fade: true });
-
-                }, 2000); // 2 seconds delay on Welcome screen
+                getProfile(userDetail);
             } else {
                 // No user logged in, go to Auth after delay
                 setTimeout(async () => {
                     setInitial('Welcome');
                     await BootSplash.hide({ fade: true });
-
                     // setInitial('Auth');
                 }, 2000);
             }
@@ -180,15 +161,33 @@ const App = () => {
         }
     };
 
-    const getProfile = () => {
+    const getProfile = async (u) => {
+        await AsyncStorage.setItem('userDetail', JSON.stringify(u));
         setLoading(true);
         GetApi('getProfile', {}).then(
             async res => {
                 setLoading(false);
                 console.log(res);
                 if (res.status) {
-                    res.data.token = user?.token;
+                    let userDetail = res.data;
+                    res.data.token = u?.token;
+                    AsyncStorage.setItem('userDetail', JSON.stringify(res.data));
                     setuser(res.data);
+                    // setTimeout(async () => {
+                    if (userDetail.type === 'ADMIN') {
+                        setInitial('Employeetab');
+                    } else if (userDetail.type === 'DRIVER') {
+                        if (userDetail.status === 'Verified') {
+                            setInitial('Drivertab');
+                        } else {
+                            setInitial('Driverform');
+                        }
+                    } else {
+                        setInitial('App');
+                    }
+                    await BootSplash.hide({ fade: true });
+
+                    // }, 2000);
                     // triggerDeviceRegistrationAfterSignIn();
                 }
             },
@@ -204,7 +203,7 @@ const App = () => {
             if (Platform.OS === 'ios') {
                 request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE).then(result => {
                     console.log('dsdswdswdsw===>', result);
-                    if (result === 'granted') {
+                    if (result === 'granted' || result === 'limited') {
                         Geolocation.getCurrentPosition(
                             position => {
                                 console.log(position);

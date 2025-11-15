@@ -50,7 +50,7 @@ const LocationDropdown = (props) => {
       if (Platform.OS === 'ios') {
         request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE).then(async result => {
           console.log(result);
-          if (result === 'granted') {
+          if (result === 'granted' || result === 'limited') {
             GooglePlacesInput(text)
           }
         });

@@ -97,7 +97,7 @@ const Map = props => {
       if (Platform.OS === 'ios') {
         request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE).then(result => {
           console.log(result);
-          if (result === 'granted') {
+          if (result === 'granted' || result === 'limited') {
             Geolocation.getCurrentPosition(
               position => {
                 console.log(position);
@@ -361,7 +361,7 @@ const Map = props => {
     return new Promise((resolve, reject) => {
       if (Platform.OS === 'ios') {
         request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE).then(result => {
-          if (result === 'granted') {
+          if (result === 'granted' || result === 'limited') {
             Geolocation.getCurrentPosition(
               position => {
                 const lat = position.coords.latitude;

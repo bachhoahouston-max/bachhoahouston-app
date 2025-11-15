@@ -87,7 +87,7 @@ const Notification = props => {
             <View style={[styles.box]}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={[styles.editiconcov]}>
-                  <NotificationIcon height={25} color={Constants.saffron} />
+                  <NotificationIcon height={25} color={Constants.greennew} />
                 </View>
                 <View style={styles.notitxt}>
                   <Text style={[styles.txtm]}>{item.title}</Text>
@@ -133,14 +133,14 @@ const styles = StyleSheet.create({
   },
   box: {
     // height: 80,
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.lightgreen,
     borderRadius: 20,
     // flexDirection: 'row',
     // alignItems: 'center',
     paddingHorizontal: 20,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: Constants.saffron,
+    borderColor: Constants.greennew,
   },
   editiconcov: {
     height: 30,
@@ -153,14 +153,14 @@ const styles = StyleSheet.create({
   txtm: {
     fontWeight: '500',
     // marginVertical:10,
-    color: Constants.white,
+    color: Constants.black,
     fontSize: 18,
     fontFamily: FONTS.Medium,
   },
   txtm2: {
     // fontWeight:'500',
     // marginVertical:10,
-    color: Constants.white,
+    color: Constants.black,
     fontSize: 16,
     fontFamily: FONTS.Regular,
   },

@@ -15,6 +15,7 @@ const GetApi = async (url, props, data) => {
         if (connected) {
           const user = await AsyncStorage.getItem('userDetail');
           let userDetail = JSON.parse(user);
+          console.log('userDetail from service====>', userDetail);
           console.log(Constants.baseUrl + url);
           console.log(`jwt ${userDetail?.token}`);
 
