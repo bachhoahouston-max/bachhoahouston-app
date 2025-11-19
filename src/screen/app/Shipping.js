@@ -33,7 +33,7 @@ import DriverHeader from '../../Assets/Component/DriverHeader';
 import { Checkbox } from 'react-native-paper';
 import GetLatLongFromAddress from '../../Assets/Helpers/GetLatLongFromAddress';
 import Toast from 'react-native-toast-message';
-import PhoneInput from '@linhnguyen96114/react-native-phone-input';
+// import PhoneInput from '@linhnguyen96114/react-native-phone-input';
 
 
 const Shipping = props => {
@@ -111,13 +111,7 @@ const Shipping = props => {
               res?.data?.SecurityGateCode || prev.SecurityGateCode || '',
             zipcode: res?.data?.zipcode || prev.zipcode || '',
             number:
-              res?.data?.number ||
-              res?.data?.number ||
-              user?.number ||
-              user?.phone ||
-              user?.mobile ||
-              prev.number ||
-              '',
+              res?.data?.number?.replace('+1', '') || '',
             city: res?.data?.city || prev.city || '',
             country: res?.data?.country || prev.country || '',
           }));
@@ -306,11 +300,11 @@ const Shipping = props => {
 
 
   const submit = () => {
-    const isValid = phoneInput.current?.isValidNumber(addressdata.number);
-    if (addressdata.number && !isValid) {
-      setToast(t('Please enter a valid phone number'));
-      return;
-    }
+    // const isValid = phoneInput.current?.isValidNumber(addressdata.number);
+    // if (addressdata.number && !isValid) {
+    //   setToast(t('Please enter a valid phone number'));
+    //   return;
+    // }
     const isEmpty = val => !val || val.trim() === '';
 
     const requiredFields = [
@@ -384,12 +378,12 @@ const Shipping = props => {
       BusinessAddress: finalAddressData.BusinessAddress,
       ApartmentNo: finalAddressData.ApartmentNo,
       SecurityGateCode: finalAddressData.SecurityGateCode,
-      number: finalAddressData.number,
+      number: `+1${finalAddressData?.number}`,
       userId: user?._id,
       username: finalAddressData.name,
       lastname: finalAddressData.lastname,
     };
-
+    console.log(userdata)
     setLoading(true);
     Post('updateProfile', userdata, {}).then(
       async res => {
@@ -647,26 +641,22 @@ const Shipping = props => {
               onChangeText={number => setaddressdata({ ...addressdata, number })}
             /> */}
           </View>
-          <PhoneInput
-            ref={phoneInput}
-            defaultValue={addressdata?.number.replace('+1', '')}
-            defaultCode="US"
-            flagButtonStyle={{
-              display: 'none',
-            }}
-            onChangeText={(value) => { console.log(value) }}
-            containerStyle={styles.input}
-            textContainerStyle={{
-              borderRadius: 30,
-              backgroundColor: '#fff',
-              paddingHorizontal: 15,
-            }}
-            onChangeFormattedText={text => {
-              console.log(text);
-              setaddressdata({ ...addressdata, number: text });
-              console.log(phoneInput.current?.isValidNumber(text))
-            }}
-          />
+          <View style={styles.phonecontainer}  >
+            {/* Country Code Box */}
+            <TouchableOpacity style={styles.codeBox}>
+              <Text style={styles.codeText}>+1</Text>
+            </TouchableOpacity>
+
+            {/* Phone Input */}
+            <TextInput
+              style={styles.input2}
+              placeholder={t('Enter Number')}
+              keyboardType="number-pad"
+              placeholderTextColor={Constants.customgrey}
+              value={addressdata?.number}
+              onChangeText={number => setaddressdata({ ...addressdata, number })}
+            />
+          </View>
           {submitted && addressdata.number === '' && (
             <Text style={styles.require}>{t('Number is required')}</Text>
           )}
@@ -858,5 +848,43 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginBottom: 5,
     borderRadius: 5,
+  },
+
+  codeBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    backgroundColor: '#fff',
+    borderRightWidth: 1,
+    borderRightColor: '#ddd',
+  },
+
+  codeText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+  arrow: {
+    marginLeft: 4,
+    fontSize: 12,
+  },
+
+  input2: {
+    flex: 1,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    color: '#000',
+  },
+
+  phonecontainer: {
+    flexDirection: 'row',
+    width: '100%',
+    alignSelf: 'center',
+    backgroundColor: '#f2f2f2',
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    height: 45
   },
 });

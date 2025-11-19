@@ -56,38 +56,38 @@ export const TabNav = () => {
   const { t } = useTranslation();
   const [cartdetail, setcartdetail] = useContext(CartContext);
 
-const TabArr = [
-  {
-    icon: Home,
-    component: HomeStack,
-    routeName: 'Home',
-    name: 'Home',
-  },
-  {
-    icon: LayoutDashboard,
-    component: CategoriesStack,
-    routeName: 'Categories',
-    name: 'Categories',
-  },
-  {
-    icon: BringToFront,
-    component: OrdersStack,
-    routeName: 'Orders',
-    name: 'Orders',
-  },
-  {
-    icon: ShoppingCart,
-    component: CartStack,
-    routeName: 'Cart',
-    name: 'Cart',
-  },
-];
+  const TabArr = [
+    {
+      icon: Home,
+      component: HomeStack,
+      routeName: 'Home',
+      name: 'Home',
+    },
+    {
+      icon: LayoutDashboard,
+      component: CategoriesStack,
+      routeName: 'Categories',
+      name: 'Categories',
+    },
+    {
+      icon: BringToFront,
+      component: OrdersStack,
+      routeName: 'Orders',
+      name: 'Orders',
+    },
+    {
+      icon: ShoppingCart,
+      component: CartStack,
+      routeName: 'Cart',
+      name: 'Cart',
+    },
+  ];
 
   const TabButton = ({ onPress, onclick, item, index }) => {
     const isFocused = useIsFocused();
     const isCartTab = item.routeName === 'Cart';
-    const cartCount = cartdetail?.length || 0;
-    
+    const cartCount = cartdetail?.reduce((sum, obj) => sum + (obj?.qty ?? 0), 0) || 0;
+
     const IconComponent = item.icon;
 
     return (
@@ -100,8 +100,8 @@ const TabArr = [
               styles.tabBtn,
               isFocused && styles.tabBtnActive,
             ]}>
-            <IconComponent 
-              color={isFocused ? '#2E7D32' : Constants.customgrey3} 
+            <IconComponent
+              color={isFocused ? '#2E7D32' : Constants.customgrey3}
               size={26}
               strokeWidth={isFocused ? 2.5 : 2}
             />

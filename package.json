@@ -30,7 +30,6 @@
     "open-ios": "open -a Xcode "
   },
   "dependencies": {
-    "@linhnguyen96114/react-native-phone-input": "^3.5.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "^8.4.4",
     "@react-native-community/netinfo": "^11.4.1",

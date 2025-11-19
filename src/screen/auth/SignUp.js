@@ -10,6 +10,7 @@ import {
   Linking,
   ImageBackground,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import React, { useContext, useEffect, useState } from 'react';
 import styles from './styles';
@@ -155,239 +156,245 @@ const SignUp = props => {
   }
 
   return (
-    <SafeAreaView style={newStyles.container}>
+    <View style={newStyles.container}>
       <Spinner color={'#fff'} visible={loading} />
-      <ScrollView
-        style={newStyles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={newStyles.scrollContent}>
-        
-        {/* Header with Background Image */}
-        <ImageBackground
-          source={require('../../Assets/Images/ron.png')}
-          style={newStyles.headerBackground}
-          resizeMode="cover">
-          
-          {/* Language Switcher */}
-          <View style={newStyles.languageSwitcher}>
-            <TouchableOpacity
-              style={[
-                newStyles.langButton,
-                selectLanguage === 'English' && newStyles.langButtonActive
-              ]}
-              onPress={async () => {
-                await AsyncStorage.setItem('LANG', 'en');
-                i18n.changeLanguage('en');
-                setSelectLanguage('English');
-              }}>
-              <Text style={[
-                newStyles.langButtonText,
-                selectLanguage === 'English' && newStyles.langButtonTextActive
-              ]}>
-                EN
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                newStyles.langButton,
-                selectLanguage === 'Vietnames' && newStyles.langButtonActive
-              ]}
-              onPress={async () => {
-                await AsyncStorage.setItem('LANG', 'vi');
-                i18n.changeLanguage('vi');
-                setSelectLanguage('Vietnames');
-              }}>
-              <Text style={[
-                newStyles.langButtonText,
-                selectLanguage === 'Vietnames' && newStyles.langButtonTextActive
-              ]}>
-                VI
-              </Text>
-            </TouchableOpacity>
-          </View>
+      <KeyboardAvoidingView style={newStyles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      >
+        <ScrollView
+          style={newStyles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={newStyles.scrollContent}
+        >
 
-          {/* Header Text */}
-          <View style={newStyles.headerTextContainer}>
-            <Text style={newStyles.welcomeText}>{t('WELCOME')}</Text>
-            <Text style={newStyles.subtitleText}>
-              {t('Please enter your Sign up details')}
-            </Text>
-          </View>
-        </ImageBackground>
+          {/* Header with Background Image */}
+          <ImageBackground
+            source={require('../../Assets/Images/ron.png')}
+            style={newStyles.headerBackground}
+            resizeMode="cover">
 
-        {/* Main Content */}
-        <View style={newStyles.mainContent}>
-          {/* Character Image */}
-          {/* <Image
+            {/* Language Switcher */}
+            <View style={newStyles.languageSwitcher}>
+              <TouchableOpacity
+                style={[
+                  newStyles.langButton,
+                  selectLanguage === 'English' && newStyles.langButtonActive
+                ]}
+                onPress={async () => {
+                  await AsyncStorage.setItem('LANG', 'en');
+                  i18n.changeLanguage('en');
+                  setSelectLanguage('English');
+                }}>
+                <Text style={[
+                  newStyles.langButtonText,
+                  selectLanguage === 'English' && newStyles.langButtonTextActive
+                ]}>
+                  EN
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  newStyles.langButton,
+                  selectLanguage === 'Vietnames' && newStyles.langButtonActive
+                ]}
+                onPress={async () => {
+                  await AsyncStorage.setItem('LANG', 'vi');
+                  i18n.changeLanguage('vi');
+                  setSelectLanguage('Vietnames');
+                }}>
+                <Text style={[
+                  newStyles.langButtonText,
+                  selectLanguage === 'Vietnames' && newStyles.langButtonTextActive
+                ]}>
+                  VI
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Header Text */}
+            <View style={newStyles.headerTextContainer}>
+              <Text style={newStyles.welcomeText}>{t('WELCOME')}</Text>
+              <Text style={newStyles.subtitleText}>
+                {t('Please enter your Sign up details')}
+              </Text>
+            </View>
+          </ImageBackground>
+
+          {/* Main Content */}
+          <View style={newStyles.mainContent}>
+            {/* Character Image */}
+            {/* <Image
             source={require('../../Assets/Images/girl2.png')}
             style={newStyles.characterImage}
             resizeMode="contain"
           /> */}
 
-          {/* User Type Selection */}
-          <View style={newStyles.userTypeContainer}>
-            <TouchableOpacity
-              style={[
-                newStyles.userTypeButton,
-                user === 0 && newStyles.userTypeButtonActive
-              ]}
-              onPress={() => {
-                setuser(0);
-                userDetail.type = 'USER';
-              }}>
-              <Text style={[
-                newStyles.userTypeText,
-                user === 0 && newStyles.userTypeTextActive
-              ]}>
-                {t('User')}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                newStyles.userTypeButton,
-                user === 2 && newStyles.userTypeButtonActive
-              ]}
-              onPress={() => {
-                setuser(2);
-                userDetail.type = 'DRIVER';
-              }}>
-              <Text style={[
-                newStyles.userTypeText,
-                user === 2 && newStyles.userTypeTextActive
-              ]}>
-                {t('Driver')}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Name Input */}
-          <View style={newStyles.inputContainer}>
-            <TextInput
-              style={newStyles.input}
-              placeholder={t('Enter Name')}
-              placeholderTextColor="#4B5563"
-              value={userDetail.username}
-              onChangeText={username => setUserDetail({ ...userDetail, username })}
-            />
-          </View>
-          {submitted && userDetail.username === '' && (
-            <Text style={newStyles.errorText}>{t('Name is required')}</Text>
-          )}
-
-          {/* Email Input */}
-          <View style={newStyles.inputContainer}>
-            <TextInput
-              style={newStyles.input}
-              placeholder={t('Enter Email')}
-              placeholderTextColor="#4B5563"
-              value={userDetail.email}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              onChangeText={email => setUserDetail({ ...userDetail, email })}
-            />
-          </View>
-          {submitted && userDetail.email === '' && (
-            <Text style={newStyles.errorText}>{t('Email is required')}</Text>
-          )}
-
-          {/* Phone Number Input */}
-          <View style={newStyles.inputContainer}>
-            <TextInput
-              style={newStyles.input}
-              placeholder={t('Phone Number')}
-              placeholderTextColor="#4B5563"
-              keyboardType="number-pad"
-              value={userDetail.number}
-              onChangeText={number => setUserDetail({ ...userDetail, number })}
-            />
-          </View>
-          {submitted && userDetail.number === '' && (
-            <Text style={newStyles.errorText}>{t('Number is required')}</Text>
-          )}
-
-          {/* Password Input */}
-          <View style={newStyles.inputContainer}>
-            <View style={newStyles.passwordWrapper}>
-              <TextInput
-                style={[newStyles.input, { paddingRight: 50 }]}
-                placeholder={t('Password')}
-                placeholderTextColor="#4B5563"
-                secureTextEntry={showPass}
-                value={userDetail.password}
-                onChangeText={password => setUserDetail({ ...userDetail, password })}
-              />
+            {/* User Type Selection */}
+            <View style={newStyles.userTypeContainer}>
               <TouchableOpacity
-                onPress={() => setShowPass(!showPass)}
-                style={newStyles.eyeIcon}>
-                <Image
-                  source={
-                    showPass
-                      ? require('../../Assets/Images/eye-1.png')
-                      : require('../../Assets/Images/eye.png')
-                  }
-                  style={{ height: 24, width: 24 }}
-                  resizeMode="contain"
-                />
+                style={[
+                  newStyles.userTypeButton,
+                  user === 0 && newStyles.userTypeButtonActive
+                ]}
+                onPress={() => {
+                  setuser(0);
+                  userDetail.type = 'USER';
+                }}>
+                <Text style={[
+                  newStyles.userTypeText,
+                  user === 0 && newStyles.userTypeTextActive
+                ]}>
+                  {t('User')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  newStyles.userTypeButton,
+                  user === 2 && newStyles.userTypeButtonActive
+                ]}
+                onPress={() => {
+                  setuser(2);
+                  userDetail.type = 'DRIVER';
+                }}>
+                <Text style={[
+                  newStyles.userTypeText,
+                  user === 2 && newStyles.userTypeTextActive
+                ]}>
+                  {t('Driver')}
+                </Text>
               </TouchableOpacity>
             </View>
-          </View>
-          {submitted && userDetail.password === '' && (
-            <Text style={newStyles.errorText}>{t('Password is required')}</Text>
-          )}
 
-          {/* Referral Code (only for User type) */}
-          {user === 0 && (
+            {/* Name Input */}
             <View style={newStyles.inputContainer}>
               <TextInput
                 style={newStyles.input}
-                placeholder={t('Referral Code (optional)')}
+                placeholder={t('Enter Name')}
                 placeholderTextColor="#4B5563"
-                value={userDetail.referal}
-                onChangeText={referal => setUserDetail({ ...userDetail, referal })}
+                value={userDetail.username}
+                onChangeText={username => setUserDetail({ ...userDetail, username })}
               />
             </View>
-          )}
+            {submitted && userDetail.username === '' && (
+              <Text style={newStyles.errorText}>{t('Name is required')}</Text>
+            )}
 
-          {/* Terms and Privacy */}
-          <View style={newStyles.termsContainer}>
-            <Text style={newStyles.termsText}>
-              {t('By clicking Sign up, you agree with our')}
-            </Text>
-            <View style={newStyles.termsLinks}>
-              <TouchableOpacity onPress={() => term()}>
-                <Text style={newStyles.termsLink}>
-                  {t('Terms and Condition')}
-                </Text>
-              </TouchableOpacity>
-              <Text style={newStyles.termsText}> {t('and')} </Text>
-              <TouchableOpacity onPress={() => privacy()}>
-                <Text style={newStyles.termsLink}>
-                  {t('Privacy Policy')}
-                </Text>
+            {/* Email Input */}
+            <View style={newStyles.inputContainer}>
+              <TextInput
+                style={newStyles.input}
+                placeholder={t('Enter Email')}
+                placeholderTextColor="#4B5563"
+                value={userDetail.email}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                onChangeText={email => setUserDetail({ ...userDetail, email })}
+              />
+            </View>
+            {submitted && userDetail.email === '' && (
+              <Text style={newStyles.errorText}>{t('Email is required')}</Text>
+            )}
+
+            {/* Phone Number Input */}
+            <View style={newStyles.inputContainer}>
+              <TextInput
+                style={newStyles.input}
+                placeholder={t('Phone Number')}
+                placeholderTextColor="#4B5563"
+                keyboardType="number-pad"
+                value={userDetail.number}
+                onChangeText={number => setUserDetail({ ...userDetail, number })}
+              />
+            </View>
+            {submitted && userDetail.number === '' && (
+              <Text style={newStyles.errorText}>{t('Number is required')}</Text>
+            )}
+
+            {/* Password Input */}
+            <View style={newStyles.inputContainer}>
+              <View style={newStyles.passwordWrapper}>
+                <TextInput
+                  style={[newStyles.input, { paddingRight: 50 }]}
+                  placeholder={t('Password')}
+                  placeholderTextColor="#4B5563"
+                  secureTextEntry={showPass}
+                  value={userDetail.password}
+                  onChangeText={password => setUserDetail({ ...userDetail, password })}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPass(!showPass)}
+                  style={newStyles.eyeIcon}>
+                  <Image
+                    source={
+                      showPass
+                        ? require('../../Assets/Images/eye-1.png')
+                        : require('../../Assets/Images/eye.png')
+                    }
+                    style={{ height: 24, width: 24 }}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+            {submitted && userDetail.password === '' && (
+              <Text style={newStyles.errorText}>{t('Password is required')}</Text>
+            )}
+
+            {/* Referral Code (only for User type) */}
+            {user === 0 && (
+              <View style={newStyles.inputContainer}>
+                <TextInput
+                  style={newStyles.input}
+                  placeholder={t('Referral Code (optional)')}
+                  placeholderTextColor="#4B5563"
+                  value={userDetail.referal}
+                  onChangeText={referal => setUserDetail({ ...userDetail, referal })}
+                />
+              </View>
+            )}
+
+            {/* Terms and Privacy */}
+            <View style={newStyles.termsContainer}>
+              <Text style={newStyles.termsText}>
+                {t('By clicking Sign up, you agree with our')}
+              </Text>
+              <View style={newStyles.termsLinks}>
+                <TouchableOpacity onPress={() => term()}>
+                  <Text style={newStyles.termsLink}>
+                    {t('Terms and Condition')}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={newStyles.termsText}> {t('and')} </Text>
+                <TouchableOpacity onPress={() => privacy()}>
+                  <Text style={newStyles.termsLink}>
+                    {t('Privacy Policy')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Sign Up Button */}
+            <TouchableOpacity
+              style={newStyles.actionButton}
+              onPress={() => submit()}>
+              <Text style={newStyles.actionButtonText}>{t('Sign Up')}</Text>
+            </TouchableOpacity>
+
+            {/* Back to Sign In */}
+            <View style={newStyles.backToLoginContainer}>
+              <Text style={newStyles.backToLoginText}>
+                {t('Already have any account ?')}
+              </Text>
+              <TouchableOpacity onPress={() => navigate('SignIn')}>
+                <Text style={newStyles.backToLoginLink}> {t('Sign in')}</Text>
               </TouchableOpacity>
             </View>
           </View>
-
-          {/* Sign Up Button */}
-          <TouchableOpacity
-            style={newStyles.actionButton}
-            onPress={() => submit()}>
-            <Text style={newStyles.actionButtonText}>{t('Sign Up')}</Text>
-          </TouchableOpacity>
-
-          {/* Back to Sign In */}
-          <View style={newStyles.backToLoginContainer}>
-            <Text style={newStyles.backToLoginText}>
-              {t('Already have any account ?')}
-            </Text>
-            <TouchableOpacity onPress={() => navigate('SignIn')}>
-              <Text style={newStyles.backToLoginLink}> {t('Sign in')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -467,15 +474,15 @@ const newStyles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#E8F5E9',
     borderRadius: 25,
-    
+
     marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
     elevation: 2,
-    borderColor:'#2E7D32',
-    borderWidth:1,
+    borderColor: '#2E7D32',
+    borderWidth: 1,
   },
   userTypeButton: {
     flex: 1,
