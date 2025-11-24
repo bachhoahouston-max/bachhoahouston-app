@@ -54,7 +54,7 @@ const Work = () => {
     // setPage(p);
     let url;
     if (tab === 'pending') {
-      url = `getOrderBySeller`;
+      url = `NewgetOrderBySeller`;
     } else {
       url = `getAssignedOrder`;
     }

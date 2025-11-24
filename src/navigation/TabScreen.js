@@ -19,6 +19,7 @@ import Cart from '../screen/app/Cart';
 import { useTranslation } from 'react-i18next';
 import Myorder from '../screen/app/Myorder';
 import Products from '../screen/app/Products';
+import Payment from '../screen/app/Payment';
 import { createStackNavigator } from '@react-navigation/stack';
 import { CartContext } from '../../App';
 
@@ -49,6 +50,7 @@ const OrdersStack = () => (
 const CartStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="CartTab" component={Cart} />
+    <Stack.Screen name="Payment" component={Payment} />
   </Stack.Navigator>
 );
 

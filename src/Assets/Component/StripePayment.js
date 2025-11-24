@@ -14,6 +14,8 @@ import { Post } from '../Helpers/Service';
 import Constants from '../Helpers/constant';
 import { useTranslation } from 'react-i18next';
 const InAppBrowser = require('react-native-inappbrowser-reborn');
+import { WebView } from 'react-native-webview';
+import { navigate } from '../../../navigationRef';
 
 const StripeCheckoutButton = ({
   customerData,
@@ -24,19 +26,27 @@ const StripeCheckoutButton = ({
   onPaymentCancel,
   triggerCheckout = false,
   pickupType,
+  orderID,
+  route,
+  // setLoading,
+
 }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [paymentTimeout, setPaymentTimeout] = useState(null);
-
+  const [linkListner, setLinkLisner] = useState(null)
+  console.log(orderID)
   // Platform-specific deep link handler
   const handleDeepLink = useCallback((url) => {
     console.log('Processing deep link:', url);
     if (!url) {
       return;
     }
-
+    // if (linkListner) {
+    //   linkListner.remove()
+    // }
+    // InAppBrowser.InAppBrowser.close()
     if (url.includes('payment-success')) {
       InAppBrowser.InAppBrowser.close()
       console.log('Payment success detected via deep link');
@@ -44,9 +54,49 @@ const StripeCheckoutButton = ({
     } else if (url.includes('payment-cancel')) {
       InAppBrowser.InAppBrowser.close()
       console.log('Payment cancel detected via deep link');
-      handlePaymentCancel();
+      handlePaymentCancel(url);
     }
+    // else {
+    //   if (orderID) {
+    //     onPaymentCancel(orderID)
+    //   }
+    // }
   }, [handlePaymentSuccess, handlePaymentCancel]);
+
+  const onNavStateChange = (navState) => {
+    const { url: currUrl } = navState;
+    console.log(currUrl)
+    // if (currUrl.startsWith('myapp://success')) {
+    //   // close webview and show success in-app
+    //   navigation.popToTop();
+    //   // optionally verify session on the backend
+    // }
+    // if (currUrl.startsWith('myapp://cancel')) {
+    //   navigation.goBack();
+    // }
+
+    if (currUrl.includes('payment-success')) {
+      console.log('Payment success detected via deep link');
+      handlePaymentSuccess(currUrl);
+    } else if (currUrl.includes('payment-cancel')) {
+      console.log('Payment cancel detected via deep link');
+      handlePaymentCancel(currUrl);
+    }
+    // else {
+    //   if (orderID) {
+    //     onPaymentCancel(orderID)
+    //   }
+    // }
+  };
+
+  // useEffect(() => {
+  //   const sub = Linking.addEventListener("url", handleDeepLink);
+  //   console.log(sub)
+  //   setLinkLisner(sub)
+
+  //   return () => Linking.removeAllListeners("url");
+  // }, [])
+
 
   useEffect(() => {
     if (triggerCheckout && !loading) {
@@ -72,9 +122,11 @@ const StripeCheckoutButton = ({
           clearTimeout(paymentTimeout);
           setPaymentTimeout(null);
         }
-
-        const sessionId = url.split('session_id=')[1];
-
+        console.log(url)
+        let order = url.split('&orderID=');
+        const sessionId = order[0].split('session_id=')[1];
+        let orderid = order[1];
+        console.log(url, orderid)
         if (!sessionId) {
           throw new Error('No session ID found in success URL');
         }
@@ -84,55 +136,56 @@ const StripeCheckoutButton = ({
           sessionId,
         );
 
-        const sessionResponse = await Post('retrieve-checkout-session', {
+        const sessionResponse = await Post('new-retrieve-checkout-session', {
           session_id: sessionId,
+          orderID: orderid
         });
-
+        console.log(sessionResponse)
         if (sessionResponse?.error) {
           throw new Error(sessionResponse.error);
         }
 
-        const paymentResult = {
-          id: sessionResponse.payment_intent || sessionId,
-          paymentId: sessionResponse.payment_intent,
-          paymentIntentId: sessionResponse.payment_intent,
-          sessionId: sessionId,
-          total: sessionResponse.amount_total
-            ? sessionResponse.amount_total / 100
-            : 0,
-          subtotal: sessionResponse.amount_subtotal
-            ? sessionResponse.amount_subtotal / 100
-            : 0,
-          tax: sessionResponse.total_details?.amount_tax
-            ? sessionResponse.total_details.amount_tax / 100
-            : 0,
-          // Delivery tip now included as a line item
-          deliveryTip: sessionResponse.delivery_tip?.amount || 0,
-          tipIncludedInSubtotal:
-            sessionResponse.delivery_tip?.included_in_subtotal || true,
-          tipTaxable: sessionResponse.delivery_tip?.taxable || true,
-          tipLineItemId: sessionResponse.delivery_tip?.line_item_id || null,
-          // Line items breakdown
-          lineItemsBreakdown: sessionResponse.line_items_breakdown || [],
-          currency: sessionResponse.currency || 'usd',
-          status: 'succeeded',
-          created: new Date().toISOString(),
-          taxBreakdown: sessionResponse.total_details?.breakdown?.taxes || [],
-        };
+        // const paymentResult = {
+        //   id: sessionResponse.payment_intent || sessionId,
+        //   paymentId: sessionResponse.payment_intent,
+        //   paymentIntentId: sessionResponse.payment_intent,
+        //   sessionId: sessionId,
+        //   total: sessionResponse.amount_total
+        //     ? sessionResponse.amount_total / 100
+        //     : 0,
+        //   subtotal: sessionResponse.amount_subtotal
+        //     ? sessionResponse.amount_subtotal / 100
+        //     : 0,
+        //   tax: sessionResponse.total_details?.amount_tax
+        //     ? sessionResponse.total_details.amount_tax / 100
+        //     : 0,
+        //   // Delivery tip now included as a line item
+        //   deliveryTip: sessionResponse.delivery_tip?.amount || 0,
+        //   tipIncludedInSubtotal:
+        //     sessionResponse.delivery_tip?.included_in_subtotal || true,
+        //   tipTaxable: sessionResponse.delivery_tip?.taxable || true,
+        //   tipLineItemId: sessionResponse.delivery_tip?.line_item_id || null,
+        //   // Line items breakdown
+        //   lineItemsBreakdown: sessionResponse.line_items_breakdown || [],
+        //   currency: sessionResponse.currency || 'usd',
+        //   status: 'succeeded',
+        //   created: new Date().toISOString(),
+        //   taxBreakdown: sessionResponse.total_details?.breakdown?.taxes || [],
+        // };
 
-        console.log('Payment completed with tip as line item:', {
-          total: paymentResult.total,
-          subtotal: paymentResult.subtotal,
-          tax: paymentResult.tax,
-          deliveryTip: paymentResult.deliveryTip,
-          tipIncludedInSubtotal: paymentResult.tipIncludedInSubtotal,
-          tipTaxable: paymentResult.tipTaxable,
-          lineItemsBreakdown: paymentResult.lineItemsBreakdown,
-          sessionId: paymentResult.sessionId,
-        });
+        // console.log('Payment completed with tip as line item:', {
+        //   total: paymentResult.total,
+        //   subtotal: paymentResult.subtotal,
+        //   tax: paymentResult.tax,
+        //   deliveryTip: paymentResult.deliveryTip,
+        //   tipIncludedInSubtotal: paymentResult.tipIncludedInSubtotal,
+        //   tipTaxable: paymentResult.tipTaxable,
+        //   lineItemsBreakdown: paymentResult.lineItemsBreakdown,
+        //   sessionId: paymentResult.sessionId,
+        // });
 
         // setLoading(false);
-        onPaymentSuccess && onPaymentSuccess(paymentResult);
+        onPaymentSuccess && onPaymentSuccess();
       } catch (error) {
         console.error('Failed to process payment success:', error);
         setLoading(false);
@@ -142,7 +195,7 @@ const StripeCheckoutButton = ({
     [onPaymentSuccess, onPaymentError, paymentTimeout],
   );
 
-  const handlePaymentCancel = useCallback(() => {
+  const handlePaymentCancel = useCallback((url) => {
     console.log('User cancelled Stripe Checkout');
     setLoading(false);
     setIsListening(false);
@@ -151,8 +204,15 @@ const StripeCheckoutButton = ({
       clearTimeout(paymentTimeout);
       setPaymentTimeout(null);
     }
+    // Alert.alert(url)
+    // console.log(url)
+    let orderid = '';
+    if (url) {
+      orderid = url.split('orderID=')[1];
+    }
 
-    onPaymentCancel && onPaymentCancel();
+
+    onPaymentCancel && onPaymentCancel(orderid);
   }, [onPaymentCancel, paymentTimeout]);
 
   useEffect(() => {
@@ -166,10 +226,18 @@ const StripeCheckoutButton = ({
       const checkInitialUrl = async () => {
         try {
           const initialUrl = await Linking.getInitialURL();
+          console.log(initialUrl)
           if (initialUrl) {
             console.log('Initial URL detected:', initialUrl);
             handleDeepLink(initialUrl);
           }
+          // else {
+          //   if (orderID) {
+          //     linkListner.remove()
+          //     onPaymentCancel(orderID)
+          //   }
+          //   console.log(orderID)
+          // }
         } catch (error) {
           console.log('Error getting initial URL:', error);
         }
@@ -364,10 +432,11 @@ const StripeCheckoutButton = ({
             },
         },
         success_url:
-          'groceryapp://payment-success?session_id={CHECKOUT_SESSION_ID}',
-        cancel_url: 'groceryapp://payment-cancel',
+          `groceryapp://payment-success?session_id={CHECKOUT_SESSION_ID}&orderID=${orderID}`,
+        cancel_url: `groceryapp://payment-cancel&orderID=${orderID}`,
         mode: 'payment',
         payment_method_types: ['card'],
+        orderID
       };
 
       Object.keys(checkoutData).forEach(key => {
@@ -477,12 +546,16 @@ const StripeCheckoutButton = ({
       console.log('Opening Stripe Checkout URL:', response.url);
       setIsListening(true);
 
+
+
       const timeout = setTimeout(() => {
         console.log('Payment timeout - auto-cancelling');
         handlePaymentCancel();
       }, 5 * 60 * 1000);
       setPaymentTimeout(timeout);
 
+      // navigate('Payment', { url: response.url })
+      InAppBrowser.InAppBrowser.close()
       if (await InAppBrowser.InAppBrowser.isAvailable()) {
         // Platform-specific configuration for better iOS compatibility
         const browserOptions = {
@@ -519,13 +592,17 @@ const StripeCheckoutButton = ({
           const result = await InAppBrowser.InAppBrowser.open(response.url, browserOptions);
           console.log('InAppBrowser result:', result);
 
-          // if (result.type === 'cancel' || result.type === 'dismiss') {
-          //   console.log('InAppBrowser was closed/dismissed');
-          //   handlePaymentCancel();
-          // }
+          if (result.type === 'cancel') {
+            InAppBrowser.InAppBrowser.close()
+            setTimeout(() => {
+              onPaymentCancel(orderID)
+            }, 1000);
+            // console.log('InAppBrowser was closed/dismissed');
+            // handlePaymentCancel();
+          }
         } catch (browserError) {
           console.log('InAppBrowser failed, falling back to system browser:', browserError);
-          // Fallback to system browser if InAppBrowser fails
+          //     // Fallback to system browser if InAppBrowser fails
           const supported = await Linking.canOpenURL(response.url);
           if (supported) {
             await Linking.openURL(response.url);
@@ -536,7 +613,9 @@ const StripeCheckoutButton = ({
       } else {
         console.log('InAppBrowser not available, using system browser');
         const supported = await Linking.canOpenURL(response.url);
+        console.log(supported)
         if (supported) {
+          // <WebView source={{ uri: response.url }} onNavigationStateChange={onNavStateChange} />
           await Linking.openURL(response.url);
         } else {
           throw new Error('Cannot open Stripe Checkout URL');

@@ -34,7 +34,7 @@ import {
 } from '../../../App';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from 'react-native-swiper-flatlist/src/themes';
-import { navigate } from '../../../navigationRef';
+import { navigate, reset } from '../../../navigationRef';
 import { useTranslation } from 'react-i18next';
 import { Checkbox, Dialog, RadioButton } from 'react-native-paper';
 // import DatePicker from 'react-native-date-picker';
@@ -73,7 +73,7 @@ const pickupOptions = [
 
 const width = Dimensions.get('window').width;
 
-const Cart = () => {
+const Cart = ({ route }) => {
   const navigation = useNavigation();
   const { t } = useTranslation();
   const [cartdetail, setcartdetail] = useContext(CartContext);
@@ -113,6 +113,8 @@ const Cart = () => {
   const [showStripePayment, setShowStripePayment] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [isOnce, setIsOnce] = useState(false);
+  const [orderID, setOrderID] = useState('')
+  const [cancelModel, setCancelModel] = useState(false)
 
   const isZipAvailable = availableZipCodes.some(
     zip => String(zip.pincode) === String(localDeliveryAddress.zipcode),
@@ -514,7 +516,8 @@ const Cart = () => {
     }
 
     setLoading(true);
-    setShowStripePayment(true);
+    submitCheckoutWithStripeData()
+    // setShowStripePayment(true);
     const testPaymentResult = {
       paymentId: `test_${Date.now()}`,
       paymentIntentId: `pi_test_${Date.now()}`,
@@ -559,6 +562,19 @@ const Cart = () => {
     AsyncStorage.setItem('couponDiscount', couponDiscount.toString())
   }, [couponDiscount]);
 
+  const paymentCancel = async (orderid) => {
+    console.log({ orderID: orderid })
+    setLoading(true)
+    const response = await Post('cancel-checkout-session', { orderID: orderid }, {});
+    setLoading(false)
+    console.log('cancel-checkout-session:', response);
+    if (response.status) {
+      setCancelModel(true)
+      // navigation.replace("App", { screen: 'Cart' })
+    }
+    // navigation.replace("App", { screen: 'Cart' })
+  }
+
 
   const submitCheckoutWithStripeData = async stripePaymentResult => {
     const type = await AsyncStorage.getItem('pickupType');
@@ -594,12 +610,12 @@ const Cart = () => {
         };
       });
 
-      const isLocalDelivery = type === 'localDelivery';
-      const isOrderPickup = type === 'orderPickup';
-      const isDriveUp = type === 'driveUp';
-      const isShipmentDelivery = type === 'shipping';
+      const isLocalDelivery = PickupType === 'localDelivery';
+      const isOrderPickup = PickupType === 'orderPickup';
+      const isDriveUp = PickupType === 'driveUp';
+      const isShipmentDelivery = PickupType === 'shipping';
 
-      const dateString = date;
+      const dateString = pickupDate;
       const formattedDate = moment(dateString, 'YYYY-MM-DD').format();
 
       console.log('Formatted Date:', formattedDate);
@@ -608,12 +624,12 @@ const Cart = () => {
         productDetail: newarr,
         shipping_address: shipAdd.address,
         location: shipAdd.address?.location,
-        total: stripePaymentResult.total || totalFinal,
-        totalTax: stripePaymentResult.tax || 0,
-        subtotal: stripePaymentResult.subtotal || totaloff,
+        total: stripePaymentResult?.total || totalFinal,
+        totalTax: stripePaymentResult?.tax || 0,
+        subtotal: stripePaymentResult?.subtotal || totaloff,
         Deliverytip: deliveryTip || 0,
         deliveryfee: deliveryFees || 0,
-        discount: couponvalue || 0,
+        discount: couponvalue || couponDiscount,
         discountCode: couponCode || '',
         user: shipAdd._id,
         Email: shipAdd.email,
@@ -625,40 +641,40 @@ const Cart = () => {
         dateOfDelivery: formattedDate,
         isOnce,
         ussageType: 'once',
-        paymentId: stripePaymentResult.paymentId || stripePaymentResult.id,
-        paymentIntentId: stripePaymentResult.paymentIntentId,
-        paymentStatus: 'completed',
-        paymentAmount: stripePaymentResult.total,
-        paymentCurrency: stripePaymentResult.currency || 'usd',
-        paymentTimestamp: new Date().toISOString(),
-        stripeSessionId: stripePaymentResult.sessionId,
-        autoTaxCalculated: true,
+        paymentId: stripePaymentResult?.paymentId || stripePaymentResult?.id || '',
+        paymentIntentId: stripePaymentResult?.paymentIntentId || '',
+        // paymentStatus: '',
+        // paymentAmount: stripePaymentResult.total,
+        // paymentCurrency: stripePaymentResult.currency || 'usd',
+        // paymentTimestamp: new Date().toISOString(),
+        // stripeSessionId: stripePaymentResult.sessionId,
+        // autoTaxCalculated: true,
 
-        ...(isShipmentDelivery || isLocalDelivery
-          ? {
-            Local_address: {
-              address: user.address || '',
-              ...localDeliveryAddress,
-              name: shipAdd?.username,
-              phoneNumber: shipAdd?.number,
-              email: shipAdd?.email,
-              lastname: shipAdd?.lastname,
-              ApartmentNo: shipAdd?.ApartmentNo,
-              SecurityGateCode: shipAdd?.SecurityGateCode,
-              BusinessAddress: shipAdd?.BusinessAddress,
-              dateOfDelivery: formattedDate,
-              location: {
-                type: 'Point',
-                coordinates: Array.isArray(shipAdd?.location?.coordinates)
-                  ? [
-                    shipAdd.location.coordinates[0] ?? null,
-                    shipAdd.location.coordinates[1] ?? null,
-                  ]
-                  : [null, null],
-              },
-            },
-          }
-          : {}),
+        // ...(isShipmentDelivery || isLocalDelivery
+        //   ? {
+        //     Local_address: {
+        //       address: user.address || '',
+        //       ...localDeliveryAddress,
+        //       name: shipAdd?.username,
+        //       phoneNumber: shipAdd?.number,
+        //       email: shipAdd?.email,
+        //       lastname: shipAdd?.lastname,
+        //       ApartmentNo: shipAdd?.ApartmentNo,
+        //       SecurityGateCode: shipAdd?.SecurityGateCode,
+        //       BusinessAddress: shipAdd?.BusinessAddress,
+        //       dateOfDelivery: formattedDate,
+        //       location: {
+        //         type: 'Point',
+        //         coordinates: Array.isArray(shipAdd?.location?.coordinates)
+        //           ? [
+        //             shipAdd.location.coordinates[0] ?? null,
+        //             shipAdd.location.coordinates[1] ?? null,
+        //           ]
+        //           : [null, null],
+        //       },
+        //     },
+        //   }
+        //   : {}),
       };
 
       if (shipAdd?._id) {
@@ -675,7 +691,7 @@ const Cart = () => {
 
       console.log('Order data:', data);
 
-      const response = await Post('createProductRquest', data, {});
+      const response = await Post('New-createProductRquest', data, {});
       setLoading(false);
       console.log('Order creation response:', response);
       if (!response.status) {
@@ -690,35 +706,13 @@ const Cart = () => {
       console.log('Order created successfully:', response);
 
       setLoading(false);
+      setOrderID(response?.data?.orders?.orderId)
       setTimeout(() => {
-        setModalView(true);
+        setShowStripePayment(true);
+
       }, 500);
 
-      // Clear cart and reset state
-      AsyncStorage.removeItem('cartdata');
-      AsyncStorage.removeItem('pickupType');
-      AsyncStorage.removeItem('pickupDate');
-      AsyncStorage.removeItem('couponDiscount')
-      setcartdetail([]);
-      setPickupType(null);
-      setPickupDate(null);
-      setDeliveryTip(0);
-      setCoupon(false);
-      setCouponDiscount(0);
-      setOpen(false);
-      setCouponCode('');
-      setDiscountCode('');
-      setBusinessAddress({
-        businessAddress: shipAdd?.BusinessAddress || '',
-      });
-      setLocalDeliveryAddress({
-        ApartmentNo: shipAdd?.ApartmentNo || '',
-        SecurityGateCode: shipAdd?.SecurityGateCode || '',
-        zipcode: shipAdd?.zipcode || '',
-      });
-      setDeliveryFees(0);
-      setTotalFinal(0);
-      setTotalTax(0);
+
     } catch (error) {
       console.warn('Error submitting order:', error);
       setLoading(false);
@@ -728,6 +722,39 @@ const Cart = () => {
       });
     }
   };
+
+  const resetData = async () => {
+    // Clear cart and reset state
+    let shipAdd = {}
+    const shipAdds = await AsyncStorage.getItem('userDetail');
+    if (shipAdds) { shipAdd = JSON.parse(shipAdds) };
+    AsyncStorage.removeItem('cartdata');
+    AsyncStorage.removeItem('pickupType');
+    AsyncStorage.removeItem('pickupDate');
+    AsyncStorage.removeItem('couponDiscount')
+    setcartdetail([]);
+    setPickupType(null);
+    setPickupDate(null);
+    setDeliveryTip(0);
+    setCoupon(false);
+    setCouponDiscount(0);
+    setOpen(false);
+    setCouponCode('');
+    setDiscountCode('');
+    setBusinessAddress({
+      businessAddress: shipAdd?.BusinessAddress || '',
+    });
+    setLocalDeliveryAddress({
+      ApartmentNo: shipAdd?.ApartmentNo || '',
+      SecurityGateCode: shipAdd?.SecurityGateCode || '',
+      zipcode: shipAdd?.zipcode || '',
+    });
+    setDeliveryFees(0);
+    setTotalFinal(0);
+    setTotalTax(0);
+
+    reset('App', { screen: 'Home' });
+  }
 
 
 
@@ -2264,6 +2291,45 @@ const Cart = () => {
           </View>
         </Modal>
 
+        <Modal
+          animationType="none"
+          transparent={true}
+          visible={cancelModel}
+          onRequestClose={() => {
+            // Alert.alert('Modal has been closed.');
+            setCancelModel(!cancelModel);
+            reset('App', { screen: 'Home' });
+          }}>
+          <View style={styles.centeredView}>
+            <View style={styles.modalView2}>
+              <View style={{ backgroundColor: 'white', alignItems: 'center' }}>
+                <Text style={styles.txt}>{t('Order Canceled.')}</Text>
+                <Text style={styles.txt2}>{t('You were redirected back from Stripe. Your order has been cancel successfully')}</Text>
+                <View style={styles.cancelAndLogoutButtonWrapStyle2}>
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={async () => {
+                      setCancelModel(!cancelModel);
+                      reset('App', { screen: 'Home' });
+                    }}
+                    style={[styles.logOutButtonStyle2, { backgroundColor: 'lightgray' }]}>
+                    <Text style={[styles.modalText, { color: 'black' }]}>{t('Home')}</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    activeOpacity={0.9}
+                    onPress={async () => {
+                      setCancelModel(!cancelModel);
+                      reset('App', { screen: 'Cart' });
+                    }}
+                    style={styles.logOutButtonStyle2}>
+                    <Text style={styles.modalText}>{t('Move to Cart')}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         {/* <StripePayment
         visible={showStripePayment}
         onClose={() => setShowStripePayment(false)}
@@ -2293,6 +2359,8 @@ const Cart = () => {
         }}
       /> */}
         <StripeCheckoutButton
+          setLoading={setLoading}
+
           customerData={{
             name: user?.username || '',
             email: user?.email || '',
@@ -2335,27 +2403,43 @@ const Cart = () => {
             discountCode: discountCode,
             subtotal: totaloff,
           }}
+          orderID={orderID}
           triggerCheckout={showStripePayment}
+          route
           onPaymentSuccess={paymentResult => {
             console.log('Payment succeeded with auto tax:', paymentResult);
             setShowStripePayment(false);
-            submitCheckoutWithStripeData(paymentResult);
+            setModalView(true);
+            setTimeout(() => {
+              resetData()
+
+            }, 500);
+            // submitCheckoutWithStripeData(paymentResult);
           }}
           onPaymentError={error => {
             console.warn('Stripe checkout failed:', error);
             setShowStripePayment(false);
             handlePaymentError(error);
+            reset('App', { screen: 'Home' });
           }}
-          onPaymentCancel={() => {
+          onPaymentCancel={(orderid) => {
             console.log('User cancelled Stripe checkout');
             setShowStripePayment(false); // Reset trigger
             setLoading(false);
             setCoupon(false);
             setCouponDiscount(0);
+            if (orderid) {
+              setTimeout(() => {
+                paymentCancel(orderid)
+
+              }, 1000);
+            } else {
+              reset('App', { screen: 'Home' });
+            }
           }}
         />
 
-      </SafeAreaView>
+      </SafeAreaView >
       <DateTimePickerModal
         isVisible={openDatePicker}
 
@@ -2843,7 +2927,7 @@ const styles = StyleSheet.create({
   },
   logOutButtonStyle2: {
     flex: 0.5,
-    backgroundColor: Constants.saffron,
+    backgroundColor: Constants.greennew,
     borderRadius: 5,
     paddingVertical: 10,
     alignItems: 'center',

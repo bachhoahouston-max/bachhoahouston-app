@@ -81,7 +81,7 @@ const Myorder = () => {
       url = `order/my-orders?page=${p}&filter=favorite`;
       setLoading(true);
     } else {
-      url = `getProductRequestbyUser?page=${p}`;
+      url = `NewgetrequestProductbyuser?page=${p}`;
 
       // setLoading(true);
     }
