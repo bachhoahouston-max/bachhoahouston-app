@@ -621,10 +621,10 @@ const styles = StyleSheet.create({
   categorytxt2: {
     fontSize: 14,
     color: Constants.black,
-    fontFamily: FONTS.Medium,
+    fontFamily: FONTS.Regular,
+    fontWeight: '500',
     textAlign: 'center',
     marginVertical: 5,
-    width: Dimensions.get('window').width < 500 ? 120 : 150,
     // textTransform: 'capitalize',
     // 
     paddingHorizontal: 2,

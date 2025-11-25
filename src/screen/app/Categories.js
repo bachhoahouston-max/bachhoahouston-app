@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     // resizeMode:'contain',
     // backgroundColor:'red',
     marginVertical: 20,
-    borderRadius:20
+    borderRadius: 20
   },
   box: {
     width: 180,
@@ -311,6 +311,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
     marginVertical: 5,
+
     // flex:1,
     // height:100,
     // width:'100%',
