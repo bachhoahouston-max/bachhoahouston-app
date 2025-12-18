@@ -14,6 +14,7 @@ import {
   TouchableOpacity,
   View,
   Platform,
+  Alert,
 } from 'react-native';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import Constants, { Currency, FONTS } from '../../Assets/Helpers/constant';
@@ -115,6 +116,7 @@ const Cart = ({ route }) => {
   const [isOnce, setIsOnce] = useState(false);
   const [orderID, setOrderID] = useState('')
   const [cancelModel, setCancelModel] = useState(false)
+  const [shipcCost, setShipCost] = useState({})
 
   const isZipAvailable = availableZipCodes.some(
     zip => String(zip.pincode) === String(localDeliveryAddress.zipcode),
@@ -274,11 +276,11 @@ const Cart = ({ route }) => {
     let finalTotal = subtotalAfterDiscount; // No manual tax calculation
 
     if (PickupType === 'localDelivery') {
-      if (offdata < 35) {
+      if (offdata < shipcCost?.minShippingCostforLocal) {
         deliveryCharge = localDeliveryCost;
       }
     } else if (PickupType === 'shipping') {
-      if (offdata < 200) {
+      if (offdata < shipcCost?.minShipmentCostForShipment) {
         deliveryCharge = shippingDeliveryCost;
       }
     }
@@ -308,6 +310,7 @@ const Cart = ({ route }) => {
         setShipingDeliveryCost(res?.shippingCosts[0]?.ShipmentCostForShipment);
         setLocalDeliveryCost(res?.shippingCosts[0]?.ShippingCostforLocal);
         setShippingFee(res?.shippingCosts[0]?.ShippingCost);
+        setShipCost(res?.shippingCosts[0] || {})
       })
       .catch(err => {
         console.warn('Error fetching delivery fee:', err);
@@ -330,7 +333,7 @@ const Cart = ({ route }) => {
         price_slot: item.price_slot,
         BarCode: item.BarCode,
         color: item.selectedColor?.color || '',
-        total: item.total,
+        total: (Number(item.offer) * Number(item.qty)).toFixed(2),
         isShipmentAvailable: item.isShipmentAvailable,
         isInStoreAvailable: item.isInStoreAvailable,
         isCurbSidePickupAvailable: item.isCurbSidePickupAvailable,
@@ -643,6 +646,7 @@ const Cart = ({ route }) => {
         ussageType: 'once',
         paymentId: stripePaymentResult?.paymentId || stripePaymentResult?.id || '',
         paymentIntentId: stripePaymentResult?.paymentIntentId || '',
+        order_platform: Platform.OS,
         // paymentStatus: '',
         // paymentAmount: stripePaymentResult.total,
         // paymentCurrency: stripePaymentResult.currency || 'usd',
@@ -690,27 +694,34 @@ const Cart = ({ route }) => {
       });
 
       console.log('Order data:', data);
+      try {
+        const response = await Post('createProductRquest', data, {});
+        setLoading(false);
+        console.log('Order creation response:', response);
+        if (!response.status) {
+          Alert.alert(
+            t('Order Creation Failed'),
+            response?.message || t('Failed to create order. Please try again.'),
+          );
+          return
+        }
 
-      const response = await Post('New-createProductRquest', data, {});
-      setLoading(false);
-      console.log('Order creation response:', response);
-      if (!response.status) {
+        console.log('Order created successfully:', response);
+
+        setLoading(false);
+        setOrderID(response?.data?.orders?.orderId)
+        setTimeout(() => {
+          setShowStripePayment(true);
+
+        }, 500);
+
+      } catch (err) {
+        setLoading(false);
         Toast.show({
           type: 'error',
-          text1: 'Some thing went wrong.',
-          text2: ' Please contact support',
+          text1: err?.message,
         })
-        return
       }
-
-      console.log('Order created successfully:', response);
-
-      setLoading(false);
-      setOrderID(response?.data?.orders?.orderId)
-      setTimeout(() => {
-        setShowStripePayment(true);
-
-      }, 500);
 
 
     } catch (error) {
@@ -1919,7 +1930,7 @@ const Cart = ({ route }) => {
                 {/* Delivery Fees */}
                 {PickupType === 'localDelivery' ? (
                   <View>
-                    {totaloff < 35 ? (
+                    {totaloff < shipcCost?.minShippingCostforLocal ? (
                       <View style={styles.total}>
                         <Text style={[styles.boxtxt]}>{t('Delivery Fee')}</Text>
                         <View style={styles.amount}>
@@ -1953,7 +1964,7 @@ const Cart = ({ route }) => {
                   </View>
                 ) : PickupType === 'shipping' ? (
                   <View>
-                    {totaloff < 200 ? (
+                    {totaloff < shipcCost?.minShipmentCostForShipment ? (
                       <View style={styles.total}>
                         <Text style={[styles.boxtxt]}>{t('Delivery Fee')}</Text>
                         <View style={styles.amount}>
