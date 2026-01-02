@@ -248,10 +248,7 @@ const Cart = ({ route }) => {
       const currentHour = now.getHours();
       const minDate = new Date();
 
-      if (currentHour >= 20) {
-        // After 8 PM, set min date to day after tomorrow
-        // minDate.setDate(now.getDate() + 2);
-      } else if (currentHour >= 12) {
+      if (currentHour >= 12) {
         // Before 8 PM, set min date to tomorrow
         minDate.setDate(now.getDate() + 1);
       }
