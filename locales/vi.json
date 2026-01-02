@@ -342,6 +342,8 @@
   "Pickup Details": "Chi tiết đón hàng",
   "Product is available for Next Day Local Delivery": "Sản phẩm có sẵn để giao hàng địa phương vào ngày hôm sau",
   "Product is Not available for Next Day Local Delivery": "Sản phẩm không có sẵn để giao hàng địa phương vào ngày hôm sau",
+  "Product is Not available for Same Day Local Delivery": "Sản phẩm không có sẵn để giao hàng địa phương trong ngày",
+  "Product is available for Same Day Local Delivery": "Sản phẩm có sẵn để giao hàng địa phương trong ngày",
   "Product is available for Curbside Pickup": "Sản phẩm có sẵn để nhận hàng tại lề đường",
   "Product is Not available for Curbside Pickup": "Sản phẩm không có sẵn để nhận hàng tại lề đường",
   "Product is available for In Store Pickup": "Sản phẩm có sẵn để đón cửa hàng",
@@ -599,5 +601,10 @@
   "Some items in your cart can": "Một số mặt hàng trong giỏ hàng của bạn không thể được vận chuyển. \nXóa chúng hoặc chọn tùy chọn giao hàng khác.",
   "One item in your cart can": "Một mặt hàng trong giỏ hàng của bạn không thể được vận chuyển. \nXóa nó hoặc chọn một tùy chọn giao hàng khác.",
   "Please log in first": "Vui lòng đăng nhập đầu tiên",
-  "Please add the shipping address": "Vui lòng thêm địa chỉ giao hàng"
+  "Please add the shipping address": "Vui lòng thêm địa chỉ giao hàng",
+  "Cut off time 8 pm": "Đặt đơn hàng trước 8 giờ tối",
+  "Cut off time 11:59 pm": "Đặt đơn hàng trước 11:59 giờ tối",
+  "Cut off time 12 pm": "Đặt Trước 12 giờ trưa",
+  "Same Day Local Delivery": "Giao Hàng Trong Ngày",
+  "Note: We currently deliver only to selected ZIP codes. Orders placed before 12pm noon are eligible for same day delivery. Orders placed after 12pm will be available for delivery the next business day.": "Lưu ý: Hiện tại chúng tôi chỉ giao hàng đến các mã ZIP được chọn. Đơn hàng đặt trước 12 giờ trưa được phép giao hàng trong ngày. Đơn hàng đặt sau 12 giờ trưa sẽ được giao hàng vào ngày làm việc tiếp theo."
 }

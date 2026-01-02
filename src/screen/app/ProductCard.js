@@ -193,9 +193,9 @@ const ProductCard = ({
                   console.log(item);
 
                   if (salePrice !== null && salePrice !== undefined) {
-                    cartdata({ ...item, salePrice });
+                    cartdata({ ...item, salePrice, productSource: "SALE", });
                   } else {
-                    cartdata(item);
+                    cartdata({ ...item, productSource: "NORMAL", });
                   }
                 }}>
                 {item.Quantity <= 0 && <Text style={{ color: Constants.white, fontWeight: '700', fontSize: 16, paddingHorizontal: 10 }}>Out of stock</Text>}

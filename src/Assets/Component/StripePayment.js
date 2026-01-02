@@ -326,7 +326,7 @@ const StripeCheckoutButton = ({
         orderData?.deliveryTip && orderData.deliveryTip > 0
           ? parseFloat(orderData.deliveryTip)
           : 0;
-
+      const servicefee = parseFloat(orderData.serviceFee || 0);
       const deliveryAddress = orderData?.deliveryAddress || {};
       const currentPickupType = pickupType || orderData?.pickupType || '';
       const isPickupOrder =
@@ -363,6 +363,7 @@ const StripeCheckoutButton = ({
           hasDiscount: discountInfo ? 'true' : 'false',
           discountAmount: discountInfo?.amount?.toString() || '0',
           discountCode: discountInfo?.code || '',
+          serviceFee: servicefee.toString(),
         },
         // Enable promotion codes and let backend handle the discount
         allow_promotion_codes: true,

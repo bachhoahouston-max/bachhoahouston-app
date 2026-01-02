@@ -81,6 +81,10 @@ import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-c
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
 import BootSplash from "react-native-bootsplash";
+import SpInAppUpdates, {
+    IAUUpdateKind,
+} from 'sp-react-native-in-app-updates';
+import DeviceInfo from 'react-native-device-info';
 
 
 
@@ -411,6 +415,42 @@ const App = () => {
             });
         }
     }, [toast]);
+
+    useEffect(() => {
+        console.log(DeviceInfo?.getVersion());
+        const inAppUpdates = new SpInAppUpdates(
+            true, // isDebug
+        );
+        // curVersion is optional if you don't provide it will automatically take from the app using react-native-device-info
+        // {curVersion: VersionInfo?.appVersion}
+        try {
+            inAppUpdates.checkNeedsUpdate().then(
+                result => {
+                    console.log(result);
+                    if (result.shouldUpdate) {
+                        const updateOptions = Platform.select({
+                            ios: {
+                                title: 'Update available',
+                                message:
+                                    'There is a new version of the app available on the App Store, do you want to update it?',
+                                buttonUpgradeText: 'Update',
+                                buttonCancelText: 'Cancel',
+                            },
+                            android: {
+                                updateType: IAUUpdateKind.IMMEDIATE,
+                            },
+                        });
+                        inAppUpdates.startUpdate(updateOptions); // https://github.com/SudoPlz/sp-react-native-in-app-updates/blob/master/src/types.ts#L78
+                    }
+                },
+                err => {
+                    console.log(err);
+                },
+            );
+        } catch (err) {
+            console.log(err);
+        }
+    }, []);
     return (
         <GestureHandlerRootView>
             <PaperProvider>

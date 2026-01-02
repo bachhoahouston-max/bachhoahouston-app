@@ -49,7 +49,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import StripeCheckoutButton from '../../Assets/Component/StripePayment';
 import i18n from 'i18next';
 
-const pickupOptions = [
+const pickupOptionss = [
   {
     label: 'In Store Pickup',
     value: 'orderPickup',
@@ -63,7 +63,7 @@ const pickupOptions = [
   {
     label: 'Next Day Local Delivery',
     value: 'localDelivery',
-    description: 'Cut of time 8 pm',
+    description: 'Cut off time 11.59 pm',
   },
   {
     label: 'Shipping',
@@ -117,10 +117,22 @@ const Cart = ({ route }) => {
   const [orderID, setOrderID] = useState('')
   const [cancelModel, setCancelModel] = useState(false)
   const [shipcCost, setShipCost] = useState({})
+  const [serviceFee, setServiceFee] = useState(0);
+  const [pickupOptions, setPickupOptions] = useState(pickupOptionss)
+  const [deliveryType, setDeliveryType] = useState('');
 
   const isZipAvailable = availableZipCodes.some(
     zip => String(zip.pincode) === String(localDeliveryAddress.zipcode),
   );
+
+  const isAfter12PM = () => {
+    const now = new Date(); // local timezone
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+
+    return hours > 12 || (hours === 12 && minutes > 0);
+  };
+
 
   //clear data by screen change
   // useFocusEffect(
@@ -173,9 +185,25 @@ const Cart = ({ route }) => {
       setCoupon(false);
       setCouponDiscount(0);
       fetchZipCodes();
-
+      const isAfterNoon = isAfter12PM();
+      pickupOptionss.forEach(option => {
+        if (option.value === 'localDelivery') {
+          if (!isAfterNoon) {
+            option.description = 'Cut off time 12:00 pm';
+            option.label = 'Same Day Local Delivery';
+            setDeliveryType('Same Day Local Delivery')
+          } else {
+            option.description = 'Cut off time 11:59 pm';
+            option.label = 'Next Day Local Delivery';
+            setDeliveryType('Next Day Local Delivery')
+          }
+        }
+        setPickupOptions(pickupOptionss);
+      });
       return () => { }; // cleanup if needed
     }, [])
+
+
   );
 
   const handleDatePickerOpen = () => setOpenDatePicker(true);
@@ -222,8 +250,8 @@ const Cart = ({ route }) => {
 
       if (currentHour >= 20) {
         // After 8 PM, set min date to day after tomorrow
-        minDate.setDate(now.getDate() + 2);
-      } else {
+        // minDate.setDate(now.getDate() + 2);
+      } else if (currentHour >= 12) {
         // Before 8 PM, set min date to tomorrow
         minDate.setDate(now.getDate() + 1);
       }
@@ -274,10 +302,15 @@ const Cart = ({ route }) => {
 
     let deliveryCharge = 0;
     let finalTotal = subtotalAfterDiscount; // No manual tax calculation
-
+    let fee = 0;
     if (PickupType === 'localDelivery') {
       if (offdata < shipcCost?.minShippingCostforLocal) {
         deliveryCharge = localDeliveryCost;
+        fee =
+          finalTotal <= shipcCost?.minServiesCost
+            ? shipcCost?.serviesCost
+            : 0;
+
       }
     } else if (PickupType === 'shipping') {
       if (offdata < shipcCost?.minShipmentCostForShipment) {
@@ -285,11 +318,13 @@ const Cart = ({ route }) => {
       }
     }
 
-    finalTotal += deliveryCharge;
+
+
+    finalTotal += (deliveryCharge + fee);
     if (deliveryTip > 0) {
       finalTotal += deliveryTip;
     }
-
+    setServiceFee(fee);
     setDeliveryFees(deliveryCharge);
     setTotalFinal(Number(finalTotal.toFixed(2)));
 
@@ -610,6 +645,7 @@ const Cart = ({ route }) => {
           isCurbSidePickupAvailable: item.isCurbSidePickupAvailable,
           isNextDayDeliveryAvailable: item.isNextDayDeliveryAvailable,
           slug: item.slug,
+          productSource: item.productSource || "NORMAL",
         };
       });
 
@@ -622,7 +658,7 @@ const Cart = ({ route }) => {
       const formattedDate = moment(dateString, 'YYYY-MM-DD').format();
 
       console.log('Formatted Date:', formattedDate);
-
+      const servicefee = parseFloat(serviceFee || 0);
       const data = {
         productDetail: newarr,
         shipping_address: shipAdd.address,
@@ -643,42 +679,11 @@ const Cart = ({ route }) => {
         isShipmentDelivery: isShipmentDelivery,
         dateOfDelivery: formattedDate,
         isOnce,
+        serviceFee: servicefee.toString(),
         ussageType: 'once',
         paymentId: stripePaymentResult?.paymentId || stripePaymentResult?.id || '',
         paymentIntentId: stripePaymentResult?.paymentIntentId || '',
         order_platform: Platform.OS,
-        // paymentStatus: '',
-        // paymentAmount: stripePaymentResult.total,
-        // paymentCurrency: stripePaymentResult.currency || 'usd',
-        // paymentTimestamp: new Date().toISOString(),
-        // stripeSessionId: stripePaymentResult.sessionId,
-        // autoTaxCalculated: true,
-
-        // ...(isShipmentDelivery || isLocalDelivery
-        //   ? {
-        //     Local_address: {
-        //       address: user.address || '',
-        //       ...localDeliveryAddress,
-        //       name: shipAdd?.username,
-        //       phoneNumber: shipAdd?.number,
-        //       email: shipAdd?.email,
-        //       lastname: shipAdd?.lastname,
-        //       ApartmentNo: shipAdd?.ApartmentNo,
-        //       SecurityGateCode: shipAdd?.SecurityGateCode,
-        //       BusinessAddress: shipAdd?.BusinessAddress,
-        //       dateOfDelivery: formattedDate,
-        //       location: {
-        //         type: 'Point',
-        //         coordinates: Array.isArray(shipAdd?.location?.coordinates)
-        //           ? [
-        //             shipAdd.location.coordinates[0] ?? null,
-        //             shipAdd.location.coordinates[1] ?? null,
-        //           ]
-        //           : [null, null],
-        //       },
-        //     },
-        //   }
-        //   : {}),
       };
 
       if (shipAdd?._id) {
@@ -712,7 +717,6 @@ const Cart = ({ route }) => {
         setOrderID(response?.data?.orders?.orderId)
         setTimeout(() => {
           setShowStripePayment(true);
-
         }, 500);
 
       } catch (err) {
@@ -984,7 +988,7 @@ const Cart = ({ route }) => {
                           fontSize: 14,
                           marginTop: 5,
                         }}>
-                        {t('Product is available for Next Day Local Delivery')}
+                        {t(`Product is available for ${deliveryType}`)}
                       </Text>
                     ) : (
                       <Text
@@ -994,7 +998,7 @@ const Cart = ({ route }) => {
                           marginTop: 5,
                         }}>
                         {t(
-                          'Product is Not available for Next Day Local Delivery',
+                          `Product is Not available for ${deliveryType}`,
                         )}
                       </Text>
                     ))}
@@ -1567,7 +1571,7 @@ const Cart = ({ route }) => {
                             },
                           ]}>
                           {t(
-                            'Note: We currently deliver only to selected ZIP codes. Orders placed before 8 pm are eligible for next day delivery. Orders placed after 8pm will be available for delivery in 2 days.',
+                            'Note: We currently deliver only to selected ZIP codes. Orders placed before 12pm noon are eligible for same day delivery. Orders placed after 12pm will be available for delivery the next business day.',
                           )}
                         </Text>
                       </View>
@@ -1953,6 +1957,37 @@ const Cart = ({ route }) => {
                             style={[styles.boxtxt2, { fontFamily: FONTS.Medium }]}>
                             {Currency}
                             {Number(localDeliveryCost).toFixed(2)}
+                          </Text>
+                          <Text
+                            style={[styles.boxtxt, { fontFamily: FONTS.Medium }]}>
+                            {Currency}0.00
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                    {totaloff < shipcCost?.minServiesCost ? (
+                      <View style={styles.total}>
+                        <Text style={[styles.boxtxt]}>{t('Service Fee')}</Text>
+                        <View style={styles.amount}>
+                          {/* <Text style={styles.boxtxt2}>{Currency}{shippingFee}</Text> */}
+                          <Text
+                            style={[styles.boxtxt, { fontFamily: FONTS.Medium }]}>
+                            {Currency}
+                            {Number(serviceFee).toFixed(2)}
+                          </Text>
+                        </View>
+                      </View>
+                    ) : (
+                      <View style={styles.total}>
+                        <Text style={[styles.boxtxt]}>
+                          {t('Service Fee')} ({Currency}
+                          {Number(shipcCost.serviesCost).toFixed(2)} {t('Saved')})
+                        </Text>
+                        <View style={styles.amount}>
+                          <Text
+                            style={[styles.boxtxt2, { fontFamily: FONTS.Medium }]}>
+                            {Currency}
+                            {Number(shipcCost.serviesCost).toFixed(2)}
                           </Text>
                           <Text
                             style={[styles.boxtxt, { fontFamily: FONTS.Medium }]}>
@@ -2408,6 +2443,7 @@ const Cart = ({ route }) => {
               }) ||
               null,
             deliveryFee: deliveryFees,
+            serviceFee: serviceFee,
             deliveryTip: deliveryTip,
             couponDiscount: couponDiscount,
             couponCode: couponCode,

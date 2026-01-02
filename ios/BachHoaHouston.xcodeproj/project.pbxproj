@@ -7,16 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		02D742290E725F1B8B8DAD17 /* libPods-BachHoaHouston.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6448C0AA38D1D75501A09D34 /* libPods-BachHoaHouston.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		5E8BFE4FD648EAB8B77ADC8A /* libPods-BachHoaHouston.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 85244B23CF60D5F20EE30036 /* libPods-BachHoaHouston.a */; };
 		61302F972E3A1E2D006859CA /* OneSignalNotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 61302F902E3A1E2D006859CA /* OneSignalNotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		9371C8ADD6EAD3D1CFAE3C8E /* libPods-OneSignalNotificationServiceExtension.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D9F139BB8C45FFDA658B303A /* libPods-OneSignalNotificationServiceExtension.a */; };
 		AEE58EAFB1CE43078CB584AD /* Roboto-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DD66CE35EBFE4A4CA69FD2BF /* Roboto-Bold.ttf */; };
 		B15D13083A3640E49965BBD1 /* Roboto-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 5AEC8A900AE6440F80EFF6AC /* Roboto-Medium.ttf */; };
 		B411D16C5CB44DABA7DFBD35 /* Roboto-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C678222B2D934C7899C91C36 /* Roboto-Black.ttf */; };
 		C64BA28E57D3A18090050607 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
-		F4C91B2891BE7509E7737EE2 /* libPods-OneSignalNotificationServiceExtension.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 2AA009C9B174B0ADF5F994FB /* libPods-OneSignalNotificationServiceExtension.a */; };
 		F8DC2B201FDB440CB388E08B /* Roboto-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 65318F8441A74F5491122DDD /* Roboto-Regular.ttf */; };
 /* End PBXBuildFile section */
 
@@ -45,23 +45,23 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		0BDBD8039C0D9963599B1409 /* Pods-OneSignalNotificationServiceExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OneSignalNotificationServiceExtension.debug.xcconfig"; path = "Target Support Files/Pods-OneSignalNotificationServiceExtension/Pods-OneSignalNotificationServiceExtension.debug.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* BachHoaHouston.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BachHoaHouston.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = BachHoaHouston/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = BachHoaHouston/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = BachHoaHouston/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		2AA009C9B174B0ADF5F994FB /* libPods-OneSignalNotificationServiceExtension.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-OneSignalNotificationServiceExtension.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		44202FD45F043C9AE39EE2DD /* Pods-OneSignalNotificationServiceExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OneSignalNotificationServiceExtension.release.xcconfig"; path = "Target Support Files/Pods-OneSignalNotificationServiceExtension/Pods-OneSignalNotificationServiceExtension.release.xcconfig"; sourceTree = "<group>"; };
+		4676BC0DEC9DF5DC42EA1861 /* Pods-BachHoaHouston.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BachHoaHouston.debug.xcconfig"; path = "Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston.debug.xcconfig"; sourceTree = "<group>"; };
+		496AC5EE0D3C081EDCF06778 /* Pods-OneSignalNotificationServiceExtension.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OneSignalNotificationServiceExtension.release.xcconfig"; path = "Target Support Files/Pods-OneSignalNotificationServiceExtension/Pods-OneSignalNotificationServiceExtension.release.xcconfig"; sourceTree = "<group>"; };
 		5AEC8A900AE6440F80EFF6AC /* Roboto-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Medium.ttf"; path = "../src/Assets/fonts/Roboto-Medium.ttf"; sourceTree = "<group>"; };
 		61302F8B2E3A1D7F006859CA /* BachHoaHouston.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = BachHoaHouston.entitlements; path = BachHoaHouston/BachHoaHouston.entitlements; sourceTree = "<group>"; };
 		61302F902E3A1E2D006859CA /* OneSignalNotificationServiceExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = OneSignalNotificationServiceExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		6448C0AA38D1D75501A09D34 /* libPods-BachHoaHouston.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BachHoaHouston.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		65318F8441A74F5491122DDD /* Roboto-Regular.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Regular.ttf"; path = "../src/Assets/fonts/Roboto-Regular.ttf"; sourceTree = "<group>"; };
-		704880F769F35B0CB2C96874 /* Pods-OneSignalNotificationServiceExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OneSignalNotificationServiceExtension.debug.xcconfig"; path = "Target Support Files/Pods-OneSignalNotificationServiceExtension/Pods-OneSignalNotificationServiceExtension.debug.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = BachHoaHouston/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = BachHoaHouston/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		854C2E9FA529F2D92EF8A6E0 /* Pods-BachHoaHouston.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BachHoaHouston.release.xcconfig"; path = "Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston.release.xcconfig"; sourceTree = "<group>"; };
-		98C6687C0E6066A629174178 /* Pods-BachHoaHouston.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BachHoaHouston.debug.xcconfig"; path = "Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston.debug.xcconfig"; sourceTree = "<group>"; };
+		85244B23CF60D5F20EE30036 /* libPods-BachHoaHouston.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BachHoaHouston.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C653F087184DFD9536C3D968 /* Pods-BachHoaHouston.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BachHoaHouston.release.xcconfig"; path = "Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston.release.xcconfig"; sourceTree = "<group>"; };
 		C678222B2D934C7899C91C36 /* Roboto-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Black.ttf"; path = "../src/Assets/fonts/Roboto-Black.ttf"; sourceTree = "<group>"; };
+		D9F139BB8C45FFDA658B303A /* libPods-OneSignalNotificationServiceExtension.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-OneSignalNotificationServiceExtension.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD66CE35EBFE4A4CA69FD2BF /* Roboto-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Bold.ttf"; path = "../src/Assets/fonts/Roboto-Bold.ttf"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -85,7 +85,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				02D742290E725F1B8B8DAD17 /* libPods-BachHoaHouston.a in Frameworks */,
+				5E8BFE4FD648EAB8B77ADC8A /* libPods-BachHoaHouston.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -93,7 +93,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F4C91B2891BE7509E7737EE2 /* libPods-OneSignalNotificationServiceExtension.a in Frameworks */,
+				9371C8ADD6EAD3D1CFAE3C8E /* libPods-OneSignalNotificationServiceExtension.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -128,8 +128,8 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				6448C0AA38D1D75501A09D34 /* libPods-BachHoaHouston.a */,
-				2AA009C9B174B0ADF5F994FB /* libPods-OneSignalNotificationServiceExtension.a */,
+				85244B23CF60D5F20EE30036 /* libPods-BachHoaHouston.a */,
+				D9F139BB8C45FFDA658B303A /* libPods-OneSignalNotificationServiceExtension.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -169,10 +169,10 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				98C6687C0E6066A629174178 /* Pods-BachHoaHouston.debug.xcconfig */,
-				854C2E9FA529F2D92EF8A6E0 /* Pods-BachHoaHouston.release.xcconfig */,
-				704880F769F35B0CB2C96874 /* Pods-OneSignalNotificationServiceExtension.debug.xcconfig */,
-				44202FD45F043C9AE39EE2DD /* Pods-OneSignalNotificationServiceExtension.release.xcconfig */,
+				4676BC0DEC9DF5DC42EA1861 /* Pods-BachHoaHouston.debug.xcconfig */,
+				C653F087184DFD9536C3D968 /* Pods-BachHoaHouston.release.xcconfig */,
+				0BDBD8039C0D9963599B1409 /* Pods-OneSignalNotificationServiceExtension.debug.xcconfig */,
+				496AC5EE0D3C081EDCF06778 /* Pods-OneSignalNotificationServiceExtension.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -184,14 +184,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "BachHoaHouston" */;
 			buildPhases = (
-				1331CAD1FDFB9791B37ADE33 /* [CP] Check Pods Manifest.lock */,
+				69EFFF8ADA8E03A366D00984 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				61302F9C2E3A1E2D006859CA /* Embed Foundation Extensions */,
-				152C989E30C2249EAD57785B /* [CP] Embed Pods Frameworks */,
-				095AA63E24CFB0FA184A4B4E /* [CP] Copy Pods Resources */,
+				DD867EE5D654C1A3C3D6A78F /* [CP] Embed Pods Frameworks */,
+				A42462EF8EF04F8C493DA25D /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -207,7 +207,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 61302F992E3A1E2D006859CA /* Build configuration list for PBXNativeTarget "OneSignalNotificationServiceExtension" */;
 			buildPhases = (
-				B69C92E6A31EED128565E80B /* [CP] Check Pods Manifest.lock */,
+				2F7DC556550B0A71CA8620AB /* [CP] Check Pods Manifest.lock */,
 				61302F8C2E3A1E2D006859CA /* Sources */,
 				61302F8D2E3A1E2D006859CA /* Frameworks */,
 				61302F8E2E3A1E2D006859CA /* Resources */,
@@ -302,28 +302,29 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		095AA63E24CFB0FA184A4B4E /* [CP] Copy Pods Resources */ = {
+		2F7DC556550B0A71CA8620AB /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
 			);
-			name = "[CP] Copy Pods Resources";
+			name = "[CP] Check Pods Manifest.lock";
 			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston-resources-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-OneSignalNotificationServiceExtension-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston-resources.sh\"\n";
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		1331CAD1FDFB9791B37ADE33 /* [CP] Check Pods Manifest.lock */ = {
+		69EFFF8ADA8E03A366D00984 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -345,7 +346,28 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		152C989E30C2249EAD57785B /* [CP] Embed Pods Frameworks */ = {
+		A42462EF8EF04F8C493DA25D /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			inputPaths = (
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		DD867EE5D654C1A3C3D6A78F /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -364,28 +386,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		B69C92E6A31EED128565E80B /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-OneSignalNotificationServiceExtension-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -419,7 +419,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 98C6687C0E6066A629174178 /* Pods-BachHoaHouston.debug.xcconfig */;
+			baseConfigurationReference = 4676BC0DEC9DF5DC42EA1861 /* Pods-BachHoaHouston.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -436,7 +436,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 6.4;
+				MARKETING_VERSION = 6.5;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -458,7 +458,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 854C2E9FA529F2D92EF8A6E0 /* Pods-BachHoaHouston.release.xcconfig */;
+			baseConfigurationReference = C653F087184DFD9536C3D968 /* Pods-BachHoaHouston.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -474,7 +474,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 6.4;
+				MARKETING_VERSION = 6.5;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -495,7 +495,7 @@
 		};
 		61302F9A2E3A1E2D006859CA /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 704880F769F35B0CB2C96874 /* Pods-OneSignalNotificationServiceExtension.debug.xcconfig */;
+			baseConfigurationReference = 0BDBD8039C0D9963599B1409 /* Pods-OneSignalNotificationServiceExtension.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -538,7 +538,7 @@
 		};
 		61302F9B2E3A1E2D006859CA /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 44202FD45F043C9AE39EE2DD /* Pods-OneSignalNotificationServiceExtension.release.xcconfig */;
+			baseConfigurationReference = 496AC5EE0D3C081EDCF06778 /* Pods-OneSignalNotificationServiceExtension.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;

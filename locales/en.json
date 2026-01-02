@@ -314,6 +314,9 @@
   "Pickup Address is not valid": "Pickup Address is not valid",
   "Pickup Time is not valid": "Pickup Time is not valid",
   "Product is available for Next Day Local Delivery": "Product is available for Next Day Local Delivery",
+  "Product is not available for Next Day Local Delivery": "Product is not available for Next Day Local Delivery",
+  "Product is available for Same Day Local Delivery": "Product is available for Same Day Local Delivery",
+  "Product is not available for Same Day Local Delivery": "Product is not available for Same Day Local Delivery",
   "Product is available for In Store Pickup": "Product is available for In Store Pickup",
   "Product is available for In Store Pickup.": "Product is available for In Store Pickup.",
   "Product is available for In Store Pickup. Please select a pickup date and time.": "Product is available for In Store Pickup. Please select a pickup date and time.",
@@ -439,5 +442,10 @@
   "Some items in your cart can": "Some items in your cart can't be shipped. Remove them or choose another delivery option.",
   "Please enter a coupon code": "Please enter a coupon code",
   "Please log in first": "Please log in first",
-  "Please add the shipping address": "Please add the shipping address"
+  "Please add the shipping address": "Please add the shipping address",
+  "Cut off time 8 pm": "Cut off time 8 pm",
+  "Cut off time 11:59 pm": "Cut off time 11:59 pm",
+  "Same Day Local Delivery": "Same Day Local Delivery",
+  "Cut off time 12 pm": "Cut off time 12 pm",
+  "Note: We currently deliver only to selected ZIP codes. Orders placed before 12pm noon are eligible for same day delivery. Orders placed after 12pm will be available for delivery the next business day.": "Note: We currently deliver only to selected ZIP codes. Orders placed before 12pm noon are eligible for same day delivery. Orders placed after 12pm will be available for delivery the next business day."
 }

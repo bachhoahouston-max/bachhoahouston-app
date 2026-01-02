@@ -48,6 +48,7 @@ const Preview = props => {
   const [images, setImages] = useState([])
   const [imageIndex, setImageIndex] = useState(0)
   const [visibleImg, setVisibleImg] = useState(false)
+  // const [isFlashSale, setIsFlashSale] = useState(false)
 
 
   const sumdata =
@@ -97,11 +98,13 @@ const Preview = props => {
         setLoading(false);
         console.log('product data', res);
         if (res.status) {
-          setproductdata(res.data);
+          getProductByIdActiveFlashSale(res.data._id, res.data);
           setProductReviews(res.data?.reviews);
-          if (res?.data?.price_slot && res?.data?.price_slot?.length > 0) {
-            setsselectedslot(res?.data?.price_slot[0]);
-          }
+
+          // setproductdata(res.data);
+          // if (res?.data?.price_slot && res?.data?.price_slot?.length > 0) {
+          //   setsselectedslot(res?.data?.price_slot[0]);
+          // }
         }
       },
       err => {
@@ -111,6 +114,46 @@ const Preview = props => {
     );
   };
 
+  const getProductByIdActiveFlashSale = (pro_id, pro_data) => {
+    // GetApi(`getProductById/${productid}`).then(
+    GetApi(`getFlashSaleByProduct/${pro_id}`).then(
+      async res => {
+        setLoading(false);
+        console.log('product data', res);
+        if (res.status) {
+          pro_data.price_slot.forEach(element => {
+            if (JSON.stringify(element) === JSON.stringify(res.data.price_slot)) {
+
+              element.isFlashSale = true;
+              element.other_price = element.our_price; // Retain the original other_price
+              element.our_price = res.data.price;
+            }
+
+          });
+          setproductdata(pro_data);
+          if (pro_data?.price_slot && pro_data?.price_slot?.length > 0) {
+            setsselectedslot(pro_data?.price_slot[0]);
+          }
+
+        } else {
+          setproductdata(pro_data);
+          if (pro_data?.price_slot && pro_data?.price_slot?.length > 0) {
+            setsselectedslot(pro_data?.price_slot[0]);
+          }
+        }
+      },
+      err => {
+        setproductdata(pro_data);
+        if (pro_data?.price_slot && pro_data?.price_slot?.length > 0) {
+          setsselectedslot(pro_data?.price_slot[0]);
+        }
+        setLoading(false);
+        console.log(err);
+      },
+    );
+  };
+
+
   useEffect(() => {
     console.log('productReviews', productReviews);
   }, [productReviews]);
@@ -119,7 +162,6 @@ const Preview = props => {
     console.log('category_id', category_id);
     console.log('product_id', product_id);
 
-    setLoading(true);
     GetApi(
       `getProductBycategoryId?category=${category_id}&product_id=${product_id}`,
     ).then(
@@ -137,7 +179,7 @@ const Preview = props => {
   };
 
   useEffect(() => {
-    if (productdata) {
+    if (productdata && productdata?.category?.slug) {
       getproductByCategory(productdata?.category?.slug, productdata?._id);
     }
   }, [productdata]);
@@ -146,50 +188,7 @@ const Preview = props => {
   console.log('currentproduct', currentproduct);
 
   const cartdata = async () => {
-    // const predata = await AsyncStorage.getItem('cartdata');
-    // const predata2 = JSON.parse(predata);
-
-    // console.log('predata2', predata2);
-    // let data = {
-    //   productid: productdata._id,
-    //   productname: productdata.name,
-    //   price: productdata.price,
-    //   offer: productdata.offer,
-    //   price_slot:selectedslot,
-    //   image: productdata.varients[0].image[0],
-    //   qty: 1,
-    //   seller_id: productdata.userid,
-    // };
-    // console.log('data', data);
-    // if (predata2) {
-    //   let alreadyexsit =
-    //     predata2 &&
-    //     predata2.length > 0 &&
-    //     predata2.filter(it => it.productid === data.productid).length > 0;
-    //   setisalreadyadd(alreadyexsit);
-    //   let stringdata;
-    //   if (alreadyexsit) {
-    //     stringdata = predata2.map(_i => {
-    //       if (_i?.productid == data.productid) {
-    //         return {..._i, qty: _i?.qty + 1};
-    //       } else {
-    //         return _i;
-    //       }
-    //     });
-    //   } else {
-    //     stringdata = [...predata2, data];
-    //   }
-    //   console.log('stringdata', stringdata);
-    //   setcartdetail(stringdata);
-    //   await AsyncStorage.setItem('cartdata', JSON.stringify(stringdata));
-    // } else {
-    //   let stringdata = [data];
-
-    //   console.log('stringdata', stringdata);
-    //   setcartdetail(stringdata);
-    //   await AsyncStorage.setItem('cartdata', JSON.stringify(stringdata));
-    // }
-    // setisalreadyadd(true);
+    console.log('selectedslot', selectedslot);
 
     const existingCart = Array.isArray(cartdetail) ? cartdetail : [];
 
@@ -220,6 +219,7 @@ const Preview = props => {
         isCurbSidePickupAvailable: productdata.isCurbSidePickupAvailable,
         isNextDayDeliveryAvailable: productdata.isNextDayDeliveryAvailable,
         slug: productdata.slug,
+        productSource: selectedslot.isFlashSale ? "SALE" : "NORMAL",
       };
 
       const updatedCart = [...existingCart, newProduct];
@@ -261,6 +261,7 @@ const Preview = props => {
         slug: productdata.slug,
         tax_code: productdata.tax_code,
         tax: productdata.tax,
+        // productSource: selectedslot.isFlashSale ? "SALE" : "NORMAL",
       };
 
       const updatedCart = [...existingCart, newProduct];
@@ -627,15 +628,18 @@ const Preview = props => {
                     <ImageBackground
                       source={require('../../Assets/Images/star1.png')}
                       style={styles.cardimg2}>
-                      <Text style={styles.offtxt}>
-                        {(
-                          ((item?.other_price - item?.our_price) /
-                            item?.other_price) *
-                          100
-                        ).toFixed(0)}
-                        %
+                      {item?.isFlashSale ? <Text style={styles.offtxt}>
+                        Sale
                       </Text>
-                      <Text style={styles.offtxt}>{t('off')}</Text>
+                        : <Text style={styles.offtxt}>
+                          {(
+                            ((item?.other_price - item?.our_price) /
+                              item?.other_price) *
+                            100
+                          ).toFixed(0)}
+                          %
+                        </Text>}
+                      {!item?.isFlashSale && <Text style={styles.offtxt}>{t('off')}</Text>}
                     </ImageBackground>
                   )}
                   <Text style={styles.weight}>
@@ -839,6 +843,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginTop: 0,
     marginBottom: 5,
+    overflow: 'visible'
   },
   box2: {
     // width: 180,
@@ -850,7 +855,7 @@ const styles = StyleSheet.create({
     width: 45,
     position: 'absolute',
     right: -7,
-    top: -10,
+    top: 0,
     justifyContent: 'center',
     alignItems: 'center',
     // zIndex:99
