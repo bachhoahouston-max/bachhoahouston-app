@@ -59,6 +59,8 @@ import {
     // SafeAreaView,
     StatusBar,
     StyleSheet,
+    Alert,
+    Linking
 } from 'react-native';
 import Spinner from './src/Assets/Component/Spinner';
 import Geolocation from 'react-native-geolocation-service';
@@ -85,6 +87,8 @@ import SpInAppUpdates, {
     IAUUpdateKind,
 } from 'sp-react-native-in-app-updates';
 import DeviceInfo from 'react-native-device-info';
+import VersionCheck from 'react-native-version-check';
+
 
 
 
@@ -113,6 +117,128 @@ const App = () => {
         deliveryTip: 0,
         couponDiscount: 0,
     });
+
+    useEffect(() => {
+        console.log(DeviceInfo?.getVersion());
+        const inAppUpdates = new SpInAppUpdates(
+            true, // isDebug
+        );
+        // curVersion is optional if you don't provide it will automatically take from the app using react-native-device-info
+        // {curVersion: VersionInfo?.appVersion}
+        if (Platform.OS === 'android') {
+            try {
+
+                inAppUpdates.checkNeedsUpdate({ curVersion: VersionInfo?.appVersion }).then(
+                    result => {
+                        console.log(result);
+                        if (result.shouldUpdate) {
+                            const updateOptions = Platform.select({
+                                ios: {
+                                    title: 'Update available',
+                                    message:
+                                        'Please update the app to the latest version to access new sales and enjoy a smoother experience.',
+                                    buttonUpgradeText: 'Update',
+                                    buttonCancelText: 'Cancel',
+                                },
+                                android: {
+                                    updateType: IAUUpdateKind.IMMEDIATE,
+                                },
+                            });
+                            inAppUpdates.startUpdate(updateOptions); // https://github.com/SudoPlz/sp-react-native-in-app-updates/blob/master/src/types.ts#L78
+                        }
+                    },
+                    err => {
+                        console.log(err);
+                    },
+                );
+            } catch (err) {
+                console.log(err);
+            }
+        }
+        if (Platform.OS === 'ios') {
+            checkIOSUpdate();
+        }
+    }, []);
+
+    // const checkIOSUpdate = async () => {
+    //     const latestVersion = await VersionCheck.getLatestVersion({
+    //         provider: 'appStore',
+    //     });
+
+
+
+    //     const currentVersion = VersionCheck.getCurrentVersion();
+    //     console.log('currentVersion', currentVersion)
+    //     console.log('latestVersion', latestVersion)
+
+    //     const updateNeeded = VersionCheck.needUpdate({
+    //         currentVersion,
+    //         latestVersion,
+    //     });
+
+
+    //     if (updateNeeded?.isNeeded) {
+    //         Alert.alert(
+    //             'Update Available',
+    //             'Please update the app to the latest version to access new sales and enjoy a smoother experience.',
+    //             [
+    //                 {
+    //                     text: 'Update',
+    //                     onPress: () =>
+    //                         Linking.openURL(
+    //                             'https://apps.apple.com/us/app/b%C3%A1ch-ho%C3%A1-houston/id6745395289'
+    //                         ),
+    //                 },
+    //                 {
+    //                     text: 'Cancel',
+    //                     onPress: () => { }
+
+    //                 },
+    //             ],
+    //             { cancelable: true }
+    //         );
+    //     }
+    // }
+    async function checkIOSUpdate() {
+        try {
+            const currentVersion = VersionCheck.getCurrentVersion();
+
+            // const latestVersion = await VersionCheck.getLatestVersion({
+            //     provider: __DEV__ ? 'testflight' : 'appStore',
+            // });
+
+            const latestVersion = await VersionCheck.getLatestVersion({
+                provider: 'appStore',
+            });
+
+            const update = VersionCheck.needUpdate({
+                currentVersion,
+                latestVersion,
+            });
+
+            console.log({ currentVersion, latestVersion, update });
+
+            // Alert.alert(latestVersion)
+            if (update?.isNeeded) {
+                Alert.alert(
+                    'Update Available',
+                    'Please update the app to the latest version to access new sales and enjoy a smoother experience.',
+                    [
+                        {
+                            text: 'Update',
+                            onPress: () =>
+                                Linking.openURL(
+                                    'https://apps.apple.com/us/app/b%C3%A1ch-ho%C3%A1-houston/id6745395289'
+                                ),
+                        },
+                    ]
+                );
+            }
+        } catch (e) {
+            Alert.alert(e)
+            console.log('Update check failed', e);
+        }
+    }
 
     useEffect(() => {
         SplashScreen.hide();
@@ -416,41 +542,7 @@ const App = () => {
         }
     }, [toast]);
 
-    useEffect(() => {
-        console.log(DeviceInfo?.getVersion());
-        const inAppUpdates = new SpInAppUpdates(
-            true, // isDebug
-        );
-        // curVersion is optional if you don't provide it will automatically take from the app using react-native-device-info
-        // {curVersion: VersionInfo?.appVersion}
-        try {
-            inAppUpdates.checkNeedsUpdate().then(
-                result => {
-                    console.log(result);
-                    if (result.shouldUpdate) {
-                        const updateOptions = Platform.select({
-                            ios: {
-                                title: 'Update available',
-                                message:
-                                    'There is a new version of the app available on the App Store, do you want to update it?',
-                                buttonUpgradeText: 'Update',
-                                buttonCancelText: 'Cancel',
-                            },
-                            android: {
-                                updateType: IAUUpdateKind.IMMEDIATE,
-                            },
-                        });
-                        inAppUpdates.startUpdate(updateOptions); // https://github.com/SudoPlz/sp-react-native-in-app-updates/blob/master/src/types.ts#L78
-                    }
-                },
-                err => {
-                    console.log(err);
-                },
-            );
-        } catch (err) {
-            console.log(err);
-        }
-    }, []);
+
     return (
         <GestureHandlerRootView>
             <PaperProvider>

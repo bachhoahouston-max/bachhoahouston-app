@@ -328,6 +328,10 @@ const PosterDetail = props => {
         unitText = '1 liter';
         factor = 1; // 1 litre = 1000 ml → 100 ml = 1/10 of the price
         break;
+      case 'liter':
+        unitText = '1 liter';
+        factor = 1; // 1 litre = 1000 ml → 100 ml = 1/10 of the price
+        break;
       case 'ml':
         unitText = '100 ml';
         factor = 100; // Convert the given ml into 100 ml equivalent

@@ -309,6 +309,10 @@ const Preview = props => {
         unitText = '1 liter';
         factor = 1; // 1 litre = 1000 ml → 100 ml = 1/10 of the price
         break;
+      case 'liter':
+        unitText = '1 liter';
+        factor = 1; // 1 litre = 1000 ml → 100 ml = 1/10 of the price
+        break;
       case 'ml':
         unitText = '100 ml';
         factor = 100; // Convert the given ml into 100 ml equivalent
@@ -458,9 +462,9 @@ const Preview = props => {
         </Text>
         <View style={[styles.pricecov, { marginTop: 10, marginBottom: 0 }]}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            {/* <Text style={styles.maintxt2}>
+            <Text style={styles.maintxt2}>
               {Currency} {selectedslot?.our_price}
-            </Text> */}
+            </Text>
             {selectedslot?.other_price && (
               <Text
                 style={[styles.weight, { textDecorationLine: 'line-through' }]}>
@@ -614,11 +618,11 @@ const Preview = props => {
                         productdata?.price_slot.length === i + 1 ? 20 : 10,
                       backgroundColor:
                         selectedslot?.our_price === item.our_price
-                          ? Constants.lightgreen
+                          ? Constants.white
                           : Constants.lightgreen,
                       borderColor:
                         selectedslot?.our_price === item.our_price
-                          ? Constants.lightgreen
+                          ? Constants.custom_green
                           : Constants.lightgreen,
                     },
                   ]}
@@ -643,7 +647,7 @@ const Preview = props => {
                     </ImageBackground>
                   )}
                   <Text style={styles.weight}>
-                    {item?.value}
+                    {item?.value}{' '}
                     {item.unit}
                   </Text>
                   <View style={{ marginTop: -5 }}>
@@ -828,8 +832,10 @@ const styles = StyleSheet.create({
   },
   maintxt2: {
     fontSize: 20,
-    color: Constants.linearcolor,
-    fontFamily: FONTS.Bold,
+    color: Constants.custom_green,
+    // fontFamily: FONTS.Bold,
+    fontWeight: '900',
+    marginLeft: 10
     // textDecorationLine: 'line-through',
   },
   box: {
@@ -875,6 +881,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     fontSize: 18,
     fontFamily: FONTS.Bold,
+    height: 40,
     // position: 'absolute',
     // right: 0,
   },

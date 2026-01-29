@@ -247,11 +247,12 @@ const Orderview = props => {
               <Text style={styles.boxtxt}>
                 {Currency}{' '}
                 {(
-                  Number(orderview?.total || 0) -
-                  Number(orderview?.totalTax || 0) -
-                  Number(orderview?.deliveryfee || 0) -
-                  Number(orderview?.Deliverytip || 0) +
-                  Number(orderview?.discount || 0)
+                  Number(orderview?.subtotal || 0)
+                  // -
+                  // Number(orderview?.totalTax || 0) -
+                  // Number(orderview?.deliveryfee || 0) -
+                  // Number(orderview?.Deliverytip || 0) +
+                  // Number(orderview?.discount || 0)
                 ).toFixed(2)}
               </Text>
             </View>
@@ -330,7 +331,7 @@ const Orderview = props => {
                 <Text style={styles.boxtxt}>{t('Final Amount')}</Text>
                 <Text style={styles.boxtxt}>
                   {Currency}
-                  {Number(orderview?.total)}
+                  {(Number(orderview?.total) + Number(orderview?.totalTax)).toFixed(2)}
                 </Text>
               </View>
             </View>

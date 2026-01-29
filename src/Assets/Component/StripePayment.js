@@ -145,46 +145,7 @@ const StripeCheckoutButton = ({
           throw new Error(sessionResponse.error);
         }
 
-        // const paymentResult = {
-        //   id: sessionResponse.payment_intent || sessionId,
-        //   paymentId: sessionResponse.payment_intent,
-        //   paymentIntentId: sessionResponse.payment_intent,
-        //   sessionId: sessionId,
-        //   total: sessionResponse.amount_total
-        //     ? sessionResponse.amount_total / 100
-        //     : 0,
-        //   subtotal: sessionResponse.amount_subtotal
-        //     ? sessionResponse.amount_subtotal / 100
-        //     : 0,
-        //   tax: sessionResponse.total_details?.amount_tax
-        //     ? sessionResponse.total_details.amount_tax / 100
-        //     : 0,
-        //   // Delivery tip now included as a line item
-        //   deliveryTip: sessionResponse.delivery_tip?.amount || 0,
-        //   tipIncludedInSubtotal:
-        //     sessionResponse.delivery_tip?.included_in_subtotal || true,
-        //   tipTaxable: sessionResponse.delivery_tip?.taxable || true,
-        //   tipLineItemId: sessionResponse.delivery_tip?.line_item_id || null,
-        //   // Line items breakdown
-        //   lineItemsBreakdown: sessionResponse.line_items_breakdown || [],
-        //   currency: sessionResponse.currency || 'usd',
-        //   status: 'succeeded',
-        //   created: new Date().toISOString(),
-        //   taxBreakdown: sessionResponse.total_details?.breakdown?.taxes || [],
-        // };
 
-        // console.log('Payment completed with tip as line item:', {
-        //   total: paymentResult.total,
-        //   subtotal: paymentResult.subtotal,
-        //   tax: paymentResult.tax,
-        //   deliveryTip: paymentResult.deliveryTip,
-        //   tipIncludedInSubtotal: paymentResult.tipIncludedInSubtotal,
-        //   tipTaxable: paymentResult.tipTaxable,
-        //   lineItemsBreakdown: paymentResult.lineItemsBreakdown,
-        //   sessionId: paymentResult.sessionId,
-        // });
-
-        // setLoading(false);
         onPaymentSuccess && onPaymentSuccess();
       } catch (error) {
         console.error('Failed to process payment success:', error);
@@ -277,14 +238,14 @@ const StripeCheckoutButton = ({
           item.taxable === false ||
           item.taxable === 'false' ||
           item.tax_code === 'txcd_00000000'; // Non-taxable tax code
-
+        console.log('tax check ===========>', isTaxExempt, item.tax_code)
         // Use appropriate tax code based on item's tax status
         let taxCode = item.tax_code;
         if (!taxCode) {
           // Default tax codes
           taxCode = isTaxExempt ? 'txcd_00000000' : 'txcd_10000000';
         }
-
+        console.log('tax check ===========>', isTaxExempt, item.tax_code, taxCode)
         return {
           price_data: {
             currency: 'usd',
@@ -303,7 +264,7 @@ const StripeCheckoutButton = ({
           quantity: item.quantity,
         };
       });
-
+      // return
       // Handle coupon discount - pass to backend for proper handling
       let discountInfo = null;
       if (orderData?.couponDiscount && orderData.couponDiscount !== 0) {
