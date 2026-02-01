@@ -120,6 +120,7 @@ const Cart = ({ route }) => {
   const [serviceFee, setServiceFee] = useState(0);
   const [pickupOptions, setPickupOptions] = useState(pickupOptionss)
   const [deliveryType, setDeliveryType] = useState('');
+  const [closureDates, setClosureDates] = useState([]);
 
   const isZipAvailable = availableZipCodes.some(
     zip => String(zip.pincode) === String(localDeliveryAddress.zipcode),
@@ -132,6 +133,10 @@ const Cart = ({ route }) => {
 
     return hours > 12 || (hours === 12 && minutes > 0);
   };
+
+
+
+
 
 
   //clear data by screen change
@@ -171,6 +176,23 @@ const Cart = ({ route }) => {
     );
   };
 
+  const getClosureDate = () => {
+    setLoading(true);
+    GetApi(`getClosureDates`, {}).then(
+      async res => {
+        setLoading(false);
+        console.log('closuredates===========>', res);
+        if (res.status) {
+          setClosureDates(res.data);
+        }
+      },
+      err => {
+        setLoading(false);
+        console.log(err);
+      },
+    );
+  };
+
 
 
   // useEffect(() => {
@@ -185,6 +207,7 @@ const Cart = ({ route }) => {
       setCoupon(false);
       setCouponDiscount(0);
       fetchZipCodes();
+      getClosureDate();
       const isAfterNoon = isAfter12PM();
       pickupOptionss.forEach(option => {
         if (option.value === 'localDelivery') {
@@ -2403,7 +2426,6 @@ const Cart = ({ route }) => {
       /> */}
         <StripeCheckoutButton
           setLoading={setLoading}
-
           customerData={{
             name: user?.username || '',
             email: user?.email || '',

@@ -471,6 +471,8 @@ const App = () => {
         const x = await AsyncStorage.getItem('LANG');
         if (x != null) {
             i18n.changeLanguage(x);
+        } else {
+            i18n.changeLanguage('vi');
         }
     };
     const [interval, setinter] = useState();
