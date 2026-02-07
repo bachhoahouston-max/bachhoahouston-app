@@ -470,7 +470,7 @@ const Myorder = () => {
                         fontSize: 14,
                       },
                     ]}>
-                    {item?.status === 'Driverassigned' ? 'Driver Assigned' : item?.status}
+                    {item?.status === 'Driverassigned' ? 'Driver Assigned' : (item?.status === 'Preparing' && item?.isReady) ? 'Order Ready' : item?.status}
                   </Text>
                 </View>
               </View>

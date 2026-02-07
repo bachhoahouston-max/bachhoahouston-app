@@ -56,6 +56,7 @@ const Work = () => {
   const [modalVisible, setModalVisible] = useState(null);
   const [selectedOrderData, setSelectedOrderData] = useState(null);
   const [deliveryModal, setDeliveryModal] = useState(false);
+  const [orderReadyModal, setOrderReadyModal] = useState(false);
   const [deliveryData, setDeliveryData] = useState({
     images: [],
   });
@@ -164,18 +165,14 @@ const Work = () => {
   }, [IsFocused, nearbyLocation]);
 
   // eslint-disable-next-line no-unused-vars
-  const acceptOrder = id => {
+  const acceptOrder = () => {
     setLoading(true);
-    Post(`acceptorderdriver/${id}`, {}).then(
+    Post(`changeorderstatus`, { id: selectedOrderData?.orderId, status: selectedOrderData.status }).then(
       async res => {
         setLoading(false);
         console.log(res);
         if (res?.status) {
-          nearbyLocation();
-        } else {
-          if (res?.message) {
-            setToast(res?.message);
-          }
+          acceptedOrderForDriver()
         }
       },
       err => {
@@ -377,7 +374,7 @@ const Work = () => {
                     {item?.total}
                   </Text>
                 </View>
-                {item?.driver_id && (
+                {item?.driver_id && item?.status === 'Out for Delivery' && (
                   <TouchableOpacity
                     style={styles.acceptButtonStyle}
                     onPress={() => {
@@ -390,6 +387,22 @@ const Work = () => {
                       });
                     }}>
                     <Text style={styles.modalText}>{t('Mark Delivered')}</Text>
+                  </TouchableOpacity>
+                )}
+                {item?.driver_id && item?.status === 'Driverassigned' && (
+                  <TouchableOpacity
+                    style={styles.acceptButtonStyle}
+                    onPress={() => {
+                      setOrderReadyModal(true);
+                      setSelectedOrderData({
+                        orderId: item._id,
+                        driverId: item.driver_id,
+                        userId: item.user_id,
+                        orderDetails: item,
+                        status: 'Out for Delivery',
+                      });
+                    }}>
+                    <Text style={styles.modalText}>{t('Out for Delivery')}</Text>
                   </TouchableOpacity>
                 )}
               </TouchableOpacity>
@@ -491,6 +504,54 @@ const Work = () => {
                     // Note: This functionality needs to be properly implemented
                     // acceptOrder(selectedOrderId);
                     setAcceptModal(false);
+                  }}>
+                  <Text style={styles.modalText}>{t('Yes')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="none"
+        transparent={true}
+        visible={orderReadyModal}
+        onRequestClose={() => {
+          setOrderReadyModal(!orderReadyModal);
+        }}>
+        <View style={styles.centeredView2}>
+          <View style={styles.modalView2}>
+            <Text style={styles.alrt}>{t('Alert !')}</Text>
+            <View
+              style={{
+                backgroundColor: 'white',
+                alignItems: 'center',
+                paddingHorizontal: 30,
+              }}>
+              <Text style={styles.textStyle}>
+                {'Are you sure you want to Accept this order is ready to be delivered !'}
+              </Text>
+              <View style={styles.cancelAndLogoutButtonWrapStyle}>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => setOrderReadyModal(!orderReadyModal)}
+                  style={styles.cancelButtonStyle}>
+                  <Text
+                    style={[
+                      styles.modalText,
+                      { color: Constants.custom_yellow },
+                    ]}>
+                    {t('No')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  style={styles.logOutButtonStyle}
+                  onPress={() => {
+                    // Note: This functionality needs to be properly implemented
+                    acceptOrder();
+                    setOrderReadyModal(false);
                   }}>
                   <Text style={styles.modalText}>{t('Yes')}</Text>
                 </TouchableOpacity>

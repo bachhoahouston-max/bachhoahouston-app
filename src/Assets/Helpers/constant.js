@@ -1,6 +1,6 @@
 // const prodUrl = 'http://192.168.1.3:8000/v1/api/';
-const prodUrl = 'http://192.168.0.114:3005/v1/api/';
-// const prodUrl = 'https://api.bachhoahouston.com/v1/api/';
+// const prodUrl = 'http://192.168.0.101:3005/v1/api/';
+const prodUrl = 'https://api.bachhoahouston.com/v1/api/';
 
 let apiUrl = prodUrl;
 export const Googlekey = 'AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs';

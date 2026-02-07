@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import { View, Text, TouchableOpacity ,Image} from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import React, { use, useCallback, useContext, useEffect, useState } from 'react';
 import { RightarrowIcon } from '../../../Theme';
 import Constants, { FONTS } from '../Helpers/constant';
@@ -99,6 +99,7 @@ const Sale = ({ setIsSale }) => {
   }, [saleData]);
 
   const cartdata = async (productdata, items) => {
+    console.log('Adding to cart:', productdata, items);
     const existingCart = Array.isArray(cartdetail) ? cartdetail : [];
 
     const existingProduct = existingCart.find(
@@ -127,6 +128,8 @@ const Sale = ({ setIsSale }) => {
         slug: productdata.slug,
         tax_code: productdata.tax_code,
         tax: productdata.tax,
+        productSource: productdata?.productSource || "NORMAL",
+        saleID: items?._id || null,
       };
 
       const updatedCart = [...existingCart, newProduct];
@@ -168,73 +171,73 @@ const Sale = ({ setIsSale }) => {
   }, [saleData]);
 
   return (
-  <>
-    <View style={{ marginBottom: 5, marginHorizontal: 13 }}>
-      
-      <View style={styles.covline}>
-        
-       <View style={styles.titleRow}>
-        <View style={{ alignItems: 'flex-start' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ fontSize: 22, color: Constants.black,  fontWeight: '500' }}>
-              {t('Offer of the week')}
-            </Text>
-            <Image 
-              source={require('../Images/zap.png')} 
-              style={{ 
-                width: 20, 
-                height: 20,
-                marginLeft: 5,
-                opacity: (!saleData || saleData.length === 0) ? 0.5 : 1
-              }}
-              resizeMode="contain"
-            />
-          </View>
-          {(!saleData || saleData.length === 0) && (
-            <Text style={{ 
-              fontSize: 14, 
-              color: Constants.grey, 
-              fontFamily: 'Poppins-Regular',
-              marginTop: 2
-            }}>
-              {t('No sale is live')}
-            </Text>
-          )}
-        </View>
-      </View>
-      </View>
+    <>
+      <View style={{ marginBottom: 5, marginHorizontal: 13 }}>
 
-      <FlatList
-        data={saleData}
-        keyExtractor={(item, index) => item._id || index.toString()}
-        numColumns={2}
-        scrollEnabled={false}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
-        renderItem={({ item, index }) => {
-          const cartItem = Array.isArray(cartdetail)
-            ? cartdetail.find(it => it?.productid === item?.product?._id)
-            : undefined;
-          const currentSale = countdown[item._id];
+        <View style={styles.covline}>
 
-          return (
-            <View style={{ flex: 1, marginBottom: 10, marginHorizontal: 5 }}>
-              <ProductCard
-                item={item.product}
-                cartItem={cartItem}
-                cartdata={(e) => { cartdata(e, item) }}
-                setcartdetail={setcartdetail}
-                cartdetail={cartdetail}
-                salePrice={item.price}
-                currentSale={currentSale}
-                saleVarient={item.price_slot}
-              />
+          <View style={styles.titleRow}>
+            <View style={{ alignItems: 'flex-start' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={{ fontSize: 22, color: Constants.black, fontWeight: '500' }}>
+                  {t('Offer of the week')}
+                </Text>
+                <Image
+                  source={require('../Images/zap.png')}
+                  style={{
+                    width: 20,
+                    height: 20,
+                    marginLeft: 5,
+                    opacity: (!saleData || saleData.length === 0) ? 0.5 : 1
+                  }}
+                  resizeMode="contain"
+                />
+              </View>
+              {(!saleData || saleData.length === 0) && (
+                <Text style={{
+                  fontSize: 14,
+                  color: Constants.grey,
+                  fontFamily: 'Poppins-Regular',
+                  marginTop: 2
+                }}>
+                  {t('No sale is live')}
+                </Text>
+              )}
             </View>
-          );
-        }}
-      />
-    </View>
-  </>
-);
+          </View>
+        </View>
+
+        <FlatList
+          data={saleData}
+          keyExtractor={(item, index) => item._id || index.toString()}
+          numColumns={2}
+          scrollEnabled={false}
+          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          renderItem={({ item, index }) => {
+            const cartItem = Array.isArray(cartdetail)
+              ? cartdetail.find(it => it?.productid === item?.product?._id)
+              : undefined;
+            const currentSale = countdown[item._id];
+
+            return (
+              <View style={{ flex: 1, marginBottom: 10, marginHorizontal: 5 }}>
+                <ProductCard
+                  item={item.product}
+                  cartItem={cartItem}
+                  cartdata={(e) => { cartdata(e, item) }}
+                  setcartdetail={setcartdetail}
+                  cartdetail={cartdetail}
+                  salePrice={item.price}
+                  currentSale={currentSale}
+                  saleVarient={item.price_slot}
+                />
+              </View>
+            );
+          }}
+        />
+      </View>
+    </>
+  );
 };
 
 const styles = {

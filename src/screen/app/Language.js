@@ -30,7 +30,7 @@ export default function Language() {
   };
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', marginTop: 40}}>
+    <View style={{ flex: 1, justifyContent: 'center', marginTop: 40 }}>
       <TouchableOpacity
         style={styles.langView}
         onPress={() => langRef.current?.show()}
@@ -69,11 +69,11 @@ export default function Language() {
           <TouchableOpacity
             style={[
               styles.item,
-              { borderColor: selectLanguage === 'Vietnames' ? Constants.saffron : Constants.black },
+              { borderColor: selectLanguage === 'Vietnamese' ? Constants.saffron : Constants.black },
             ]}
-            onPress={() => changeLanguage('vi', 'Vietnames')}
+            onPress={() => changeLanguage('vi', 'Vietnamese')}
           >
-            {selectLanguage === 'Vietnames' ? (
+            {selectLanguage === 'Vietnamese' ? (
               <RadioonIcon color={Constants.saffron} height={24} width={24} />
             ) : (
               <RadiooffIcon color={Constants.black} height={24} width={24} />

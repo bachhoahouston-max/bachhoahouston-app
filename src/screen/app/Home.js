@@ -424,7 +424,9 @@ const Home = () => {
               )}
             />
             <View style={{ height: 24, backgroundColor: '#E8E8E8', marginVertical: 15 }} />
+
             <Sale setIsSale={setIsSale} />
+
             <View style={{ height: 24, backgroundColor: '#E8E8E8', marginVertical: 15 }} />
             {/* Top Selling Header */}
             <View style={styles.covline}>

@@ -192,11 +192,15 @@ const ProductCard = ({
                   }
                   console.log(item);
 
-                  if (salePrice !== null && salePrice !== undefined) {
+                  if (salePrice) {
+                    console.log('salePrice1', salePrice);
                     cartdata({ ...item, salePrice, productSource: "SALE", });
                   } else {
+                    console.log('salePrice2', salePrice);
                     cartdata({ ...item, productSource: "NORMAL", });
                   }
+
+                  console.log('Added to cart', cartdata);
                 }}>
                 {item.Quantity <= 0 && <Text style={{ color: Constants.white, fontWeight: '700', fontSize: 16, paddingHorizontal: 10 }}>Out of stock</Text>}
                 {item.Quantity > 0 && <PlusIcon height={20} width={20} color="#fff" />}

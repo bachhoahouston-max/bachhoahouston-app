@@ -44,10 +44,12 @@ import moment from 'moment-timezone';
 import { Dropdown } from 'react-native-element-dropdown';
 import { GetApi, Post } from '../../Assets/Helpers/Service';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { DatePickerModal } from 'react-native-paper-dates';
 import { DateTime } from 'luxon';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import StripeCheckoutButton from '../../Assets/Component/StripePayment';
 import i18n from 'i18next';
+import PaymentWaitingModal from '../../Assets/Component/PaymentWaitingModal'
 
 const pickupOptionss = [
   {
@@ -121,6 +123,10 @@ const Cart = ({ route }) => {
   const [pickupOptions, setPickupOptions] = useState(pickupOptionss)
   const [deliveryType, setDeliveryType] = useState('');
   const [closureDates, setClosureDates] = useState([]);
+  const [extraFees, setExtrafees] = useState(0);
+  const [ExtraFeesObj, setExtraFeesObj] = useState({})
+  const [waiting, setWaiting] = useState(false);
+
 
   const isZipAvailable = availableZipCodes.some(
     zip => String(zip.pincode) === String(localDeliveryAddress.zipcode),
@@ -133,32 +139,6 @@ const Cart = ({ route }) => {
 
     return hours > 12 || (hours === 12 && minutes > 0);
   };
-
-
-
-
-
-
-  //clear data by screen change
-  // useFocusEffect(
-  //   React.useCallback(() => {
-  //     return () => {
-  //       setPickupType(null);
-  //       setPickupDate(null);
-  //       setDeliveryTip(0);
-  //       setCoupon(false);
-  //       setCouponDiscount(0);
-  //       setOpen(false);
-  //       setCouponCode('');
-  //       setBusinessAddress({ businessAddress: user?.BusinessAddress || '' });
-  //       setLocalDeliveryAddress({
-  //         ApartmentNo: user?.ApartmentNo || '',
-  //         SecurityGateCode: user?.SecurityGateCode || '',
-  //         zipcode: user?.zipcode || '',
-  //       });
-  //     }
-  //   }, [])
-  // );
 
   const fetchZipCodes = async () => {
     setLoading(true);
@@ -176,6 +156,35 @@ const Cart = ({ route }) => {
     );
   };
 
+  const checkZipCodeAvailability = async (pincode) => {
+    console.log(pincode)
+    setLoading(true);
+    Post('checkAvailable', { pincode }).then(
+      async res => {
+        setLoading(false);
+        console.log('Zip Codes:', res);
+        if (res?.error) {
+          props.toaster({ type: "error", message: res?.error });
+        } else {
+          setExtraFeesObj(res.data)
+          if (res?.data?.extendedCharge) {
+            if (totaloff > res?.data.extendedCharge) {
+              setExtrafees(0)
+            } else {
+              setExtrafees(res.data.extendedCharge)
+            }
+          } else {
+            setExtrafees(0)
+          }
+        }
+      },
+      err => {
+        console.log('Error fetching zip codes:', err);
+        setLoading(false);
+      },
+    );
+  };
+
   const getClosureDate = () => {
     setLoading(true);
     GetApi(`getClosureDates`, {}).then(
@@ -183,7 +192,8 @@ const Cart = ({ route }) => {
         setLoading(false);
         console.log('closuredates===========>', res);
         if (res.status) {
-          setClosureDates(res.data);
+          // setClosureDates(res.data);
+          setClosureDates(res.data.map(d => new Date(d.closureDate)));
         }
       },
       err => {
@@ -192,15 +202,6 @@ const Cart = ({ route }) => {
       },
     );
   };
-
-
-
-  // useEffect(() => {
-  //   setCoupon(false);
-  //   setCouponDiscount(0);
-  //   fetchZipCodes();
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -257,9 +258,7 @@ const Cart = ({ route }) => {
         minDate.setDate(now.getDate());
       }
 
-      minDate.setHours(0, 0, 0, 0); // Start of the day
-      setPickupDate(minDate)
-      setMinDate(minDate);
+      checkAvailabilityAndAddToCart(minDate);
 
       AsyncStorage.setItem(
         'pickupDate',
@@ -275,11 +274,8 @@ const Cart = ({ route }) => {
         // Before 8 PM, set min date to tomorrow
         minDate.setDate(now.getDate() + 1);
       }
+      checkAvailabilityAndAddToCart(minDate);
 
-      minDate.setHours(0, 0, 0, 0);
-      setPickupDate(minDate)
-
-      setMinDate(minDate);
       AsyncStorage.setItem(
         'pickupDate',
         moment(new Date(minDate)).format('YYYY-MM-DD'))
@@ -292,6 +288,19 @@ const Cart = ({ route }) => {
     }
   }, [PickupType]);
 
+  const checkAvailabilityAndAddToCart = async (mdate) => {
+    let cDate = moment(new Date(mdate)).format('YYYY-MM-DD');
+    const fdate = closureDates.find((e) => cDate.toString() === moment(new Date(e)).format('YYYY-MM-DD'))
+    if (fdate) {
+      const cdate = new Date(mdate);
+      cdate.setDate(mdate.getDate() + 1);
+      checkAvailabilityAndAddToCart(cdate)
+    } else {
+      mdate.setHours(0, 0, 0, 0);
+      setPickupDate(mdate)
+      setMinDate(mdate);
+    }
+  }
 
   useEffect(() => {
     // Calculate cart total (original prices)
@@ -344,6 +353,17 @@ const Cart = ({ route }) => {
     if (deliveryTip > 0) {
       finalTotal += deliveryTip;
     }
+    if (PickupType === 'localDelivery') {
+      if (offdata < ExtraFeesObj.extendedMinCharge) {
+        finalTotal += ExtraFeesObj.extendedCharge;
+        setExtrafees(ExtraFeesObj.extendedCharge)
+      } else {
+        setExtrafees(0)
+      }
+    }
+
+
+
     setServiceFee(fee);
     setDeliveryFees(deliveryCharge);
     setTotalFinal(Number(finalTotal.toFixed(2)));
@@ -356,6 +376,8 @@ const Cart = ({ route }) => {
     localDeliveryCost,
     shippingFee,
     couponDiscount,
+    extraFees,
+    ExtraFeesObj
   ]);
 
   const fetchDeliveryFee = async () => {
@@ -647,6 +669,7 @@ const Cart = ({ route }) => {
     setLoading(true);
     let cart = await AsyncStorage.getItem('cartdata');
     let carDetails = JSON.parse(cart)
+    console.log('Cart Details for Order Submission:', carDetails);
     try {
       let newarr = carDetails.map(item => {
         return {
@@ -666,6 +689,7 @@ const Cart = ({ route }) => {
           isNextDayDeliveryAvailable: item.isNextDayDeliveryAvailable,
           slug: item.slug,
           productSource: item.productSource || "NORMAL",
+          saleID: item.saleID || null,
         };
       });
 
@@ -704,6 +728,7 @@ const Cart = ({ route }) => {
         paymentId: stripePaymentResult?.paymentId || stripePaymentResult?.id || '',
         paymentIntentId: stripePaymentResult?.paymentIntentId || '',
         order_platform: Platform.OS,
+        extraFees
       };
 
       if (shipAdd?._id) {
@@ -776,6 +801,7 @@ const Cart = ({ route }) => {
     setOpen(false);
     setCouponCode('');
     setDiscountCode('');
+
     setBusinessAddress({
       businessAddress: shipAdd?.BusinessAddress || '',
     });
@@ -797,6 +823,15 @@ const Cart = ({ route }) => {
   useEffect(() => {
     setCouponCode('');
   }, [open]);
+
+  const onConfirmSingle = React.useCallback(
+    (params) => {
+      setOpenDatePicker(false);
+      console.log('Selected date:', params);
+      setPickupDate(params.date);
+    },
+    [setOpenDatePicker, setPickupDate]
+  );
 
   return (
     <>
@@ -1030,7 +1065,11 @@ const Cart = ({ route }) => {
               <RadioButton.Group
                 onValueChange={type => {
                   setPickupType(type);
+                  setCouponDiscount(0);
+                  setCoupon(false);
+                  setCouponCode('');
                   setPickupDate(null);
+
                 }}
                 value={PickupType}>
                 {pickupOptions.map((option, index) => (
@@ -1054,6 +1093,14 @@ const Cart = ({ route }) => {
                           SecurityGateCode: user?.SecurityGateCode || '',
                           zipcode: user?.zipcode || '',
                         });
+                        console.log(user)
+                        if (user.zipcode) {
+                          if (option.value === 'localDelivery') {
+                            checkZipCodeAvailability(user.zipcode);
+                          } else {
+                            setExtrafees(0)
+                          }
+                        }
                       }}>
                       <RadioButton.Android
                         value={option.value}
@@ -1122,22 +1169,7 @@ const Cart = ({ route }) => {
                               ? moment(pickupDate).format('MM/DD/YYYY')
                               : t('Select Delivery Date')}
                           </Text>
-                          {/* <TextInput
-                    value={
-                      pickupDate ? moment(pickupDate).format('MM/DD/YYYY') : ''
-                    }
-                    onFocus={handleDatePickerOpen}
-                    placeholder={t('Select Pickup Dates')}
-                    placeholderTextColor={Constants.customgrey}
-                    editable={false}
-                    style={{
-                      flex: 1,
-                      height: 40,
-                      color: Constants.black,
-                      fontSize: 16,
-                      fontFamily: FONTS.Regular,
-                    }}
-                  /> */}
+
                           <Calendar color="black" />
                         </Pressable>
                         <Text
@@ -1172,37 +1204,7 @@ const Cart = ({ route }) => {
                             '*Note: Orders placed before 2 PM are eligible for same-day pickup. Orders placed after 2 PM will be available for pickup the next day.',
                           )}
                         </Text>
-                        {/* <DatePicker
-                  modal
-                  mode="datetime"
-                  open={openDatePicker}
-                  date={pickupDate || new Date()}
-                  onConfirm={date => {
-                    setPickupDate(date);
-                    handleDatePickerClose();
-                  }}
-                  onCancel={handleDatePickerClose}
-                  textColor={Constants.black}
-                  title={t('Select Pickup Date')}
-                  confirmText={t('Confirm')}
-                  cancelText={t('Cancel')}
-                  theme="light"
-                /> */}
-                        {/* <DateTimePickerModal
-                  isVisible={openDatePicker}
-                  mode="date"
-                  minimumDate={minDate}
-                  date={new Date()}
-                  locale="en_GB"
-                  display="spinner"
-                  onConfirm={date => {
-                    setPickupDate(date);
-                    handleDatePickerClose();
-                  }}
-                  onCancel={() => handleDatePickerClose()}
-                  themeVariant="ligt"
 
-                /> */}
                       </View>
                     )}
 
@@ -1241,22 +1243,7 @@ const Cart = ({ route }) => {
                               ? moment(pickupDate).format('MM/DD/YYYY')
                               : t('Select Delivery Date')}
                           </Text>
-                          {/* <TextInput
-                    value={
-                      pickupDate ? moment(pickupDate).format('MM/DD/YYYY') : ''
-                    }
-                    onFocus={handleDatePickerOpen}
-                    placeholder={t('Select Pickup Date')}
-                    placeholderTextColor={Constants.customgrey}
-                    editable={false}
-                    style={{
-                      flex: 1,
-                      height: 40,
-                      color: Constants.black,
-                      fontSize: 16,
-                      fontFamily: FONTS.Regular,
-                    }}
-                  /> */}
+
                           <Calendar color="black" />
                         </Pressable>
                         <Text
@@ -1290,32 +1277,13 @@ const Cart = ({ route }) => {
                             '*Note: Orders placed before 2 PM are eligible for same-day pickup. Orders placed after 2 PM will be available for pickup the next day.',
                           )}
                         </Text>
-                        {/* <DateTimePickerModal
-                  isVisible={openDatePicker}
-                  mode="date"
-                  minimumDate={minDate}
-                  date={new Date()}
-                  locale="en_GB"
-                  display="spinner"
-                  onConfirm={date => {
-                    setPickupDate(date);
-                    handleDatePickerClose();
-                  }}
-                  onCancel={() => handleDatePickerClose()}
-                  themeVariant="light"
-                /> */}
+
                       </View>
                     )}
 
                     {PickupType === option.value && option.value === 'localDelivery' && (
                       <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
-                        {/* <Text
-                  style={[
-                    styles.boxtxt,
-                    {marginBottom: 10, fontSize: 16, fontWeight: '900'},
-                  ]}>
-                  {t('Pick up in 2 Hours')}
-                </Text> */}
+
                         <View style={styles.paycovtxt}>
                           {user?.address ? (
                             <Text style={styles.locationtxt} numberOfLines={1}>
@@ -1339,58 +1307,7 @@ const Cart = ({ route }) => {
                             <Text style={styles.changadd}>{t('CHANGE ADDRESS')}</Text>
                           </TouchableOpacity>
                         </View>
-                        {/* <TextInput
-                  value={localDeliveryAddress.ApartmentNo}
-                  onChangeText={text =>
-                    setLocalDeliveryAddress({
-                      ...localDeliveryAddress,
-                      ApartmentNo: text,
-                    })
-                  }
-                  placeholder={t('Apartment No.')}
-                  placeholderTextColor={Constants.customgrey}
-                  style={{
-                    flex: 1,
-                    height: 40,
-                    color: Constants.black,
-                    fontSize: 16,
-                    fontFamily: FONTS.Regular,
-                    borderWidth: 1,
-                    borderColor: Constants.customgrey2,
-                    borderRadius: 5,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 10,
-                    marginBottom: 10,
-                  }}
-                /> */}
-                        {/* <TextInput
-                  value={localDeliveryAddress.securityNo}
-                  onChangeText={text =>
-                    setLocalDeliveryAddress({
-                      ...localDeliveryAddress,
-                      securityNo: text,
-                    })
-                  }
-                  placeholder={t('Security Gate No.')}
-                  placeholderTextColor={Constants.customgrey}
-                  style={{
-                    flex: 1,
-                    height: 40,
-                    color: Constants.black,
-                    fontSize: 16,
-                    fontFamily: FONTS.Regular,
-                    borderWidth: 1,
-                    borderColor: Constants.customgrey2,
-                    borderRadius: 5,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 10,
-                    marginBottom: 10,
-                  }}
-                /> */}
+
                         <Pressable
                           onPress={handleDatePickerOpen}
                           style={{
@@ -1436,32 +1353,7 @@ const Cart = ({ route }) => {
                           <Calendar color="black" />
                         </Pressable>
 
-                        {/* <TextInput
-                  value={localDeliveryAddress?.zipcode}
-                  onChangeText={text =>
-                    setLocalDeliveryAddress(prev => ({
-                      ...prev,
-                      zipcode: text,
-                    }))
-                  }
-                  placeholder={t('Enter Zip / Post Code')}
-                  placeholderTextColor={Constants.customgrey}
-                  style={{
-                    flex: 1,
-                    height: 40,
-                    color: Constants.black,
-                    fontSize: 16,
-                    fontFamily: FONTS.Regular,
-                    borderWidth: 1,
-                    borderColor: Constants.customgrey2,
-                    borderRadius: 5,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 10,
-                    marginTop: 10,
-                  }}
-                /> */}
+
                         <Dropdown
                           data={[
                             ...(!availableZipCodes.some(
@@ -1488,6 +1380,11 @@ const Cart = ({ route }) => {
                               ...localDeliveryAddress,
                               zipcode: String(item.value),
                             });
+                            if (item.value) {
+                              if (PickupType === 'localDelivery') {
+                                checkZipCodeAvailability(item.value);
+                              }
+                            }
                           }}
                           placeholder={t('Select Zip Code')}
                           placeholderStyle={{ color: Constants.customgrey }}
@@ -1537,48 +1434,7 @@ const Cart = ({ route }) => {
                               )}
                             </Text>
                           )}
-                        {/* <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    marginTop: 10,
-                  }}>
-                  <Checkbox
-                    status={isBusiness ? 'checked' : 'unchecked'}
-                    onPress={() => setIsBusiness(!isBusiness)}
-                    color={Constants.saffron}
-                    uncheckedColor={Constants.customgrey}
-                  />
-                  <Text>{t('Is this your business address?')}</Text>
-                </View>
-                {isBusiness && (
-                  <TextInput
-                    value={businessAddress.businessAddress}
-                    onChangeText={text =>
-                      setBusinessAddress({
-                        ...businessAddress,
-                        businessAddress: text,
-                      })
-                    }
-                    placeholder={t('Business Name')}
-                    placeholderTextColor={Constants.customgrey}
-                    style={{
-                      flex: 1,
-                      height: 40,
-                      color: Constants.black,
-                      fontSize: 16,
-                      fontFamily: FONTS.Regular,
-                      borderWidth: 1,
-                      borderColor: Constants.customgrey2,
-                      borderRadius: 5,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      paddingHorizontal: 10,
-                      marginTop: 10,
-                    }}
-                  />
-                )} */}
+
                         <Text
                           style={[
                             styles.boxtxt,
@@ -1629,99 +1485,7 @@ const Cart = ({ route }) => {
                             <Text style={styles.changadd}>{t('CHANGE ADDRESS')}</Text>
                           </TouchableOpacity>
                         </View>
-                        {/* <TextInput
-                  value={localDeliveryAddress.ApartmentNo}
-                  onChangeText={text =>
-                    setLocalDeliveryAddress({
-                      ...localDeliveryAddress,
-                      ApartmentNo: text,
-                    })
-                  }
-                  placeholder={t('Apartment No.')}
-                  placeholderTextColor={Constants.customgrey}
-                  style={{
-                    flex: 1,
-                    height: 40,
-                    color: Constants.black,
-                    fontSize: 16,
-                    fontFamily: FONTS.Regular,
-                    borderWidth: 1,
-                    borderColor: Constants.customgrey2,
-                    borderRadius: 5,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 10,
-                    marginBottom: 10,
-                  }}
-                /> */}
-                        {/* <TextInput
-                  value={localDeliveryAddress.securityNo}
-                  onChangeText={text =>
-                    setLocalDeliveryAddress({
-                      ...localDeliveryAddress,
-                      securityNo: text,
-                    })
-                  }
-                  placeholder={t('Security Gate No.')}
-                  placeholderTextColor={Constants.customgrey}
-                  style={{
-                    flex: 1,
-                    height: 40,
-                    color: Constants.black,
-                    fontSize: 16,
-                    fontFamily: FONTS.Regular,
-                    borderWidth: 1,
-                    borderColor: Constants.customgrey2,
-                    borderRadius: 5,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    paddingHorizontal: 10,
-                    marginBottom: 10,
-                  }}
-                /> */}
-                        {/* <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                  }}>
-                  <Checkbox
-                    status={isBusiness ? 'checked' : 'unchecked'}
-                    onPress={() => setIsBusiness(!isBusiness)}
-                    color={Constants.saffron}
-                    uncheckedColor={Constants.customgrey}
-                  />
-                  <Text>{t('Is this your business address?')}</Text>
-                </View>
-                {isBusiness && (
-                  <TextInput
-                    value={businessAddress.businessAddress}
-                    onChangeText={text =>
-                      setBusinessAddress({
-                        ...businessAddress,
-                        businessAddress: text,
-                      })
-                    }
-                    placeholder="Business Name"
-                    placeholderTextColor={Constants.customgrey}
-                    style={{
-                      flex: 1,
-                      height: 40,
-                      color: Constants.black,
-                      fontSize: 16,
-                      fontFamily: FONTS.Regular,
-                      borderWidth: 1,
-                      borderColor: Constants.customgrey2,
-                      borderRadius: 5,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      paddingHorizontal: 10,
-                      marginTop: 10,
-                    }}
-                  />
-                )} */}
+
                         <Text
                           style={[
                             styles.boxtxt,
@@ -1744,7 +1508,7 @@ const Cart = ({ route }) => {
               </RadioButton.Group>
 
               {/* Coupon Section - Moved below shipping options */}
-              <View style={[styles.totalcov, { marginTop: 15 }]}>
+              {PickupType && <View style={[styles.totalcov, { marginTop: 15 }]}>
                 <Text style={styles.boxtxtlg}>{t('Savings Corner')}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                   <TextInput
@@ -1789,6 +1553,7 @@ const Cart = ({ route }) => {
                             code: couponCode,
                             cartValue: totaloff,
                             userId: user._id,
+                            option: PickupType,
                           },
                           {},
                         );
@@ -1847,7 +1612,7 @@ const Cart = ({ route }) => {
                     </Pressable>
                   </View>
                 )}
-              </View>
+              </View>}
 
               <View style={styles.totalcov}>
                 <Text style={styles.boxtxtlg}>{t('Cart Summary')}</Text>
@@ -1855,10 +1620,7 @@ const Cart = ({ route }) => {
                 <View style={styles.total}>
                   <Text style={styles.boxtxt}>{t('Subtotal')}</Text>
                   <View style={styles.amount}>
-                    {/* <Text style={[styles.boxtxt2, { fontFamily: FONTS.Medium }]}>
-                    {Currency}
-                    {(Number(totalsum) || 0).toFixed(2)}
-                  </Text> */}
+
                     <Text style={[styles.boxtxt, { fontFamily: FONTS.Medium }]}>
                       {Currency}
                       {Number(totaloff).toFixed(2)}
@@ -1983,8 +1745,23 @@ const Cart = ({ route }) => {
                             {Currency}0.00
                           </Text>
                         </View>
+
+
                       </View>
                     )}
+
+                    <View style={styles.total}>
+                      <Text style={[styles.boxtxt]}>{t('Extended Zone Delivery Fee')}</Text>
+                      <View style={styles.amount}>
+                        {/* <Text style={styles.boxtxt2}>{Currency}{shippingFee}</Text> */}
+                        <Text
+                          style={[styles.boxtxt, { fontFamily: FONTS.Medium }]}>
+                          {Currency}
+                          {Number(extraFees).toFixed(2)}
+                        </Text>
+                      </View>
+                    </View>
+
                     {totaloff < shipcCost?.minServiesCost ? (
                       <View style={styles.total}>
                         <Text style={[styles.boxtxt]}>{t('Service Fee')}</Text>
@@ -2052,16 +1829,7 @@ const Cart = ({ route }) => {
                     )}
                   </View>
                 ) : null}
-                {/* Tax Amount */}
-                {/* <View style={styles.total}>
-                <Text style={styles.boxtxt}>{t('Tax')}</Text>
-                <View style={styles.amount}>
-                  <Text style={[styles.boxtxt, {fontFamily: FONTS.Medium}]}>
-                    {Currency}
-                    {(Number(totalTax) || 0).toFixed(2)}
-                  </Text>
-                </View>
-              </View> */}
+
 
                 <View style={styles.line} />
                 <View style={styles.total}>
@@ -2396,35 +2164,10 @@ const Cart = ({ route }) => {
           </View>
         </Modal>
 
-        {/* <StripePayment
-        visible={showStripePayment}
-        onClose={() => setShowStripePayment(false)}
-        amount={totalFinal}
-        currency="usd"
-        onPaymentSuccess={handlePaymentSuccess}
-        onPaymentError={handlePaymentError}
-        customerData={{
-          name: user?.username || '',
-          email: user?.email || '',
-          userId: user?._id || '',
-          address: {
-            line1: user?.address || '',
-            line2: user?.ApartmentNo || '',
-            city: user?.city || '',
-            state: user?.state || '',
-            postal_code:
-              localDeliveryAddress?.zipcode || user?.zipcode || '',
-            country: 'US',
-          },
-        }}
-        orderData={{
-          orderId: `ORDER_${Date.now()}`,
-          items: cartdetail?.length || 0,
-          pickupType: PickupType,
-          deliveryDate: pickupDate,
-        }}
-      /> */}
+
         <StripeCheckoutButton
+          waiting={waiting}
+          setWaiting={setWaiting}
           setLoading={setLoading}
           customerData={{
             name: user?.username || '',
@@ -2449,6 +2192,7 @@ const Cart = ({ route }) => {
             quantity: item.qty,
             tax_code: item.tax_code || 'txcd_10000000',
           }))}
+          extraFees={extraFees}
           orderData={{
             pickupType: PickupType,
             deliveryDate: pickupDate,
@@ -2478,8 +2222,7 @@ const Cart = ({ route }) => {
             setModalView(true);
             setTimeout(() => {
               resetData()
-
-            }, 500);
+            }, 1000);
             // submitCheckoutWithStripeData(paymentResult);
           }}
           onPaymentError={error => {
@@ -2506,33 +2249,43 @@ const Cart = ({ route }) => {
         />
 
       </SafeAreaView >
-      <DateTimePickerModal
-        isVisible={openDatePicker}
 
-        mode="date"
-        // locale="en_GB"
-        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-        minimumDate={minDate}
+      <DatePickerModal
+        locale="en"
+        mode="single"
+        visible={openDatePicker}
+        onDismiss={handleDatePickerClose}
         date={new Date(pickupDate)}
-        onConfirm={date => {
-          // date.setHours(0, 0, 0, 0);
-          console.log('Selected:', date);
-          setPickupDate(new Date(date));
-          AsyncStorage.setItem(
-            'pickupDate',
-            moment(new Date(date)).format('YYYY-MM-DD'),
-          ).then(() =>
-            console.log('Stored date:', moment(new Date(date)).format('YYYY-MM-DD')),
-          );
-          handleDatePickerClose();
+        onConfirm={onConfirmSingle}
+        validRange={{
+          startDate: new Date(minDate),
+          // endDate: new Date(2026, 11, 31),
+          disabledDates: closureDates
         }}
-        onCancel={handleDatePickerClose}
-        themeVariant="dark"
-        textColor={Constants.green}
+        presentationStyle="pageSheet"
       />
+
+      <PaymentWaitingModal visible={waiting} />
+
     </>
+
   );
+
+
 };
+
+const blockedDates = ["2026-01-13", "2026-01-20"];
+
+const disabledDates = (date) => {
+  console.log(date)
+  return false;
+  // if (!(date instanceof Date)) return false;
+
+  // const formatted = date.toISOString().split("T")[0];
+
+  // return blockedDates.includes(formatted);
+};
+
 
 export default Cart;
 

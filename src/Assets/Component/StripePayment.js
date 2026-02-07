@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 const InAppBrowser = require('react-native-inappbrowser-reborn');
 import { WebView } from 'react-native-webview';
 import { navigate } from '../../../navigationRef';
+import PaymentWaitingModal from './PaymentWaitingModal';
 
 const StripeCheckoutButton = ({
   customerData,
@@ -27,6 +28,9 @@ const StripeCheckoutButton = ({
   triggerCheckout = false,
   pickupType,
   orderID,
+  extraFees,
+  waiting,
+  setWaiting,
   route,
   // setLoading,
 
@@ -36,9 +40,11 @@ const StripeCheckoutButton = ({
   const [isListening, setIsListening] = useState(false);
   const [paymentTimeout, setPaymentTimeout] = useState(null);
   const [linkListner, setLinkLisner] = useState(null)
+
   console.log(orderID)
   // Platform-specific deep link handler
   const handleDeepLink = useCallback((url) => {
+
     console.log('Processing deep link:', url);
     if (!url) {
       return;
@@ -145,11 +151,14 @@ const StripeCheckoutButton = ({
           throw new Error(sessionResponse.error);
         }
 
-
-        onPaymentSuccess && onPaymentSuccess();
+        setWaiting(false)
+        setTimeout(() => {
+          onPaymentSuccess && onPaymentSuccess();
+        }, 500);
       } catch (error) {
         console.error('Failed to process payment success:', error);
         setLoading(false);
+        setWaiting(false)
         onPaymentError && onPaymentError(error);
       }
     },
@@ -171,9 +180,11 @@ const StripeCheckoutButton = ({
     if (url) {
       orderid = url.split('orderID=')[1];
     }
+    setWaiting(false)
+    setTimeout(() => {
+      onPaymentCancel && onPaymentCancel(orderid);
+    }, 500);
 
-
-    onPaymentCancel && onPaymentCancel(orderid);
   }, [onPaymentCancel, paymentTimeout]);
 
   useEffect(() => {
@@ -347,7 +358,7 @@ const StripeCheckoutButton = ({
                   type: 'fixed_amount',
                   fixed_amount: {
                     amount: Math.round(
-                      parseFloat(orderData?.deliveryFee || 0) * 100,
+                      parseFloat(Number(orderData?.deliveryFee) + Number(extraFees) || 0) * 100,
                     ),
                     currency: 'usd',
                   },
@@ -551,16 +562,25 @@ const StripeCheckoutButton = ({
         console.log('Opening InAppBrowser with options:', browserOptions);
 
         try {
-          const result = await InAppBrowser.InAppBrowser.open(response.url, browserOptions);
+          const result = await InAppBrowser.InAppBrowser.open(response.url, {
+            dismissButtonStyle: 'close',
+            preferredBarTintColor: '#000',
+            preferredControlTintColor: '#fff',
+            forceCloseOnRedirection: false,
+          });
           console.log('InAppBrowser result:', result);
 
           if (result.type === 'cancel') {
             InAppBrowser.InAppBrowser.close()
             setTimeout(() => {
+              setLoading(false);
               onPaymentCancel(orderID)
             }, 1000);
             // console.log('InAppBrowser was closed/dismissed');
             // handlePaymentCancel();
+          } else {
+            // Alert.alert('Please Do not refresh this page. We are processing your order.')
+            setWaiting(true)
           }
         } catch (browserError) {
           console.log('InAppBrowser failed, falling back to system browser:', browserError);
@@ -627,23 +647,26 @@ const StripeCheckoutButton = ({
   ]);
 
   return (
-    <View style={styles.hiddenContainer}>
-      <TouchableOpacity
-        onPress={handleStripeCheckout}
-        style={[styles.button, loading && styles.buttonDisabled]}
-        disabled={loading}>
-        {loading ? (
-          <ActivityIndicator color="#FFF" size="small" />
-        ) : (
-          <Text style={styles.buttonText}>{t('Pay with Stripe Checkout')}</Text>
+    <>
+      <View style={styles.hiddenContainer}>
+        <TouchableOpacity
+          onPress={handleStripeCheckout}
+          style={[styles.button, loading && styles.buttonDisabled]}
+          disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color="#FFF" size="small" />
+          ) : (
+            <Text style={styles.buttonText}>{t('Pay with Stripe Checkout')}</Text>
+          )}
+        </TouchableOpacity>
+        {loading && (
+          <Text style={styles.loadingText}>
+            {t('Opening Stripe Checkout...')}
+          </Text>
         )}
-      </TouchableOpacity>
-      {loading && (
-        <Text style={styles.loadingText}>
-          {t('Opening Stripe Checkout...')}
-        </Text>
-      )}
-    </View>
+      </View>
+      {/* <PaymentWaitingModal visible={waiting} /> */}
+    </>
   );
 };
 

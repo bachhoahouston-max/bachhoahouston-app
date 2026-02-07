@@ -408,7 +408,7 @@
   "Delete Address": "Xóa địa chỉ",
   "Delivered": "Đã giao hàng",
   "Delivery Location": "Vị trí giao hàng",
-  "Delivery Partner Tip": "Mẹo đối tác giao hàng",
+  "Delivery Partner Tip": "Tip cho Tài Xế (Tuỳ Chọn)",
   "Dl number is required": "Cần số DL",
   "Done": "Xong",
   "Donot have an Account ?": "Không có tài khoản?",
@@ -606,5 +606,6 @@
   "Cut off time 11:59 pm": "Đặt đơn hàng trước 11:59 giờ tối",
   "Cut off time 12 pm": "Đặt Trước 12 giờ trưa",
   "Same Day Local Delivery": "Giao Hàng Trong Ngày",
-  "Note: We currently deliver only to selected ZIP codes. Orders placed before 12pm noon are eligible for same day delivery. Orders placed after 12pm will be available for delivery the next business day.": "Lưu ý: Hiện tại chúng tôi chỉ giao hàng đến các mã ZIP được chọn. Đơn hàng đặt trước 12 giờ trưa được phép giao hàng trong ngày. Đơn hàng đặt sau 12 giờ trưa sẽ được giao hàng vào ngày làm việc tiếp theo."
+  "Note: We currently deliver only to selected ZIP codes. Orders placed before 12pm noon are eligible for same day delivery. Orders placed after 12pm will be available for delivery the next business day.": "Lưu ý: Hiện tại chúng tôi chỉ giao hàng đến các mã ZIP được chọn. Đơn hàng đặt trước 12 giờ trưa được phép giao hàng trong ngày. Đơn hàng đặt sau 12 giờ trưa sẽ được giao hàng vào ngày làm việc tiếp theo.",
+  "Extended Zone Delivery Fee": "Phụ Phí  Giao Zipcode Xa"
 }

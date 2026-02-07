@@ -123,12 +123,13 @@ const App = () => {
         const inAppUpdates = new SpInAppUpdates(
             true, // isDebug
         );
+        const currentVersion = VersionCheck.getCurrentVersion();
         // curVersion is optional if you don't provide it will automatically take from the app using react-native-device-info
         // {curVersion: VersionInfo?.appVersion}
         if (Platform.OS === 'android') {
             try {
 
-                inAppUpdates.checkNeedsUpdate({ curVersion: VersionInfo?.appVersion }).then(
+                inAppUpdates.checkNeedsUpdate({ curVersion: currentVersion }).then(
                     result => {
                         console.log(result);
                         if (result.shouldUpdate) {
@@ -473,6 +474,7 @@ const App = () => {
             i18n.changeLanguage(x);
         } else {
             i18n.changeLanguage('vi');
+            await AsyncStorage.setItem('LANG', 'vi');
         }
     };
     const [interval, setinter] = useState();
