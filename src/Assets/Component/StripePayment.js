@@ -494,6 +494,8 @@ const StripeCheckoutButton = ({
       );
 
       const response = await Post('create-checkout-session', checkoutData);
+      console.log('Stripe Checkout session response:', response);
+      // return
 
       if (response?.error) {
         throw new Error(response.error);

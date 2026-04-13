@@ -5,6 +5,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -316,7 +317,10 @@ const Myorder = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      {/* <SafeAreaView style={styles.container}> */}
       <DriverHeader item={t('My Order')} showback={true} />
       {/* <View style={styles.toppart}>
           <Image
@@ -390,236 +394,220 @@ const Myorder = () => {
             </View>
           )}
           showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) => (
-            <TouchableOpacity
-              style={[styles.card, { marginBottom: orderlist.length === index + 1 ? 100 : 0 }]}
-              onPress={() => navigate('Orderview', { id: item?._id })}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  marginBottom: 5,
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                }}>
-                <View style={{ flexDirection: 'row', flex: 1, marginRight: 10 }}>
-                  <View style={styles.ordiccov}>
-                    <OrderIcon />
-                  </View>
-                  <View
-                    style={{
-                      flexDirection: 'column',
-                      marginLeft: 10,
-                      flex: 1,
-                    }}>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                      }}>
-                      <Text style={styles.txt1}>ID</Text>
-                      <Text
-                        style={styles.txt1}
-                        numberOfLines={1}
-                        ellipsizeMode="tail">
-                        :- {item?.orderId}
-                      </Text>
+          renderItem={({ item, index }) => {
+            console.log('orderitem:', item.status);
+            return (
+              <TouchableOpacity
+                style={[styles.card, { marginBottom: orderlist.length === index + 1 ? 100 : 0 }]}
+                onPress={() => navigate('Orderview', { id: item?._id })}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    marginBottom: 5,
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                  }}>
+                  <View style={{ flexDirection: 'row', flex: 1, marginRight: 10 }}>
+                    <View style={styles.ordiccov}>
+                      <OrderIcon />
                     </View>
                     <View
                       style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
+                        flexDirection: 'column',
+                        marginLeft: 10,
+                        flex: 1,
                       }}>
-                      <Text style={[styles.txt2, { marginTop: -5 }]}>
-                        {item?.isOrderPickup
-                          ? t('In Store Pickup')
-                          : item?.isDriveUp
-                            ? t('Curbside Pickup')
-                            : item?.isLocalDelivery
-                              ? t('Next Day Local Delivery')
-                              : item?.isShipmentDelivery
-                                ? t('Shipping')
-                                : t('Delivery')}
-                      </Text>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                        }}>
+                        <Text style={styles.txt1}>ID</Text>
+                        <Text
+                          style={styles.txt1}
+                          numberOfLines={1}
+                          ellipsizeMode="tail">
+                          :- {item?.orderId}
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                        }}>
+                        <Text style={[styles.txt2, { marginTop: -5 }]}>
+                          {item?.isOrderPickup
+                            ? t('In Store Pickup')
+                            : item?.isDriveUp
+                              ? t('Curbside Pickup')
+                              : item?.isLocalDelivery
+                                ? t('Next Day Local Delivery')
+                                : item?.isShipmentDelivery
+                                  ? t('Shipping')
+                                  : t('Delivery')}
+                        </Text>
+                      </View>
                     </View>
                   </View>
+                  <View style={{ width: 100, alignItems: 'flex-end' }}>
+                    <Text
+                      style={[
+                        styles.delevered,
+                        {
+                          backgroundColor:
+                            item?.status === 'Completed'
+                              ? Constants.green + 20
+                              : item?.status === 'Pending'
+                                ? Constants.saffron + 20
+                                : item?.status === 'Cancel'
+                                  ? Constants.red + 20
+                                  : Constants.pink + 20,
+                          color:
+                            item?.status === 'Completed'
+                              ? Constants.green
+                              : item?.status === 'Pending'
+                                ? Constants.saffron
+                                : item?.status === 'Cancel'
+                                  ? Constants.red
+                                  : Constants.pink,
+                          borderRadius: 50,
+                          paddingHorizontal: 10,
+                          fontSize: 14,
+                        },
+                      ]}>
+                      {item?.status === 'Driverassigned' ? 'Driver Assigned' : (item?.status === 'Preparing' && item?.isReady) ? 'Order Ready' : item?.status}
+                    </Text>
+                  </View>
                 </View>
-                <View style={{ width: 100, alignItems: 'flex-end' }}>
-                  <Text
-                    style={[
-                      styles.delevered,
-                      {
-                        backgroundColor:
-                          item?.status === 'Completed'
-                            ? Constants.green + 20
-                            : item?.status === 'Pending'
-                              ? Constants.saffron + 20
-                              : item?.status === 'Cancel'
-                                ? Constants.red + 20
-                                : Constants.pink + 20,
-                        color:
-                          item?.status === 'Completed'
-                            ? Constants.green
-                            : item?.status === 'Pending'
-                              ? Constants.saffron
-                              : item?.status === 'Cancel'
-                                ? Constants.red
-                                : Constants.pink,
-                        borderRadius: 50,
-                        paddingHorizontal: 10,
-                        fontSize: 14,
-                      },
-                    ]}>
-                    {item?.status === 'Driverassigned' ? 'Driver Assigned' : (item?.status === 'Preparing' && item?.isReady) ? 'Order Ready' : item?.status}
-                  </Text>
-                </View>
-              </View>
-              <View style={{ marginVertical: 5 }}>
-                {item?.productDetail.map((prod, index) => (
-                  <View key={index}>
-                    <View style={{ flexDirection: 'row', marginBottom: 5 }}>
-                      <Image
-                        source={
-                          prod?.image
-                            ? {
-                              uri: `${prod.image[0]}`,
-                            }
-                            : require('../../Assets/Images/veg.png')
-                        }
-                        style={styles.cartimg}
-                        resizeMode="contain"
-                        onError={error => {
-                          console.log('Product image loading error:', error);
-                        }}
-                      />
-                      <View style={{ flex: 1, marginLeft: 10 }}>
-                        <View style={{ flexDirection: 'row' }}>
-                          <Text style={styles.boxtxt}>
-                            {i18n.language === 'vi' ? (prod?.product?.vietnamiesName || prod?.product?.name) : prod?.product?.name}
-                            {/* {prod?.product?.name} */}
-                          </Text>
+                <View style={{ marginVertical: 5 }}>
+                  {item?.productDetail.map((prod, index) => (
+                    <View key={index}>
+                      <View style={{ flexDirection: 'row', marginBottom: 5 }}>
+                        <Image
+                          source={
+                            prod?.image
+                              ? {
+                                uri: `${prod.image[0]}`,
+                              }
+                              : require('../../Assets/Images/veg.png')
+                          }
+                          style={styles.cartimg}
+                          resizeMode="contain"
+                          onError={error => {
+                            console.log('Product image loading error:', error);
+                          }}
+                        />
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                          <View style={{ flexDirection: 'row' }}>
+                            <Text style={styles.boxtxt}>
+                              {i18n.language === 'vi' ? (prod?.product?.vietnamiesName || prod?.product?.name) : prod?.product?.name}
+                              {/* {prod?.product?.name} */}
+                            </Text>
 
-                        </View>
+                          </View>
 
-                        {/* <Text style={styles.qty}>
+                          {/* <Text style={styles.qty}>
                         {prod?.price_slot?.value} {prod?.price_slot?.unit}
                       </Text> */}
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginTop: 3,
-                            // marginVertical: 10,
-                          }}>
                           <View
                             style={{
                               flexDirection: 'row',
-                              gap: 5,
+                              justifyContent: 'space-between',
                               alignItems: 'center',
+                              marginTop: 3,
+                              // marginVertical: 10,
                             }}>
                             <View
                               style={{
                                 flexDirection: 'row',
+                                gap: 5,
                                 alignItems: 'center',
                               }}>
-                              <Text style={styles.boxtxt2}>{t('Qty')}</Text>
-                              <Text style={styles.boxtxt2}>:- {prod?.qty}</Text>
-                            </View>
-                            <View
-                              style={{
-                                height: 5,
-                                width: 5,
-                                backgroundColor: Constants.customgrey2,
-                                borderRadius: '50%',
-                              }}
-                            />
-                            <Text style={styles.boxtxt3}>
-                              {Currency} {Number(prod?.price ?? 0).toFixed(2)}{' '}
-                            </Text>
-                          </View>
-                          {item?.status === 'Completed' && (
-                            <Pressable
-                              // onPress={() => cancelOrder(item._id)}
-                              onPress={() => {
-                                setModalData({
-                                  productId: prod?.product?._id,
-                                  orderId: item?._id,
-                                  productName: prod?.product?.name,
-                                  productImage: prod?.image,
-                                });
-                                setRatingModal(true);
-                              }}
-                              style={({ pressed }) => [
-                                {
-                                  backgroundColor: Constants.pink,
-                                  paddingVertical: 4,
-                                  paddingHorizontal: 16,
-                                  borderRadius: 6,
-                                  height: 30,
-                                },
-                              ]}>
-                              <Text
+                              <View
                                 style={{
-                                  color: 'white',
-                                  fontSize: 14,
-                                  fontWeight: '500',
+                                  flexDirection: 'row',
+                                  alignItems: 'center',
                                 }}>
-                                {t('Review')}
+                                <Text style={styles.boxtxt2}>{t('Qty')}</Text>
+                                <Text style={styles.boxtxt2}>:- {prod?.qty}</Text>
+                              </View>
+                              <View
+                                style={{
+                                  height: 5,
+                                  width: 5,
+                                  backgroundColor: Constants.customgrey2,
+                                  borderRadius: '50%',
+                                }}
+                              />
+                              <Text style={styles.boxtxt3}>
+                                {Currency} {Number(prod?.price ?? 0).toFixed(2)}{' '}
                               </Text>
-                            </Pressable>
-                          )}
+                            </View>
+                            {item?.status === 'Completed' && (
+                              <Pressable
+                                // onPress={() => cancelOrder(item._id)}
+                                onPress={() => {
+                                  setModalData({
+                                    productId: prod?.product?._id,
+                                    orderId: item?._id,
+                                    productName: prod?.product?.name,
+                                    productImage: prod?.image,
+                                  });
+                                  setRatingModal(true);
+                                }}
+                                style={({ pressed }) => [
+                                  {
+                                    backgroundColor: Constants.pink,
+                                    paddingVertical: 4,
+                                    paddingHorizontal: 16,
+                                    borderRadius: 6,
+                                    height: 30,
+                                  },
+                                ]}>
+                                <Text
+                                  style={{
+                                    color: 'white',
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                  }}>
+                                  {t('Review')}
+                                </Text>
+                              </Pressable>
+                            )}
+                          </View>
                         </View>
                       </View>
                     </View>
-                  </View>
-                ))}
-              </View>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                }}>
-                <View style={{ flexDirection: 'column' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={styles.txt3}>{t('Total Items')}</Text>
-                    <Text style={styles.txt3}>
-                      {':'}{' '}
-                      {item?.productDetail?.reduce(
-                        (sum, prod) => sum + (prod?.qty || 0),
-                        0,
-                      )}
-                    </Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={styles.txt3}>{t('Total')}</Text>
-                    <Text style={styles.txt3}>
-                      {''} {Currency} {Number(item?.total).toFixed(2)}
-                    </Text>
-                  </View>
+                  ))}
                 </View>
-                {/* Secret Code */}
-                {item?.SecretCode && item?.status === 'Preparing' && (
-                  <View
-                    style={{
-                      flexDirection: 'column',
-                      backgroundColor: Constants.saffron + 40,
-                      padding: 10,
-                      borderRadius: 10,
-                    }}>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                  }}>
+                  <View style={{ flexDirection: 'column' }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Text style={styles.txt4}>{t('Secret Code')}</Text>
-                      <Text style={styles.txt4}>
-                        {':'} {item?.SecretCode}
+                      <Text style={styles.txt3}>{t('Total Items')}</Text>
+                      <Text style={styles.txt3}>
+                        {':'}{' '}
+                        {item?.productDetail?.reduce(
+                          (sum, prod) => sum + (prod?.qty || 0),
+                          0,
+                        )}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Text style={styles.txt3}>{t('Total')}</Text>
+                      <Text style={styles.txt3}>
+                        {''} {Currency} {Number(item?.total).toFixed(2)}
                       </Text>
                     </View>
                   </View>
-                )}
-                {item?.isShipmentDelivery &&
-                  (item?.status === 'Pending' ||
-                    item?.status === 'Shipped') && (
+                  {/* Secret Code */}
+                  {item?.SecretCode && item?.status === 'Preparing' && (
                     <View
                       style={{
                         flexDirection: 'column',
@@ -627,49 +615,67 @@ const Myorder = () => {
                         padding: 10,
                         borderRadius: 10,
                       }}>
-                      <View
-                        style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.txt4}>{t('Secret Code')}</Text>
                         <Text style={styles.txt4}>
-                          {t('Delivery Expected')}
-                        </Text>
-                        <Text style={styles.txt4}>
-                          {':'}{' '}
-                          {formatDate2(
-                            addBusinessDays(new Date(item.createdAt), 5),
-                          )}{' '}
-                          11 PM
+                          {':'} {item?.SecretCode}
                         </Text>
                       </View>
-                      {item?.trackingNo && item?.trackingLink && (
-                        <View>
-                          <View
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                            }}>
-                            <Text style={styles.txt4}>
-                              {t('Tracking Number')}
-                            </Text>
-                            <Text style={styles.txt4}>
-                              {':'} {item?.trackingNo}
-                            </Text>
-                          </View>
-                          <View
-                            style={{
-                              flexDirection: 'row',
-                              alignItems: 'center',
-                            }}>
-                            <Text style={styles.txt4}>{t('Company Name')}</Text>
-                            <Text style={styles.txt4}>
-                              {':'} {item?.trackingLink}
-                            </Text>
-                          </View>
-                        </View>
-                      )}
                     </View>
                   )}
-                {/* Rating module */}
-                {/* {item?.status === 'Completed' && (
+                  {item?.isShipmentDelivery &&
+                    (item?.status === 'Pending' ||
+                      item?.status === 'Shipped') && (
+                      <View
+                        style={{
+                          flexDirection: 'column',
+                          backgroundColor: Constants.saffron + 40,
+                          padding: 10,
+                          borderRadius: 10,
+                        }}>
+                        <View
+                          style={{ flexDirection: 'row', alignItems: 'center' }}>
+                          <Text style={styles.txt4}>
+                            {t('Delivery Expected')}
+                          </Text>
+                          <Text style={styles.txt4}>
+                            {':'}{' '}
+                            {formatDate2(
+                              addBusinessDays(new Date(item.createdAt), 5),
+                            )}{' '}
+                            11 PM
+                          </Text>
+                        </View>
+                        {item?.trackingNo && item?.trackingLink && (
+                          <View>
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                              }}>
+                              <Text style={styles.txt4}>
+                                {t('Tracking Number')}
+                              </Text>
+                              <Text style={styles.txt4}>
+                                {':'} {item?.trackingNo}
+                              </Text>
+                            </View>
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                              }}>
+                              <Text style={styles.txt4}>{t('Company Name')}</Text>
+                              <Text style={styles.txt4}>
+                                {':'} {item?.trackingLink}
+                              </Text>
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                    )}
+                  {/* Rating module */}
+                  {/* {item?.status === 'Completed' && (
                   <Pressable
                     // onPress={() => cancelOrder(item._id)}
                     onPress={() => {
@@ -694,154 +700,157 @@ const Myorder = () => {
                     </Text>
                   </Pressable>
                 )} */}
-                {/* I am here */}
-                {(() => {
-                  const createdTime = new Date(item.createdAt);
-                  const now = new Date();
-                  const diffInMinutes = (now - createdTime) / (1000 * 60);
+                  {/* I am here */}
+                  {(() => {
+                    const createdTime = new Date(item.createdAt);
+                    const now = new Date();
+                    const diffInMinutes = (now - createdTime) / (1000 * 60);
 
-                  return (
-                    item?.status === "Pending" && diffInMinutes <= 15
-                  );
-                })() ? (
-                  <Pressable
-                    onPress={() => cancelOrder(item._id)}
-                    style={({ pressed }) => [
-                      {
-                        backgroundColor: pressed ? '#b91c1c' : '#dc2626',
-                        paddingVertical: 8,
-                        paddingHorizontal: 16,
-                        borderRadius: 6,
-                      },
-                    ]}>
-                    <Text
-                      style={{
-                        color: 'white',
-                        fontSize: 14,
-                        fontWeight: '500',
-                      }}>
-                      {t('Cancel Order')}
-                    </Text>
-                  </Pressable>
-                ) : item?.status === 'Cancel' ? null : (
-                  <View>
-                    {item?.status === 'Preparing' &&
-                      (item?.isDriveUp || item?.isOrderPickup) &&
-                      item?.createdAt &&
-                      new Date() - new Date(item?.createdAt) >=
-                      30 * 60 * 1000 && (
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            flexWrap: 'wrap',
-                            justifyContent: 'flex-end',
-                            gap: 8,
-                          }}>
-                          {item?.isDriveUp && (
-                            <Pressable
-                              onPress={() => {
-                                setId(item?._id);
-                                setModalVisible(true);
-                              }}
-                              style={({ pressed }) => [
-                                {
-                                  backgroundColor: pressed
-                                    ? '#b45309'
-                                    : Constants.saffron,
-                                  paddingVertical: 8,
-                                  paddingHorizontal: 16,
-                                  borderRadius: 6,
-                                  marginRight: 8,
-                                },
-                              ]}>
-                              <Text
-                                style={{
-                                  color: 'white',
-                                  fontSize: 14,
-                                  fontWeight: '500',
-                                }}>
-                                {item?.parkingNo
-                                  ? t('Update Parking Spot')
-                                  : t("I'm here")}
-                              </Text>
-                            </Pressable>
-                          )}
+                    return (
+                      item?.status === "Pending" && diffInMinutes <= 15
+                    );
+                  })() ? (
+                    <Pressable
+                      onPress={() => cancelOrder(item._id)}
+                      style={({ pressed }) => [
+                        {
+                          backgroundColor: pressed ? '#b91c1c' : '#dc2626',
+                          paddingVertical: 8,
+                          paddingHorizontal: 16,
+                          borderRadius: 6,
+                        },
+                      ]}>
+                      <Text
+                        style={{
+                          color: 'white',
+                          fontSize: 14,
+                          fontWeight: '500',
+                        }}>
+                        {t('Cancel Order')}
+                      </Text>
+                    </Pressable>
+                  ) : item?.status === 'Cancel' ? null : (
+                    <View>
+                      {item?.status === 'Preparing' &&
+                        (item?.isDriveUp || item?.isOrderPickup) &&
+                        // item?.createdAt &&
+                        // new Date() - new Date(item?.createdAt) >=
+                        // 30 * 60 * 1000 && 
+                        (
+                          <View
+                            style={{
+                              flexDirection: 'row',
+                              flexWrap: 'wrap',
+                              justifyContent: 'flex-end',
+                              gap: 8,
+                            }}>
+                            {item?.isDriveUp && (
+                              <Pressable
+                                onPress={() => {
+                                  setId(item?._id);
+                                  setModalVisible(true);
+                                }}
+                                style={({ pressed }) => [
+                                  {
+                                    backgroundColor: pressed
+                                      ? '#b45309'
+                                      : Constants.saffron,
+                                    paddingVertical: 8,
+                                    paddingHorizontal: 16,
+                                    borderRadius: 6,
+                                    marginRight: 8,
+                                  },
+                                ]}>
+                                <Text
+                                  style={{
+                                    color: 'white',
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                  }}>
+                                  {item?.parkingNo
+                                    ? t('Update Parking Spot')
+                                    : t("I'm here")}
+                                </Text>
+                              </Pressable>
+                            )}
 
-                          {item?.isOrderPickup && (
-                            <Pressable
-                              onPress={() => getSecrectCode(item?._id)}
-                              style={({ pressed }) => [
-                                {
-                                  backgroundColor: pressed
-                                    ? '#b45309'
-                                    : Constants.saffron,
-                                  paddingVertical: 8,
-                                  paddingHorizontal: 16,
-                                  borderRadius: 6,
-                                },
-                              ]}>
-                              <Text
-                                style={{
-                                  color: 'white',
-                                  fontSize: 14,
-                                  fontWeight: '500',
-                                }}>
-                                {t("I'm here")}
-                              </Text>
-                            </Pressable>
-                          )}
-                        </View>
-                      )}
-                  </View>
-                )}
-
-                {item?.status === 'Completed' &&
-                  item?.deliveredAt &&
-                  (item?.isShipmentDelivery || item?.isLocalDelivery) &&
-                  (() => {
-                    const deliveredTime = new Date(item?.deliveredAt).getTime();
-                    const currentTime = new Date().getTime();
-                    const hoursSinceDelivery =
-                      (currentTime - deliveredTime) / (1000 * 60 * 60);
-
-                    return hoursSinceDelivery <= 24;
-                  })() && (
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        flexWrap: 'wrap',
-                        justifyContent: 'flex-end',
-                        gap: 8,
-                      }}>
-                      <Pressable
-                        onPress={() => {
-                          setId(item?._id);
-                          setModalVisible2(true);
-                        }}
-                        style={({ pressed }) => [
-                          {
-                            backgroundColor: pressed
-                              ? '#b45309'
-                              : Constants.red,
-                            paddingVertical: 8,
-                            paddingHorizontal: 16,
-                            borderRadius: 6,
-                          },
-                        ]}>
-                        <Text
-                          style={{
-                            color: 'white',
-                            fontSize: 14,
-                            fontWeight: '500',
-                          }}>
-                          {t('Return Order')}
-                        </Text>
-                      </Pressable>
+                            {item?.isOrderPickup && !item?.SecretCode && (
+                              <Pressable
+                                onPress={() => getSecrectCode(item?._id)}
+                                style={({ pressed }) => [
+                                  {
+                                    backgroundColor: pressed
+                                      ? '#b45309'
+                                      : Constants.saffron,
+                                    paddingVertical: 8,
+                                    paddingHorizontal: 16,
+                                    borderRadius: 6,
+                                  },
+                                ]}>
+                                <Text
+                                  style={{
+                                    color: 'white',
+                                    fontSize: 14,
+                                    fontWeight: '500',
+                                  }}>
+                                  {t("I'm here")}
+                                </Text>
+                              </Pressable>
+                            )}
+                          </View>
+                        )}
                     </View>
                   )}
-              </View>
-            </TouchableOpacity>
-          )}
+
+                  {item?.status === 'Completed' &&
+                    item?.deliveredAt &&
+                    (item?.isShipmentDelivery || item?.isLocalDelivery) &&
+                    (() => {
+                      const deliveredTime = new Date(item?.deliveredAt).getTime();
+                      const currentTime = new Date().getTime();
+                      const hoursSinceDelivery =
+                        (currentTime - deliveredTime) / (1000 * 60 * 60);
+
+                      return hoursSinceDelivery <= 24;
+                    })() && (
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          flexWrap: 'wrap',
+                          justifyContent: 'flex-end',
+                          gap: 8,
+                        }}>
+                        <Pressable
+                          onPress={() => {
+                            setId(item?._id);
+                            setModalVisible2(true);
+                          }}
+                          style={({ pressed }) => [
+                            {
+                              backgroundColor: pressed
+                                ? '#b45309'
+                                : Constants.red,
+                              paddingVertical: 8,
+                              paddingHorizontal: 16,
+                              borderRadius: 6,
+                            },
+                          ]}>
+                          <Text
+                            style={{
+                              color: 'white',
+                              fontSize: 14,
+                              fontWeight: '500',
+                            }}>
+                            {t('Return Order')}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    )}
+                </View>
+              </TouchableOpacity>
+            )
+          }
+          }
           onEndReached={() => {
             if (orderlist && orderlist.length > 0) {
               fetchNextPage();
@@ -987,6 +996,7 @@ const Myorder = () => {
         </Modal>
         <Modal
           animationType="none"
+
           transparent={true}
           visible={ratingModal}
           onRequestClose={() => {
@@ -994,185 +1004,192 @@ const Myorder = () => {
             setId(null);
           }}>
           <View style={styles.centeredView}>
-            <View style={[styles.modalView, { paddingTop: 10 }]}>
-              <View style={{ backgroundColor: 'white', width: '100%' }}>
-                <Text
-                  style={[
-                    styles.txt,
-                    {
-                      textAlign: 'center',
-                      borderBottomWidth: 1,
-                      paddingBottom: 10,
-                      borderColor: Constants.customgrey3,
-                    },
-                  ]}>
-                  {t('Review Product')}
-                </Text>
-                <Text style={[styles.label, { textAlign: 'center' }]}>
-                  {modalData?.productName}
-                </Text>
-                <Text
-                  style={[
-                    styles.label,
-                    {
-                      fontFamily: FONTS.Regular,
-                      fontWeight: '500',
-                      textAlign: 'left',
-                      marginTop: 10,
-                    },
-                  ]}>
-                  {t('Write your review')}
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    { height: 100, textAlignVertical: 'top' },
-                  ]}
-                  placeholder={t('Write your review')}
-                  placeholderTextColor={Constants.customgrey}
-                  value={ratingData.review}
-                  onChangeText={review =>
-                    setRatingData({ ...ratingData, review })
-                  }
-                  multiline={true}
-                  numberOfLines={4}
-                />
-
-                <Text
-                  style={[
-                    styles.label,
-                    {
-                      fontFamily: FONTS.Regular,
-                      fontWeight: '500',
-                      textAlign: 'left',
-                      marginTop: 10,
-                    },
-                  ]}>
-                  {t('Upload Images (up to 6)')}
-                </Text>
-                <MultiImageUpload
-                  maxImages={6}
-                  onImagesUpload={async images => {
-                    if (!images || images.length === 0) {
-                      return;
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={{ marginHorizontal: 20, width: '90%' }}
+            >
+              <View style={[styles.modalView, { paddingTop: 10, width: '100%' }]}>
+                <View style={{ backgroundColor: 'white', width: '100%' }}>
+                  <Text
+                    style={[
+                      styles.txt,
+                      {
+                        textAlign: 'center',
+                        borderBottomWidth: 1,
+                        paddingBottom: 10,
+                        borderColor: Constants.customgrey3,
+                      },
+                    ]}>
+                    {t('Review Product')}
+                  </Text>
+                  <Text style={[styles.label, { textAlign: 'center' }]}>
+                    {modalData?.productName}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.label,
+                      {
+                        fontFamily: FONTS.Regular,
+                        fontWeight: '500',
+                        textAlign: 'left',
+                        marginTop: 10,
+                      },
+                    ]}>
+                    {t('Write your review')}
+                  </Text>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      { height: 100, textAlignVertical: 'top' },
+                    ]}
+                    placeholder={t('Write your review')}
+                    placeholderTextColor={Constants.customgrey}
+                    value={ratingData.review}
+                    onChangeText={review =>
+                      setRatingData({ ...ratingData, review })
                     }
+                    multiline={true}
+                    numberOfLines={4}
+                  />
 
-                    if (ratingData.images.length + images.length > 6) {
-                      Toast.show({
-                        type: 'error',
-                        text1: t("Maximum 6 images allowed"),
-                      })
-                      return;
-                    }
+                  <Text
+                    style={[
+                      styles.label,
+                      {
+                        fontFamily: FONTS.Regular,
+                        fontWeight: '500',
+                        textAlign: 'left',
+                        marginTop: 10,
+                      },
+                    ]}>
+                    {t('Upload Images (up to 6)')}
+                  </Text>
+                  <MultiImageUpload
+                    maxImages={6}
+                    onImagesUpload={async images => {
+                      if (!images || images.length === 0) {
+                        return;
+                      }
 
-                    for (let i = 0; i < images.length; i++) {
-                      const image = images[i];
+                      if (ratingData.images.length + images.length > 6) {
+                        Toast.show({
+                          type: 'error',
+                          text1: t("Maximum 6 images allowed"),
+                        })
+                        return;
+                      }
 
-                      try {
-                        setLoading(true);
+                      for (let i = 0; i < images.length; i++) {
+                        const image = images[i];
 
-                        const compressedImage = await ImageCompressor.compress(
-                          image.uri || image,
-                          {
-                            compressionMethod: 'auto',
-                            maxWidth: 800,
-                            maxHeight: 800,
-                            quality: 0.7,
-                          },
-                        );
+                        try {
+                          setLoading(true);
 
-                        const imageForUpload = {
-                          uri: compressedImage,
-                          type: image.type || 'image/jpeg',
-                          fileName: image.fileName || 'compressed_image.jpg',
-                        };
-
-                        const result = await ApiFormData(imageForUpload);
-
-                        if (
-                          result &&
-                          result.status &&
-                          result.data &&
-                          result.data.file
-                        ) {
-                          setRatingData(prevData => ({
-                            ...prevData,
-                            images: [...prevData.images, result.data.file],
-                          }));
-                          Toast.show({
-                            type: 'success',
-                            text1: t("Image uploaded successfully"),
-                          })
-                          console.log(
-                            'Image uploaded successfully:',
-                            result.data.file,
+                          const compressedImage = await ImageCompressor.compress(
+                            image.uri || image,
+                            {
+                              compressionMethod: 'auto',
+                              maxWidth: 800,
+                              maxHeight: 800,
+                              quality: 0.7,
+                            },
                           );
-                        } else {
-                          console.log('Upload failed for image:', image);
+
+                          const imageForUpload = {
+                            uri: compressedImage,
+                            type: image.type || 'image/jpeg',
+                            fileName: image.fileName || 'compressed_image.jpg',
+                          };
+
+                          const result = await ApiFormData(imageForUpload);
+
+                          if (
+                            result &&
+                            result.status &&
+                            result.data &&
+                            result.data.file
+                          ) {
+                            setRatingData(prevData => ({
+                              ...prevData,
+                              images: [...prevData.images, result.data.file],
+                            }));
+                            Toast.show({
+                              type: 'success',
+                              text1: t("Image uploaded successfully"),
+                            })
+                            console.log(
+                              'Image uploaded successfully:',
+                              result.data.file,
+                            );
+                          } else {
+                            console.log('Upload failed for image:', image);
+                            Toast.show({
+                              type: 'error',
+                              text1: t("Failed to upload image"),
+                            })
+                          }
+                        } catch (error) {
+                          console.log('Error uploading image:', error);
                           Toast.show({
                             type: 'error',
-                            text1: t("Failed to upload image"),
+                            text1: t("Error uploading image"),
+                          })
+                        } finally {
+                          setLoading(false); // Hide loading state
+                        }
+                      }
+                    }}
+                  />
+
+                  <View style={styles.cancelAndLogoutButtonWrapStyle}>
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={async () => {
+                        setRatingModal(false);
+                        setModalData({
+                          productId: null,
+                          orderId: null,
+                          productName: '',
+                          productImage: '',
+                        });
+                        setId(null);
+                        setRatingData({
+                          review: '',
+                          images: [],
+                        });
+                      }}
+                      style={styles.logOutButtonStyle2}>
+                      <Text style={styles.modalText2}>{t('Cancel')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.9}
+                      onPress={async () => {
+                        if (ratingData.review.trim() !== '') {
+                          rating(
+                            modalData.productId,
+                            ratingData.review,
+                            ratingData.images,
+                          );
+                        } else {
+                          Toast.show({
+                            type: 'error',
+                            text1: t("Please write a review before submitting"),
                           })
                         }
-                      } catch (error) {
-                        console.log('Error uploading image:', error);
-                        Toast.show({
-                          type: 'error',
-                          text1: t("Error uploading image"),
-                        })
-                      } finally {
-                        setLoading(false); // Hide loading state
-                      }
-                    }
-                  }}
-                />
-
-                <View style={styles.cancelAndLogoutButtonWrapStyle}>
-                  <TouchableOpacity
-                    activeOpacity={0.9}
-                    onPress={async () => {
-                      setRatingModal(false);
-                      setModalData({
-                        productId: null,
-                        orderId: null,
-                        productName: '',
-                        productImage: '',
-                      });
-                      setId(null);
-                      setRatingData({
-                        review: '',
-                        images: [],
-                      });
-                    }}
-                    style={styles.logOutButtonStyle2}>
-                    <Text style={styles.modalText2}>{t('Cancel')}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    activeOpacity={0.9}
-                    onPress={async () => {
-                      if (ratingData.review.trim() !== '') {
-                        rating(
-                          modalData.productId,
-                          ratingData.review,
-                          ratingData.images,
-                        );
-                      } else {
-                        Toast.show({
-                          type: 'error',
-                          text1: t("Please write a review before submitting"),
-                        })
-                      }
-                    }}
-                    style={styles.logOutButtonStyle}>
-                    <Text style={styles.modalText}>{t('Submit Review')}</Text>
-                  </TouchableOpacity>
+                      }}
+                      style={styles.logOutButtonStyle}>
+                      <Text style={styles.modalText}>{t('Submit Review')}</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
-            </View>
+            </KeyboardAvoidingView>
           </View>
         </Modal>
       </View>
-    </SafeAreaView>
+      {/* </SafeAreaView> */}
+
+    </KeyboardAvoidingView>
   );
 };
 
@@ -1184,6 +1201,7 @@ const styles = StyleSheet.create({
     backgroundColor: Constants.white,
     // padding: 20,
     paddingBottom: 70,
+    overflow: 'visible',
   },
   label: {
     color: Constants.black,

@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import ImageViewing from 'react-native-image-viewing';
 import { SwiperFlatList } from 'react-native-swiper-flatlist';
 import Constants, { Currency, FONTS } from '../../Assets/Helpers/constant';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -39,6 +40,8 @@ const PosterDetail = props => {
   const [availableQty, setAvailableQty] = useState(0);
   const [productList, SetProductList] = useState([]);
   const scrollRef = useRef(null);
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [imageViewerIndex, setImageViewerIndex] = useState(0);
 
   const sumdata =
     cartdetail && cartdetail.length > 0
@@ -400,19 +403,23 @@ const PosterDetail = props => {
             renderItem={({ item, index }) => (
               <View
                 style={{ paddingBottom: 35, width: width, alignItems: 'center' }}>
-                <Image
-                  source={{ uri: `${item}` }}
-                  // source={item.images}
-                  style={{
-                    height: 200,
-                    width: '93%',
-                    borderRadius: 15,
-                    // marginLeft:-40,
-                    // backgroundColor: 'red',
+                <TouchableOpacity
+                  onPress={() => {
+                    setImageViewerIndex(index);
+                    setImageViewerVisible(true);
                   }}
-                  resizeMode="contain"
-                  key={index}
-                />
+                  activeOpacity={0.9}>
+                  <Image
+                    source={{ uri: `${item}` }}
+                    style={{
+                      height: 200,
+                      width: width * 0.93,
+                      borderRadius: 15,
+                    }}
+                    resizeMode="contain"
+                    key={index}
+                  />
+                </TouchableOpacity>
               </View>
             )}
           />
@@ -477,11 +484,12 @@ const PosterDetail = props => {
                       {item.our_price}
                     </Text>
                     <Text style={styles.disctxt}>
-                      {formatPricePerUnit(
+                      {/* {formatPricePerUnit(
                         item.our_price,
                         item?.value,
                         item.unit,
-                      )}
+                      )} */}
+                      {item.unit}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -715,6 +723,12 @@ const PosterDetail = props => {
           </View>
         </TouchableOpacity>
       )} */}
+      <ImageViewing
+        images={(productdata?.varients[0]?.image || []).map(uri => ({ uri }))}
+        imageIndex={imageViewerIndex}
+        visible={imageViewerVisible}
+        onRequestClose={() => setImageViewerVisible(false)}
+      />
     </SafeAreaView>
   );
 };

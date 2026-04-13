@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   date: {
-    color: Constants.white,
+    color: Constants.black,
     fontSize: 12,
     // fontWeight: '500',
     fontFamily: FONTS.Medium,

@@ -1,12 +1,12 @@
+/* eslint-disable no-undef */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable quotes */
 /* eslint-disable react-native/no-inline-styles */
 import {
   Dimensions,
-  FlatList,
   Image,
   Modal,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,9 +19,7 @@ import {
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import Constants, { Currency, FONTS } from '../../Assets/Helpers/constant';
 import {
-  BackIcon,
   Calendar,
-  Cross2Icon,
   CrossIcon,
   LocationIcon,
   MinusIcon,
@@ -34,20 +32,18 @@ import {
   UserContext,
 } from '../../../App';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { colors } from 'react-native-swiper-flatlist/src/themes';
 import { navigate, reset } from '../../../navigationRef';
 import { useTranslation } from 'react-i18next';
-import { Checkbox, Dialog, RadioButton } from 'react-native-paper';
-// import DatePicker from 'react-native-date-picker';
+import { RadioButton } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 import moment from 'moment-timezone';
 import { Dropdown } from 'react-native-element-dropdown';
 import { GetApi, Post } from '../../Assets/Helpers/Service';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { DatePickerModal } from 'react-native-paper-dates';
-import { DateTime } from 'luxon';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import StripeCheckoutButton from '../../Assets/Component/StripePayment';
+import ComboOfferCard from '../../Assets/Component/ComboOfferCard';
+import DriverHeader from '../../Assets/Component/DriverHeader';
 import i18n from 'i18next';
 import PaymentWaitingModal from '../../Assets/Component/PaymentWaitingModal'
 
@@ -74,7 +70,6 @@ const pickupOptionss = [
   },
 ];
 
-const width = Dimensions.get('window').width;
 
 const Cart = ({ route }) => {
   const navigation = useNavigation();
@@ -92,7 +87,6 @@ const Cart = ({ route }) => {
   const [pickupDate, setPickupDate] = useState(null);
   const [openDatePicker, setOpenDatePicker] = useState(false);
   const [modalView, setModalView] = useState(false);
-  const [isBusiness, setIsBusiness] = useState(false);
   const [businessAddress, setBusinessAddress] = useState({
     businessAddress: user?.BusinessAddress || '',
   });
@@ -126,7 +120,13 @@ const Cart = ({ route }) => {
   const [extraFees, setExtrafees] = useState(0);
   const [ExtraFeesObj, setExtraFeesObj] = useState({})
   const [waiting, setWaiting] = useState(false);
+  const [isPriceChanged, setIsPriceChanged] = useState(false);
 
+  useFocusEffect(
+    useCallback(() => {
+      setIsPriceChanged(false)
+    }, [])
+  )
 
   const isZipAvailable = availableZipCodes.some(
     zip => String(zip.pincode) === String(localDeliveryAddress.zipcode),
@@ -163,19 +163,28 @@ const Cart = ({ route }) => {
       async res => {
         setLoading(false);
         console.log('Zip Codes:', res);
+
         if (res?.error) {
           props.toaster({ type: "error", message: res?.error });
         } else {
-          setExtraFeesObj(res.data)
-          if (res?.data?.extendedCharge) {
-            if (totaloff > res?.data.extendedCharge) {
-              setExtrafees(0)
+          if (res.available) {
+            setExtraFeesObj(res.data)
+            if (res?.data?.extendedCharge) {
+              if (totaloff > res?.data.extendedCharge) {
+                setExtrafees(0)
+              } else {
+                setExtrafees(res.data.extendedCharge)
+              }
             } else {
-              setExtrafees(res.data.extendedCharge)
+              setExtrafees(0)
             }
           } else {
-            setExtrafees(0)
+            Alert.alert(
+              t("Delivery Not Available"),
+              t("Sorry, delivery is not available in your area. Please check the address or contact support for assistance."),
+            )
           }
+
         }
       },
       err => {
@@ -226,23 +235,10 @@ const Cart = ({ route }) => {
       });
       return () => { }; // cleanup if needed
     }, [])
-
-
   );
 
   const handleDatePickerOpen = () => setOpenDatePicker(true);
   const handleDatePickerClose = () => setOpenDatePicker(false);
-
-  // const totalTax = parseFloat(
-  //   cartdetail
-  //     ?.reduce((accumulator, currentValue) => {
-  //       const itemTotal = Number(currentValue?.total || 0);
-  //       const taxRate = Number(currentValue?.tax || 0); // percentage
-  //       const taxAmount = (itemTotal * taxRate) / 100;
-  //       return accumulator + taxAmount;
-  //     }, 0)
-  //     .toFixed(2),
-  // );
 
   useEffect(() => {
     const updateMinDate = () => {
@@ -347,13 +343,11 @@ const Cart = ({ route }) => {
       }
     }
 
-
-
     finalTotal += (deliveryCharge + fee);
     if (deliveryTip > 0) {
       finalTotal += deliveryTip;
     }
-    if (PickupType === 'localDelivery') {
+    if (PickupType === 'localDelivery' && ExtraFeesObj?.extendedCharge) {
       if (offdata < ExtraFeesObj.extendedMinCharge) {
         finalTotal += ExtraFeesObj.extendedCharge;
         setExtrafees(ExtraFeesObj.extendedCharge)
@@ -361,8 +355,6 @@ const Cart = ({ route }) => {
         setExtrafees(0)
       }
     }
-
-
 
     setServiceFee(fee);
     setDeliveryFees(deliveryCharge);
@@ -594,21 +586,9 @@ const Cart = ({ route }) => {
       });
       return;
     }
-
     setLoading(true);
     submitCheckoutWithStripeData()
-    // setShowStripePayment(true);
-    const testPaymentResult = {
-      paymentId: `test_${Date.now()}`,
-      paymentIntentId: `pi_test_${Date.now()}`,
-      sessionId: `sess_test_${Date.now()}`,
-      total: totalFinal,
-      subtotal: totaloff,
-      tax: 0,
-      currency: 'usd',
-    };
     setLoading(true);
-    // submitCheckoutWithStripeData(testPaymentResult);
     console.log('newarr:', newarr);
     console.warn('pickup', PickupType);
     console.warn('pickupDate', pickupDate);
@@ -683,6 +663,7 @@ const Cart = ({ route }) => {
           BarCode: item.BarCode,
           color: item.selectedColor?.color || '',
           total: item.total,
+          // total: (Number(item.offer) * Number(item.qty)).toFixed(2)
           isShipmentAvailable: item.isShipmentAvailable,
           isInStoreAvailable: item.isInStoreAvailable,
           isCurbSidePickupAvailable: item.isCurbSidePickupAvailable,
@@ -690,6 +671,8 @@ const Cart = ({ route }) => {
           slug: item.slug,
           productSource: item.productSource || "NORMAL",
           saleID: item.saleID || null,
+          combo_id: item.combo_id || null,
+
         };
       });
 
@@ -833,231 +816,367 @@ const Cart = ({ route }) => {
     [setOpenDatePicker, setPickupDate]
   );
 
+
+  const checkQuantity = async (items) => {
+    try {
+      const res = await GetApi(
+        `checkQuantity/${items.productid}`,
+      );
+      return res.status ? res.data.qty : 0;
+    } catch (err) {
+      return 0;
+    }
+  };
+  const extractProductObjects = (cartData) => {
+    let result = [];
+console.log(cartData)
+    cartData.forEach((item) => {
+      const source = item?.productSource || "NORMAL";
+
+      const mainId = item?.product?._id || item?._id || item?.productid;
+
+      let obj = {
+        productSource: source,
+        productId: mainId,
+      };
+
+      if (source === "COMBO" && item?.free_product?.length > 0) {
+        obj.freeProducts = item.free_product
+          .map((freeItem) => freeItem?.product?._id)
+          .filter(Boolean);
+      }
+console.log('kjsaikosadad>',obj)
+      if (mainId) {
+        result.push(obj);
+      }
+    });
+console.log(result)
+    return result;
+  };
+
+  const updateCartWithLatestData = (cartData, latestData) => {
+    //  let cData = cartdetail;
+    //  console.log()
+    const updatedCart = cartData.map((item,i) => {
+      const match = latestData.find(
+        (p) => String(p.productId) === String(item?._id || item?.product?._id || item?.productid),
+      );
+      if (!match) return item;
+      let updatedItem = { ...item };
+ console.log(item)
+      if (item.productSource === "SALE") {
+        if (item.offer !== match.price) {
+          Alert.alert(
+            t("Price Update"),
+            t(
+              "Some sale items have expired. Prices have been updated. Please review you cart",
+            )
+          );
+        }
+      }
+
+      if (item.productSource === "COMBO" && match.productSource !== "COMBO") {
+        updatedItem.free_product = [];
+
+        Alert.alert(
+          t("Combo Offer Update"),
+          t(
+            "A combo offer in your cart has expired. The free items associated with that offer have been removed. Please review your cart.",
+          )
+        );
+      }
+
+      updatedItem.offer = match.price;
+      updatedItem.price = match.price;
+      updatedItem.seletype = item.productSource;
+      updatedItem.total = match.price * (item.qty || 1);
+
+      updatedItem.productSource = match.productSource;
+      //  shaloowarray[i].seletype = item.productSource;
+  
+
+      return updatedItem;
+    });
+  //  setcartdetail([...shaloowarray])
+  //  setTimeout(() => {
+    return updatedCart;
+  //  }, 500);
+  };
+
+  const checkPRiceOFPRoduct = async (cartData) => {
+    try {
+      setLoading(true);
+      const res = await Post(`checkPRiceOFPRoduct`, extractProductObjects(cartData), {});
+      console.log(res)
+      setLoading(false);
+      const latestData = res.data || [];
+      const updatedCart = updateCartWithLatestData(cartData, latestData);
+      const isChanged = updatedCart.find(f => f.seletype !== f.productSource)
+      console.log(isChanged)
+// console.log(updatedCart);
+// console.log(cartData);
+//       const isChanged =
+//         JSON.stringify(cartData) !== JSON.stringify(updatedCart);
+// console.log(isChanged)
+      if (isChanged?.seletype) {
+        setcartdetail(updatedCart);
+        await AsyncStorage.setItem("cartdata", JSON.stringify(updatedCart));
+
+        setIsPriceChanged(true);
+        // Alert.alert(
+        //   t("Price Update"),
+        //   t(
+        //     "Some sale items have expired. Prices have been updated. Please review you cart",
+        //   )
+        // );
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      props.loader(false);
+      props.toaster({ type: "error", message: err?.message });
+      return false;
+    }
+  };
+
   return (
     <>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.toppart}>
-          {/* <BackIcon color={Constants.white}/> */}
-          <Text style={styles.carttxt}>
-            {t('Cart')} ({cartdetail.length})
-          </Text>
-          {cartdetail && cartdetail.length > 0 && (
-            <Text style={styles.addbtn} onPress={() => setModalVisible(true)}>
-              {t('Empty Cart')}
-            </Text>
-          )}
-        </View>
+      <View style={styles.container}>
+        <DriverHeader
+          item={`${t('Cart')} (${cartdetail.length})`}
+          showback={true}
+          showCart={false}
+          showEmptyCart={cartdetail && cartdetail.length > 0}
+          onEmptyCart={() => setModalVisible(true)}
+        />
         {cartdetail && cartdetail.length > 0 ? (
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={{ backgroundColor: Constants.lightgreen }}>
               {cartdetail.map((item, i) => (
-                <View style={[styles.box, { borderBottomWidth: 1 }]} key={i}>
-                  <View style={styles.firstpart}>
-                    <View style={styles.firstleftpart}>
-                      <Pressable onPress={() => navigate('Preview', item.slug)}>
-                        <Image source={{ uri: item?.image }} style={styles.cardimg} />
-                      </Pressable>
-                      <View>
-                        <Text style={styles.productname}>
-                          {i18n.language === 'vi' ? (item?.vietnamiesName || item?.productname) : item?.productname}
-                          {/* {item?.productname} */}
-                        </Text>
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            flexWrap: 'wrap',
-                          }}>
+                item?.productSource === "COMBO" ? (
+                  <ComboOfferCard key={i} cartItem={item} isCartMode />
+                ) : (
+                  <View style={[styles.box, { borderBottomWidth: 1 }]} key={i}>
+                    <View style={styles.firstpart}>
+                      <View style={styles.firstleftpart}>
+                        <Pressable onPress={() => navigate('Preview', item.slug)}>
+                          <Image source={{ uri: item?.image }} style={styles.cardimg} />
+                        </Pressable>
+                        <View>
+                          <Text style={styles.productname}>
+                            {i18n.language === 'vi' ? (item?.vietnamiesName || item?.productname) : item?.productname}
+                            {/* {item?.productname} */}
+                          </Text>
                           <View
                             style={{
-                              flexDirection: 'column',
-                              alignItems: 'left',
-                              gap: 5,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              flexWrap: 'wrap',
                             }}>
-                            <Text style={styles.maintxt}>
-                              {' '}
-                              {Currency} {item?.offer}
-                            </Text>
-                            {/* <Text style={styles.disctxt}> {Currency} {item?.price}</Text> */}
-                            <Text style={styles.qty}>
-                              {item?.price_slot?.value} {item?.price_slot?.unit}
-                            </Text>
-                          </View>
-                          <View style={styles.addcov}>
-                            <TouchableOpacity
-                              style={styles.plus}
-                              onPress={async () => {
-                                const updatedCart = cartdetail.map(cartItem => {
-                                  if (
-                                    cartItem.productid === item?.productid &&
-                                    cartItem.price_slot?.value ===
-                                    item?.price_slot?.value
-                                  ) {
-                                    if (cartItem.qty > 1) {
-                                      return {
-                                        ...cartItem,
-                                        qty: cartItem.qty - 1,
-                                      };
+                            <View
+                              style={{
+                                flexDirection: 'column',
+                                alignItems: 'left',
+                                gap: 5,
+                              }}>
+                              <Text style={styles.maintxt}>
+                                {' '}
+                                {Currency} {item?.offer}
+                              </Text>
+                              {/* <Text style={styles.disctxt}> {Currency} {item?.price}</Text> */}
+                              <Text style={styles.qty}>
+                                {item?.price_slot?.value} {item?.price_slot?.unit}
+                              </Text>
+
+                            </View>
+                            <View style={styles.addcov}>
+                              <TouchableOpacity
+                                style={styles.plus}
+                                onPress={async () => {
+                                  const updatedCart = cartdetail.map(cartItem => {
+                                    if (
+                                      cartItem.productid === item?.productid &&
+                                      cartItem.price_slot?.value ===
+                                      item?.price_slot?.value
+                                    ) {
+                                      if (cartItem.qty > 1) {
+                                        return {
+                                          ...cartItem,
+                                          qty: cartItem.qty - 1,
+                                        };
+                                      }
                                     }
-                                  }
-                                  return cartItem;
-                                });
+                                    return cartItem;
+                                  });
 
-                                setcartdetail(updatedCart);
-                                await AsyncStorage.setItem(
-                                  'cartdata',
-                                  JSON.stringify(updatedCart),
-                                );
-                                setCoupon(false);
-                                setCouponDiscount(0);
-                              }}>
-                              <MinusIcon
-                                color={Constants.white}
-                                height={16}
-                                width={16}
-                              />
-                            </TouchableOpacity>
-                            <Text style={styles.plus2}>{item?.qty}</Text>
-                            <TouchableOpacity
-                              style={styles.plus3}
-                              onPress={async () => {
-                                const updatedCart = cartdetail.map(cartItem => {
-                                  if (
-                                    cartItem.productid === item?.productid &&
-                                    cartItem.price_slot?.value ===
-                                    item?.price_slot?.value
-                                  ) {
-                                    return {
-                                      ...cartItem,
-                                      qty: cartItem.qty + 1,
-                                    };
-                                  }
-                                  return cartItem;
-                                });
+                                  setcartdetail(updatedCart);
+                                  await AsyncStorage.setItem(
+                                    'cartdata',
+                                    JSON.stringify(updatedCart),
+                                  );
+                                  setCoupon(false);
+                                  setCouponDiscount(0);
+                                  setIsPriceChanged(false)
+                                }}>
+                                <MinusIcon
+                                  color={Constants.white}
+                                  height={16}
+                                  width={16}
+                                />
+                              </TouchableOpacity>
+                              <Text style={styles.plus2}>{item?.qty}</Text>
+                              <TouchableOpacity
+                                style={styles.plus3}
+                                onPress={async () => {
 
-                                setcartdetail(updatedCart);
-                                await AsyncStorage.setItem(
-                                  'cartdata',
-                                  JSON.stringify(updatedCart),
-                                );
-                                setCoupon(false);
-                                setCouponDiscount(0);
-                              }}>
-                              <Plus2Icon
-                                color={Constants.white}
-                                height={16}
-                                width={16}
-                              />
-                            </TouchableOpacity>
+
+                                  const availableQuantity = await checkQuantity(item)
+                                  console.log('Available quantity:', availableQuantity);
+                                  console.log('Current quantity in cart:', item, availableQuantity);
+                                  if (item.qty + 1 > availableQuantity) {
+                                    Toast.show({
+                                      type: 'error',
+                                      text1: t('Item is not available in this quantity in stock. Please choose a different item.'),
+                                    })
+                                    return
+
+                                  }
+
+                                  item.qty = item.qty + 1;
+
+                                  setcartdetail([...cartdetail]);
+                                  await AsyncStorage.setItem(
+                                    'cartdata',
+                                    JSON.stringify([...cartdetail]),
+                                  );
+                                  setCoupon(false);
+                                  setCouponDiscount(0);
+                                        setIsPriceChanged(false)
+                                }}>
+                                <Plus2Icon
+                                  color={Constants.white}
+                                  height={16}
+                                  width={16}
+                                />
+                              </TouchableOpacity>
+                            </View>
                           </View>
                         </View>
                       </View>
-                    </View>
-                    <CrossIcon
-                      onPress={async () => {
-                        shaloowarray.splice(i, 1),
-                          await AsyncStorage.setItem(
-                            'cartdata',
-                            JSON.stringify(shaloowarray),
-                          );
-                        JSON.stringify(shaloowarray);
+                      <CrossIcon
+                        onPress={async () => {
+                          shaloowarray.splice(i, 1),
+                            await AsyncStorage.setItem(
+                              'cartdata',
+                              JSON.stringify(shaloowarray),
+                            );
+                          JSON.stringify(shaloowarray);
+      setIsPriceChanged(false)
+                          setcartdetail(shaloowarray);
+                          setCoupon(false);
+                          setCouponDiscount(0);
 
-                        setcartdetail(shaloowarray);
-                        setCoupon(false);
-                        setCouponDiscount(0);
-                        // if (shaloowarray.length === 0) {
-                        //   setCoupon(false);
-                        //   setCouponDiscount(0);
-                        // }
-                      }}
-                      style={{ marginTop: 10, marginRight: 10 }}
-                    />
+                        }}
+                        style={{ marginTop: 10, marginRight: 10 }}
+                      />
+                    </View>
+                    {/* inavailibility message */}
+                    {item?.saletype === "COMBO" && (
+                      <Text style={[styles.qty, { color: Constants.red, marginTop: 5 }]}>
+                        {t(`Combo Sale Ended - Free Item Removed`)}
+                      </Text>
+                    )}
+                    {item?.seletype === "SALE" && (
+                      <Text style={[styles.qty, { color: Constants.red, marginTop: 5 }]}>
+                        {t(`Sale Ended - Price changed to regular price`)}
+                      </Text>
+                    )}
+                    {PickupType === 'shipping' &&
+                      (item.isShipmentAvailable ? (
+                        <Text
+                          style={{
+                            color: Constants.green,
+                            fontSize: 14,
+                            marginTop: 5,
+                          }}>
+                          {t('Product is available for Shipment Delivery')}
+                        </Text>
+                      ) : (
+                        <Text
+                          style={{
+                            color: Constants.red,
+                            fontSize: 14,
+                            marginTop: 5,
+                          }}>
+                          {t('Product is Not available for Shipment Delivery')}
+                        </Text>
+                      ))}
+                    {PickupType === 'orderPickup' &&
+                      (item.isInStoreAvailable ? (
+                        <Text
+                          style={{
+                            color: Constants.green,
+                            fontSize: 14,
+                            marginTop: 5,
+                          }}>
+                          {t('Product is available for In Store Pickup')}
+                        </Text>
+                      ) : (
+                        <Text
+                          style={{
+                            color: Constants.red,
+                            fontSize: 14,
+                            marginTop: 5,
+                          }}>
+                          {t('Product is Not available for In Store Pickup')}
+                        </Text>
+                      ))}
+                    {PickupType === 'driveUp' &&
+                      (item.isCurbSidePickupAvailable ? (
+                        <Text
+                          style={{
+                            color: Constants.green,
+                            fontSize: 14,
+                            marginTop: 5,
+                          }}>
+                          {t('Product is available for Curbside Pickup')}
+                        </Text>
+                      ) : (
+                        <Text
+                          style={{
+                            color: Constants.red,
+                            fontSize: 14,
+                            marginTop: 5,
+                          }}>
+                          {t('Product is Not available for Curbside Pickup')}
+                        </Text>
+                      ))}
+                    {PickupType === 'localDelivery' &&
+                      (item.isNextDayDeliveryAvailable ? (
+                        <Text
+                          style={{
+                            color: Constants.green,
+                            fontSize: 14,
+                            marginTop: 5,
+                          }}>
+                          {t(`Product is available for ${deliveryType}`)}
+                        </Text>
+                      ) : (
+                        <Text
+                          style={{
+                            color: Constants.red,
+                            fontSize: 14,
+                            marginTop: 5,
+                          }}>
+                          {t(
+                            `Product is Not available for ${deliveryType}`,
+                          )}
+                        </Text>
+                      ))}
                   </View>
-                  {/* inavailibility message */}
-                  {PickupType === 'shipping' &&
-                    (item.isShipmentAvailable ? (
-                      <Text
-                        style={{
-                          color: Constants.green,
-                          fontSize: 14,
-                          marginTop: 5,
-                        }}>
-                        {t('Product is available for Shipment Delivery')}
-                      </Text>
-                    ) : (
-                      <Text
-                        style={{
-                          color: Constants.red,
-                          fontSize: 14,
-                          marginTop: 5,
-                        }}>
-                        {t('Product is Not available for Shipment Delivery')}
-                      </Text>
-                    ))}
-                  {PickupType === 'orderPickup' &&
-                    (item.isInStoreAvailable ? (
-                      <Text
-                        style={{
-                          color: Constants.green,
-                          fontSize: 14,
-                          marginTop: 5,
-                        }}>
-                        {t('Product is available for In Store Pickup')}
-                      </Text>
-                    ) : (
-                      <Text
-                        style={{
-                          color: Constants.red,
-                          fontSize: 14,
-                          marginTop: 5,
-                        }}>
-                        {t('Product is Not available for In Store Pickup')}
-                      </Text>
-                    ))}
-                  {PickupType === 'driveUp' &&
-                    (item.isCurbSidePickupAvailable ? (
-                      <Text
-                        style={{
-                          color: Constants.green,
-                          fontSize: 14,
-                          marginTop: 5,
-                        }}>
-                        {t('Product is available for Curbside Pickup')}
-                      </Text>
-                    ) : (
-                      <Text
-                        style={{
-                          color: Constants.red,
-                          fontSize: 14,
-                          marginTop: 5,
-                        }}>
-                        {t('Product is Not available for Curbside Pickup')}
-                      </Text>
-                    ))}
-                  {PickupType === 'localDelivery' &&
-                    (item.isNextDayDeliveryAvailable ? (
-                      <Text
-                        style={{
-                          color: Constants.green,
-                          fontSize: 14,
-                          marginTop: 5,
-                        }}>
-                        {t(`Product is available for ${deliveryType}`)}
-                      </Text>
-                    ) : (
-                      <Text
-                        style={{
-                          color: Constants.red,
-                          fontSize: 14,
-                          marginTop: 5,
-                        }}>
-                        {t(
-                          `Product is Not available for ${deliveryType}`,
-                        )}
-                      </Text>
-                    ))}
-                </View>
+                )
               ))}
             </View>
             <View style={[styles.btombg, { marginHorizontal: 10 }]}>
@@ -1088,6 +1207,9 @@ const Cart = ({ route }) => {
                         setPickupType(option.value);
                         setPickupDate(null);
                         setDeliveryTip(0);
+                        setCoupon(false);
+                        setCouponDiscount(0);
+                        setDiscountCode('');
                         setLocalDeliveryAddress({
                           ApartmentNo: user?.ApartmentNo || '',
                           SecurityGateCode: user?.SecurityGateCode || '',
@@ -1115,7 +1237,7 @@ const Cart = ({ route }) => {
                           style={{
                             color:
                               PickupType === option.value
-                                ? Constants.pink
+                                ? Constants.saffron
                                 : Constants.black,
                             fontSize: 16,
                             fontWeight: '700',
@@ -1334,22 +1456,7 @@ const Cart = ({ route }) => {
                               ? moment(pickupDate).format('MM/DD/YYYY')
                               : t('Select Delivery Date')}
                           </Text>
-                          {/* <TextInput
-                    value={
-                      pickupDate ? moment(pickupDate).format('MM/DD/YYYY') : ''
-                    }
-                    onFocus={handleDatePickerOpen}
-                    placeholder={t('Select Delivery Date')}
-                    placeholderTextColor={Constants.customgrey}
-                    editable={false}
-                    style={{
-                      // flex: 1,
-                      height: 40,
-                      color: Constants.black,
-                      fontSize: 16,
-                      fontFamily: FONTS.Regular,
-                    }}
-                  /> */}
+
                           <Calendar color="black" />
                         </Pressable>
 
@@ -1455,13 +1562,7 @@ const Cart = ({ route }) => {
 
                     {PickupType === option.value && option.value === 'shipping' && (
                       <View style={{ marginTop: 15, paddingTop: 15, borderTopWidth: 1, borderTopColor: Constants.customgrey3 }}>
-                        {/* <Text
-                  style={[
-                    styles.boxtxt,
-                    {marginBottom: 10, fontSize: 16, fontWeight: '900'},
-                  ]}>
-                  {t('Pick up in 2 Hours')}
-                </Text> */}
+
                         <View style={styles.paycovtxt}>
                           {user?.address ? (
                             <Text style={styles.locationtxt} numberOfLines={1}>
@@ -1545,6 +1646,26 @@ const Cart = ({ route }) => {
                         });
                         return;
                       }
+
+                      const notAvailablecoupan = cartdetail.some(
+                        (item) => item?.combo_id && item?.accept_coupon === false,
+                      );
+
+                      if (notAvailablecoupan) {
+
+                        Alert.alert(
+                          t('Coupon Not Applicable'),
+                          t('One or more combo products in your cart do not allow coupons. Please remove those items to apply the coupon.'),
+                          [
+                            {
+                              text: t('OK'),
+                              onPress: () => { },
+                            },
+                          ]
+                        );
+                        return;
+                      }
+
 
                       try {
                         const response = await Post(
@@ -1843,26 +1964,11 @@ const Cart = ({ route }) => {
                 </View>
 
                 <View style={styles.paycov}>
-                  {/* <View style={styles.paycovtxt}>
-                {user?.address ? (
-                  <Text style={styles.locationtxt} numberOfLines={1}>
-                    {user?.ApartmentNo}, {user?.address}
-                  </Text>
-                ) : (
-                  <Text style={styles.locationtxt} numberOfLines={1}>
-                    {locationadd}
-                  </Text>
-                )}
-                <TouchableOpacity
-                  style={{flexDirection: 'row', width: '40%'}}
-                  onPress={() => navigate('Shipping')}>
-                  <LocationIcon height={20} width={20} color={Constants.pink} />
-                  <Text style={styles.changadd}>{t('CHANGE ADDRESS')}</Text>
-                </TouchableOpacity>
-              </View> */}
+
                   <TouchableOpacity
                     style={styles.cartbtn}
-                    onPress={() => {
+                    onPress={async () => {
+
                       if (PickupType === null) {
                         Toast.show({
                           type: 'error',
@@ -1896,7 +2002,7 @@ const Cart = ({ route }) => {
                         return;
                       }
 
-                      console.log(user);
+
 
                       // Check if user is properly authenticated
                       if (!user || !user._id) {
@@ -1908,25 +2014,29 @@ const Cart = ({ route }) => {
                         return;
                       }
 
-                      initiatePurchase();
-                      // const checkoutData = {
-                      //   cartdetail,
-                      //   PickupType,
-                      //   pickupDate: pickupDate
-                      //     ? moment(pickupDate).format('DD/MM/YYYY')
-                      //     : null,
-                      //   localDeliveryAddress,
-                      //   businessAddress,
-                      //   isBusiness,
-                      //   deliveryFees,
-                      //   totalFinal,
-                      //   totaloff,
-                      //   couponDiscount,
-                      // };
 
-                      // user?.address
-                      //   ? navigate('Checkout', {checkoutData})
-                      //   : navigate('Shipping', {type: 'checkout'});
+
+                      // const isIncludesComboORsales = cartdetail.find(item => item.productSource === 'COMBO' || item.productSource === 'SALE');
+                      // console.log('Cart includes combo or sale items:', isIncludesComboORsales);
+                      // //  if (isPriceChanged) {
+                      // //     initiatePurchase();
+                      // //       return;
+                      // //     }
+                      // console.log('Price change status:', isPriceChanged);
+
+                      if (isPriceChanged) {
+                        initiatePurchase();
+                        return;
+                      }
+                      console.log(user);
+                      const isValid =
+                        await checkPRiceOFPRoduct(cartdetail);
+                      console.log('Price validation result:', isValid);
+                      if (isValid) {
+                        initiatePurchase && initiatePurchase();
+                      }
+
+
                     }}>
                     <Text style={styles.buttontxt}>
                       {t('CONTINUE TO PAY')} {Currency}
@@ -2248,7 +2358,7 @@ const Cart = ({ route }) => {
           }}
         />
 
-      </SafeAreaView >
+      </View >
 
       <DatePickerModal
         locale="en"
@@ -2279,11 +2389,7 @@ const blockedDates = ["2026-01-13", "2026-01-20"];
 const disabledDates = (date) => {
   console.log(date)
   return false;
-  // if (!(date instanceof Date)) return false;
 
-  // const formatted = date.toISOString().split("T")[0];
-
-  // return blockedDates.includes(formatted);
 };
 
 

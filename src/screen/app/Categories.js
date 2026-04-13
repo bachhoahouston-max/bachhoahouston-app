@@ -14,7 +14,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useState } from 'react';
+import i18n from 'i18next';
 import Constants, { FONTS } from '../../Assets/Helpers/constant';
 import {
   DiscountIcon,
@@ -31,15 +32,18 @@ import { GetApi } from '../../Assets/Helpers/Service';
 import { LoadContext, ToastContext } from '../../../App';
 import Header from '../../Assets/Component/Header';
 import { useTranslation } from 'react-i18next';
+import { useFocusEffect } from '@react-navigation/native';
 
 const Categories = () => {
   const { t } = useTranslation();
   const [toast, setToast] = useContext(ToastContext);
   const [loading, setLoading] = useContext(LoadContext);
   const [categorylist, setcategorylist] = useState();
-  useEffect(() => {
-    getCategory();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      getCategory();
+    }, [])
+  );
 
   const getCategory = () => {
     setLoading(true);
@@ -100,7 +104,7 @@ const Categories = () => {
             <TouchableOpacity
               style={{ flex: 1, marginVertical: 10 }}
               onPress={() =>
-                navigate('CategoryFilter', { item: item._id, name: item.name })
+                navigate('CategoryFilter', { item: item._id, name: i18n.language === 'vi' ? (item.v_name || item.name) : item.name })
               }>
               <View style={styles.categorycircle}>
                 <Image
@@ -116,7 +120,7 @@ const Categories = () => {
                 />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.categorytxt2}>{item.name}</Text>
+                <Text style={styles.categorytxt2}>{i18n.language === 'vi' ? (item.v_name || item.name) : item.name}</Text>
               </View>
             </TouchableOpacity>
           )}

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-native/no-inline-styles */
 import {
   StyleSheet,
@@ -9,6 +10,7 @@ import {
   TextInput,
   PermissionsAndroid,
   Platform,
+  Dimensions,
 } from 'react-native';
 import React, { useContext, useEffect, useState } from 'react';
 import {
@@ -19,16 +21,21 @@ import {
 } from '../../../Theme';
 import Constants, { FONTS } from '../Helpers/constant';
 import { goBack, navigate } from '../../../navigationRef';
+import MarqueeText from './MarqueeText';
 // import { GetApi } from '../Helpers/Service';
 // import { PERMISSIONS, request } from 'react-native-permissions';
 // import Geolocation from 'react-native-geolocation-service';
 // import GetCurrentAddressByLatLong from './GetCurrentAddressByLatLong';
-import { AddressContext, UserContext } from '../../../App';
+import { AddressContext, LanguageContext, UserContext } from '../../../App';
+
 
 const Header = props => {
   const [location, setlocation] = useState(null);
   const [locationadd, setlocationadd] = useContext(AddressContext);
   const [user, setuser] = useContext(UserContext);
+  const [language, toggleLanguage] = useContext(LanguageContext);
+
+  const width = Dimensions.get('window').width;
 
   return (
     <View style={{ backgroundColor: Constants.yellow }}>
@@ -52,26 +59,39 @@ const Header = props => {
             )}
             <DownarrIcon height={15} width={15} style={{ alignSelf: 'center' }} />
           </TouchableOpacity>
-          {user?.img ? (
-            <TouchableOpacity onPress={() =>
-              user.email ? navigate('Account') : navigate('Auth')
-            }>
-              <Image
-                source={{
-                  uri: `${user.img}`,
-                }}
-                style={styles.hi}
-              />
+          {/* <View style={{ width: width - 50, alignSelf: 'center', backgroundColor: 'transparent' }}>
+            <MarqueeText speed={20} text="🔥 This is a scrolling marquee text in React Native 🔥" />
+          </View> */}
+
+          <View style={styles.rightSection}>
+            <TouchableOpacity style={styles.langToggle} onPress={toggleLanguage}>
+              <View style={[styles.langOption, language === 'en' && styles.langActive]}>
+                <Text style={[styles.langText, language === 'en' && styles.langTextActive]}>EN</Text>
+              </View>
+              <View style={[styles.langOption, language === 'vi' && styles.langActive]}>
+                <Text style={[styles.langText, language === 'vi' && styles.langTextActive]}>VI</Text>
+              </View>
             </TouchableOpacity>
-          ) : (
-            <ProfileIcon
-              height={25}
-              width={25}
-              onPress={() =>
+
+            {user?.img ? (
+              <TouchableOpacity onPress={() =>
                 user.email ? navigate('Account') : navigate('Auth')
-              }
-            />
-          )}
+              }>
+                <Image
+                  source={{ uri: `${user.img}` }}
+                  style={styles.hi}
+                />
+              </TouchableOpacity>
+            ) : (
+              <ProfileIcon
+                height={25}
+                width={25}
+                onPress={() =>
+                  user.email ? navigate('Account') : navigate('Auth')
+                }
+              />
+            )}
+          </View>
         </View>
       </View>
     </View>
@@ -98,11 +118,38 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Bold,
     marginLeft: 10,
     marginRight: 5,
-    width: '70%',
+    width: '50%',
   },
   hi: {
     height: 28,
     width: 28,
     borderRadius: 15,
+  },
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  langToggle: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    padding: 3,
+  },
+  langOption: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 18,
+  },
+  langActive: {
+    backgroundColor: '#F28321',
+  },
+  langText: {
+    fontSize: 13,
+    fontFamily: FONTS.Bold,
+    color: Constants.white,
+  },
+  langTextActive: {
+    color: Constants.white,
   },
 });

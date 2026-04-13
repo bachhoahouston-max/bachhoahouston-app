@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useEffect } from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
   Image,
   Pressable,
@@ -17,6 +17,9 @@ import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import { BlurView } from "@react-native-community/blur";
 import i18n from 'i18next';
+import AlarmBadge from '../../Assets/Component/AlarmBadge';
+import { GetApi } from '../../Assets/Helpers/Service';
+import { ToastContext } from '../../../App';
 
 const ProductCard = ({
   item,
@@ -33,9 +36,22 @@ const ProductCard = ({
     return null;
   }
 
+  const [toast, setToast] = useContext(ToastContext);
+
   useEffect(() => {
-    // console.log(item)
+    // console.log('mskqweswqiosjwsd======>', item, saleVarient)
   }, [item])
+
+  const checkQuantity = async () => {
+    try {
+      const res = await GetApi(
+        `checkQuantity/${item._id}`,
+      );
+      return res.status ? res.data.qty : 0;
+    } catch (err) {
+      return 0;
+    }
+  };
 
   return (
     <Pressable
@@ -45,6 +61,11 @@ const ProductCard = ({
 
 
       <View style={{ position: 'relative', width: '100%', overflow: 'visible', borderRadius: 10 }}>
+        {currentSale && currentSale?.status !== 'expired' && (<View style={{ position: 'absolute', top: -10, left: -10, zIndex: 1 }}>
+          <AlarmBadge currentSale={currentSale} />
+        </View>
+        )}
+
         <Image
           source={{
             uri: item?.varients?.[0]?.image?.[0] || '',
@@ -53,7 +74,7 @@ const ProductCard = ({
           resizeMode="contain"
         />
 
-        {currentSale && currentSale?.status !== 'expired' && (
+        {/* {currentSale && currentSale?.status !== 'expired' && (
           <View
             style={{
               position: 'absolute',
@@ -93,7 +114,7 @@ const ProductCard = ({
               </Text>
             </View>
           </View>
-        )}
+        )} */}
       </View>
 
       <View style={styles.cardContent}>
@@ -106,30 +127,38 @@ const ProductCard = ({
               gap: 5,
             }}>
             {item?.price_slot?.[0]?.other_price && (
-              <Text style={[styles.maintxt, { fontFamily: FONTS.Bold }]}>
+              <Text style={[styles.maintxt, { fontFamily: FONTS.Bold, color: '#E53935' }]}>
                 {`${Currency} `}
                 {item.price_slot[0].other_price || ''}
               </Text>
             )}
-            {salePrice !== null && (
-              <Text style={[styles.maintxt, { fontFamily: FONTS.Bold }]}>
-                {`${Currency} `}
-                {saleVarient?.our_price || ''}
-              </Text>
-            )}
+
             {(salePrice !== null
               ? !!salePrice
               : !!item?.price_slot?.[0]?.our_price) && (
                 <Text style={[styles.disctxt, {
-                  color: salePrice !== null ? '#FF0000' : Constants.black,
+                  color: salePrice !== null ? '#FF0000' : '#E53935',
                   fontFamily: FONTS.Bold
                 }]}>
                   {`${Currency} `}
                   {salePrice !== null
-                    ? salePrice || ''
-                    : item?.price_slot?.[0]?.our_price || ''}
+                    ? salePrice.toFixed(2) || ''
+                    : (item?.price_slot?.[0]?.our_price).toFixed(2) || ''}
                 </Text>
               )}
+
+            {salePrice !== null && (
+              <Text style={[styles.maintxt, { fontFamily: FONTS.Bold, color: '#6A7282' }]}>
+                {`${Currency} `}
+                {saleVarient?.our_price || ''}
+              </Text>
+            )}
+
+            {salePrice !== null && (
+              <Text style={[styles.maintxt, { fontFamily: FONTS.Bold, color: '#E53935', textDecorationLine: 'none', backgroundColor: '#FDE2E2', padding: 2, fontSize: 12, fontWeight: '700', borderRadius: 4 }]}>
+                {Math.round(((saleVarient?.our_price - salePrice) / saleVarient?.our_price) * 100)}% OFF
+              </Text>
+            )}
           </View>
 
           <View>
@@ -163,10 +192,19 @@ const ProductCard = ({
 
                 <TouchableOpacity
                   style={styles.plus3}
-                  onPress={() => {
+                  onPress={async () => {
+                    const existingCartItem = cartdetail.find((cartItem) => cartItem.productid === item._id);
+                    console.log('Existing cart item:', existingCartItem);
+                    const availableQuantity = await checkQuantity(item)
+                    console.log('Available quantity:', availableQuantity);
+                    if (existingCartItem.qty + 1 > availableQuantity) {
+                      setToast(t('Item is not available in this quantity in stock. Please choose a different item.'));
+                      return
+                    }
                     const updatedCart = cartdetail.map(_i =>
                       _i.productid === item._id ? { ..._i, qty: _i.qty + 1 } : _i,
                     );
+
                     setcartdetail(updatedCart);
                     AsyncStorage.setItem(
                       'cartdata',
@@ -180,10 +218,10 @@ const ProductCard = ({
               <TouchableOpacity
                 disabled={item.Quantity <= 0}
                 style={styles.pluscov}
-                onPress={() => {
-                  const itemQuantity = Number(item?.Quantity ?? 0);
-
-                  if (itemQuantity <= 0) {
+                onPress={async () => {
+                  // const itemQuantity = Number(item?.Quantity ?? 0);
+                  const availableQuantity = await checkQuantity(item);
+                  if (availableQuantity <= 0) {
                     Toast.show({
                       type: 'error',
                       text1: t('This item is currently out of stock.'),
@@ -194,10 +232,10 @@ const ProductCard = ({
 
                   if (salePrice) {
                     console.log('salePrice1', salePrice);
-                    cartdata({ ...item, salePrice, productSource: "SALE", });
+                    cartdata({ ...item, salePrice, productSource: "SALE" });
                   } else {
                     console.log('salePrice2', salePrice);
-                    cartdata({ ...item, productSource: "NORMAL", });
+                    cartdata({ ...item, productSource: "NORMAL" });
                   }
 
                   console.log('Added to cart', cartdata);
@@ -289,12 +327,12 @@ const styles = StyleSheet.create({
     marginLeft: 7,
   },
   disctxt: {
-    fontSize: 16,
+    fontSize: 14,
     color: Constants.black,
     fontWeight: '900',
   },
   maintxt: {
-    fontSize: 16,
+    fontSize: 12,
     color: Constants.customgrey,
     fontFamily: FONTS.Bold,
     textDecorationLine: 'line-through',

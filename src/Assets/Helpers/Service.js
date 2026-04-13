@@ -11,13 +11,10 @@ const GetApi = async (url, props, data) => {
   return new Promise(function (resolve, reject) {
     ConnectionCheck.isConnected().then(
       async connected => {
-        console.log(connected);
+        console.log(Constants.baseUrl + url);
         if (connected) {
           const user = await AsyncStorage.getItem('userDetail');
           let userDetail = JSON.parse(user);
-          console.log('userDetail from service====>', userDetail);
-          console.log(Constants.baseUrl + url);
-          console.log(`jwt ${userDetail?.token}`);
 
           axios
             .get(Constants.baseUrl + url, {

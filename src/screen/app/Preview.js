@@ -100,6 +100,7 @@ const Preview = props => {
         if (res.status) {
           getProductByIdActiveFlashSale(res.data._id, res.data);
           setProductReviews(res.data?.reviews);
+          // setProductReviews([...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews] || []);
 
           // setproductdata(res.data);
           // if (res?.data?.price_slot && res?.data?.price_slot?.length > 0) {
@@ -178,6 +179,17 @@ const Preview = props => {
     );
   };
 
+  const checkQuantity = async () => {
+    try {
+      const res = await GetApi(
+        `checkQuantity/${productdata._id}`,
+      );
+      return res.status ? res.data.qty : 0;
+    } catch (err) {
+      return 0;
+    }
+  };
+
   useEffect(() => {
     if (productdata && productdata?.category?.slug) {
       getproductByCategory(productdata?.category?.slug, productdata?._id);
@@ -192,6 +204,7 @@ const Preview = props => {
 
     const existingCart = Array.isArray(cartdetail) ? cartdetail : [];
 
+
     // Check if the exact product with selected price_slot exists
     const existingProduct = existingCart.find(
       f =>
@@ -199,7 +212,9 @@ const Preview = props => {
         f.price_slot?.value === selectedslot?.value,
     );
 
+
     if (!existingProduct) {
+
       const newProduct = {
         // ...productdata,
         // qty: availableQty || 1,
@@ -343,6 +358,82 @@ const Preview = props => {
 
     const calculatedPrice = (price / quantity) * factor;
     return `${Currency} ${calculatedPrice.toFixed(2)} / ${unitText}`;
+  };
+
+  const renderReview = ({ item }) => {
+    const reviewImages = (item?.images || []).map(uri => ({ uri }));
+    return (
+      <View style={styles.reviewCard}>
+        <View style={styles.userRow}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {item?.posted_by?.username?.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+          <View style={styles.userInfo}>
+            <View style={styles.usernameRow}>
+              <Text style={styles.username}>{item?.posted_by?.username}</Text>
+              {item?.verified_buyer && (
+                <Text style={styles.verified}>✓ Verified Buyer</Text>
+              )}
+            </View>
+            <Text style={styles.date}>
+              {moment(item?.createdAt).format('MMM DD, YYYY')}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.description}>{item?.description}</Text>
+
+        {/* Image Section */}
+        {item?.images && item?.images.length > 0 && (
+          <View style={styles.imageContainer}>
+            {item.images.length === 1 ? (
+              <TouchableOpacity
+                onPress={() => {
+                  setImages(reviewImages);
+                  setImageIndex(0);
+                  setVisibleImg(true);
+                }}
+                activeOpacity={0.9}>
+                <Image
+                  source={{ uri: item.images[0] }}
+                  style={styles.singleImage}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.multiImageGrid}>
+                {item.images.slice(0, 4).map((image, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => {
+                      setImages(reviewImages);
+                      setImageIndex(index);
+                      setVisibleImg(true);
+                    }}
+                    activeOpacity={0.9}
+                    style={styles.multiImageWrapper}>
+                    <Image
+                      source={{ uri: image }}
+                      style={styles.multiImage}
+                      resizeMode="cover"
+                    />
+                    {index === 3 && item.images.length > 4 && (
+                      <View style={styles.overlay}>
+                        <Text style={styles.overlayText}>
+                          +{item.images.length - 4}
+                        </Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+      </View>
+    );
   };
 
   const width = Dimensions.get('window').width - 40;
@@ -545,26 +636,35 @@ const Preview = props => {
               <TouchableOpacity
                 style={styles.plus3}
                 onPress={async () => {
-                  const updatedCart = cartdetail.map(item => {
+                  const existingCartItem = cartdetail.find((cartItem) => cartItem.productid === currentproduct?.productid && cartItem.price_slot?.value === selectedslot?.value);
+                  console.log('Existing cart item:', existingCartItem);
+                  const availableQuantity = await checkQuantity()
+                  console.log('Available quantity:', availableQuantity);
+
+                  if (existingCartItem.qty + 1 > availableQuantity) {
+                    Toast.show({
+                      type: 'error',
+                      text1: t('Item is not available in this quantity in stock. Please choose a different item.'),
+                    })
+                    return
+                  }
+
+                  cartdetail.forEach(item => {
                     if (
                       item.productid === currentproduct?.productid &&
                       item.price_slot?.value === selectedslot?.value
                     ) {
-                      return {
-                        ...item,
-                        qty: item.qty + 1,
-                        price: selectedslot.other_price,
-                        offer: selectedslot.our_price,
-                        price_slot: selectedslot,
-                      };
-                    }
-                    return item;
+                      item.qty = item.qty + 1;
+                      item.price = selectedslot.other_price;
+                      item.offer = selectedslot.our_price;
+                      item.price_slot = selectedslot;
+                    };
                   });
 
-                  setcartdetail(updatedCart);
+                  setcartdetail([...cartdetail]);
                   await AsyncStorage.setItem(
                     'cartdata',
-                    JSON.stringify(updatedCart),
+                    JSON.stringify([...cartdetail]),
                   );
                   console.log(
                     'Product quantity increased:',
@@ -656,17 +756,28 @@ const Preview = props => {
                       {item.our_price}
                     </Text>
                     {/* <Text style={[styles.disctxt, {marginTop: -3}]}>
-    {formatPricePerUnit(
-      item.our_price,
-      item?.value,
-      item.unit,
-    )}
-  </Text> */}
+                        {formatPricePerUnit(
+                          item.our_price,
+                          item?.value,
+                          item.unit,
+                        )}
+                      </Text> */}
                   </View>
                 </TouchableOpacity>
               ))}
         </ScrollView>
-
+        {productReviews && productReviews.length > 0 && (
+          <View style={{ marginTop: 10 }}>
+            <Text style={styles.title}>Reviews</Text>
+            <FlatList
+              data={productReviews}
+              keyExtractor={(_, i) => i.toString()}
+              renderItem={renderReview}
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+            />
+          </View>
+        )}
         <View style={styles.line} />
         <View style={styles.productinfocov}>
           <Text style={styles.proddec}>{t('Product Information')}</Text>
@@ -696,6 +807,7 @@ const Preview = props => {
             />
           </View>
         )}
+
         {productdata?.Warning && (
           <View style={{ marginTop: 10 }}>
             <Text style={styles.dechead}>{t('Warning')}</Text>
@@ -713,18 +825,7 @@ const Preview = props => {
           </View>
         )}
 
-        {productReviews && productReviews.length > 0 && (
-          <View>
-            <Text style={styles.title}>Reviews</Text>
-            <FlatList
-              data={productReviews}
-              keyExtractor={(_, i) => i.toString()}
-              renderItem={renderReview}
-              horizontal={true}
-              showsHorizontalScrollIndicator={false}
-            />
-          </View>
-        )}
+
         {/* <View style={{marginVertical: 10}}>
           <Text style={styles.dechead}>{t('MANUFACTURER NAME')}</Text>
           <Text style={styles.dectitle}>{productdata?.manufacturername}</Text>
@@ -1098,60 +1199,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
-const renderReview = ({ item }) => (
-  <View style={styles.reviewCard}>
-    <View style={styles.userRow}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>
-          {item?.posted_by?.username?.charAt(0).toUpperCase()}
-        </Text>
-      </View>
-      <View style={styles.userInfo}>
-        <View style={styles.usernameRow}>
-          <Text style={styles.username}>{item?.posted_by?.username}</Text>
-          {item?.verified_buyer && (
-            <Text style={styles.verified}>✓ Verified Buyer</Text>
-          )}
-        </View>
-        <Text style={styles.date}>
-          {moment(item?.createdAt).format('MMM DD, YYYY')}
-        </Text>
-      </View>
-    </View>
-
-    <Text style={styles.description}>{item?.description}</Text>
-
-    {/* Image Section */}
-    {item?.images && item?.images.length > 0 && (
-      <View style={styles.imageContainer}>
-        {item.images.length === 1 ? (
-          <Image
-            source={{ uri: item.images[0] }}
-            style={styles.singleImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.multiImageGrid}>
-            {item.images.slice(0, 4).map((image, index) => (
-              <View key={index} style={styles.multiImageWrapper}>
-                <Image
-                  source={{ uri: image }}
-                  style={styles.multiImage}
-                  resizeMode="cover"
-                />
-                {index === 3 && item.images.length > 4 && (
-                  <View style={styles.overlay}>
-                    <Text style={styles.overlayText}>
-                      +{item.images.length - 4}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-    )}
-  </View>
-);

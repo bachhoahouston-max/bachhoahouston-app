@@ -40,8 +40,10 @@ import SwiperFlatList from 'react-native-swiper-flatlist';
 import { useTranslation } from 'react-i18next';
 import ProductCard from './ProductCard';
 import Sale from '../../Assets/Component/Sale';
+import ComboCard from '../../Assets/Component/ComboCard';
 import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator } from 'react-native-paper';
+import i18n from '../../../i18n';
 
 const { width: windowWidth } = Dimensions.get('window');
 
@@ -73,6 +75,7 @@ const Home = () => {
   const flatListRef = React.useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [topsellinglist, settopsellinglist] = useState([]);
+  const [combolist, setcombolist] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -116,6 +119,7 @@ const Home = () => {
     getCategory();
     getTopSoldProduct(1, false);
     getSetting();
+    getComboDeals();
     console.log('cartdetail', cartdetail);
     AsyncStorage.getItem('cartdata').then(res => {
       console.log('cartdata', res);
@@ -216,6 +220,21 @@ const Home = () => {
       },
     );
   };
+  const getComboDeals = () => {
+    GetApi('getActiveComboOffers', {}).then(
+      res => {
+        if (res.status) {
+
+          setcombolist(res.data);
+          console.log('combo deals', res.data);
+        }
+      },
+      err => {
+        console.log('combo error', err);
+      },
+    );
+  };
+
   const getSetting = () => {
     setLoading(true);
     GetApi(`getsetting`, {}).then(
@@ -365,7 +384,7 @@ const Home = () => {
                     <Image
                       source={{ uri: item.image }}
                       style={{
-                        height: width2,
+                        height: width2 * 0.6,
                         width: width2,
                         borderRadius: 20,
                         alignSelf: 'center',
@@ -377,6 +396,9 @@ const Home = () => {
                 )}
               />
             </View>
+
+
+
             <View style={styles.covline}>
               <Text style={styles.categorytxt}>
                 {t('Explore By Categories')}
@@ -394,18 +416,21 @@ const Home = () => {
               </TouchableOpacity>
             </View>
 
+            {/* Combo Deals */}
+
 
             <FlatList
               data={categorylist}
-              scrollEnabled={false}
-              numColumns={Dimensions.get('window').width < 500 ? 4 : 6}
+              scrollEnabled={true}
+              horizontal={true}
+              // numColumns={Dimensions.get('window').width < 500 ? 4 : 6}
               keyExtractor={(item, index) => item._id || index.toString()}
               style={{ width: '100%', gap: 5, marginVertical: 10 }}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={{ flex: 1, marginVertical: 10 }}
+                  style={{ flex: 1, marginVertical: 10, width: Dimensions.get('window').width < 500 ? 100 : 120, alignItems: 'center' }}
                   onPress={() =>
-                    navigate('CategoryFilter', { item: item._id, name: item.name })
+                    navigate('CategoryFilter', { item: item._id, name: i18n.language === 'vi' ? (item.v_name || item.name) : item.name })
                   }>
                   <View style={styles.categorycircle}>
                     <Image
@@ -417,17 +442,40 @@ const Home = () => {
                       style={styles.categoryimg}
                     />
                     <View>
-                      <Text style={styles.categorytxt2}>{item.name}</Text>
+                      <Text style={styles.categorytxt2}>{i18n.language === 'vi' ? (item.v_name || item.name) : item.name}</Text>
                     </View>
                   </View>
                 </TouchableOpacity>
               )}
             />
-            <View style={{ height: 24, backgroundColor: '#E8E8E8', marginVertical: 15 }} />
+            <View style={{ height: 10, backgroundColor: 'transparent', marginVertical: 5 }} />
+
+            {combolist.length > 0 && (
+              <>
+                <View style={styles.covline}>
+                  <Text style={styles.categorytxt}>{t('Combo Deals')}</Text>
+                </View>
+                <FlatList
+                  data={combolist}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyExtractor={(item, index) => item._id || index.toString()}
+                  contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 10 }}
+                  renderItem={({ item }) => (
+                    <ComboCard
+                      combo={item}
+                      onAddCombo={combo => {
+                        console.log('Add combo to cart', combo);
+                      }}
+                    />
+                  )}
+                />
+              </>
+            )}
 
             <Sale setIsSale={setIsSale} />
 
-            <View style={{ height: 24, backgroundColor: '#E8E8E8', marginVertical: 15 }} />
+            {/* <View style={{ height: 10, backgroundColor: '#E8E8E8', marginVertical: 5 }} /> */}
             {/* Top Selling Header */}
             <View style={styles.covline}>
               <Text style={[styles.categorytxt, { marginLeft: 8 }]}>
@@ -601,7 +649,7 @@ const styles = StyleSheet.create({
   covline: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginHorizontal: 10,
+    marginHorizontal: 20,
     marginVertical: 10,
     // backgroundColor:Constants.red
   },

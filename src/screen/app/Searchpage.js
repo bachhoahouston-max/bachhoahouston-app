@@ -57,6 +57,9 @@ const Searchpage = () => {
   const [curentData, setCurrentData] = useState([]);
   const sortRef = createRef();
   const navigation = useNavigation();
+  const [saleData, setSaleData] = useState([]);
+  const [countdown, setCountdown] = useState([]);
+
 
   useEffect(() => {
     setTimeout(() => {
@@ -66,6 +69,58 @@ const Searchpage = () => {
     }, 200);
   }, []);
 
+  useEffect(() => {
+    const calculateCountdown = () => {
+      const now = new Date().getTime();
+      const newCountdown = {};
+
+      saleData.forEach(sale => {
+        const startDate = new Date(sale.startDateTime).getTime();
+        const endDate = new Date(sale.endDateTime).getTime();
+
+        if (now < startDate) {
+          const distance = startDate - now;
+          newCountdown[sale._id] = {
+            ...calculateTimeLeft(distance),
+            status: 'upcoming',
+            message: 'Sale starts in',
+          };
+        } else if (now >= startDate && now < endDate) {
+          const distance = endDate - now;
+          newCountdown[sale._id] = {
+            ...calculateTimeLeft(distance),
+            status: 'active',
+            message: 'Sale ends in',
+          };
+        } else {
+          newCountdown[sale._id] = {
+            status: 'expired',
+            message: 'Sale has ended',
+          };
+        }
+      });
+
+      setCountdown(newCountdown);
+    };
+
+    const calculateTimeLeft = distance => {
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+      );
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      return { days, hours, minutes, seconds };
+    };
+
+    if (saleData.length > 0) {
+      calculateCountdown();
+      const interval = setInterval(calculateCountdown, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [saleData]);
+
   const getsearchproducts = (p, text, sort) => {
     setPage(p);
     // setLoading(true);
@@ -73,11 +128,12 @@ const Searchpage = () => {
     GetApi(`productSearch?page=${p}&key=${text}`).then(
       async res => {
         // setLoading(false);
-        console.log(res);
+        console.log(res.data);
         // setproductlist(res);
-        setCurrentData(res.data);
+        setCurrentData(res.data.products);
         if (p === 1) {
-          setproductlist(res.data);
+          setproductlist([...res.data.filtered, ...res.data.products]);
+          setSaleData(res.data.filtered);
         } else {
           setproductlist([...productlist, ...res.data]);
         }
@@ -116,6 +172,65 @@ const Searchpage = () => {
         slug: productdata.slug,
         tax_code: productdata.tax_code,
         tax: productdata.tax,
+      };
+
+      const updatedCart = [...existingCart, newProduct];
+      setcartdetail(updatedCart);
+      await AsyncStorage.setItem('cartdata', JSON.stringify(updatedCart));
+      console.log('Product added to cart:', newProduct);
+    } else {
+      console.log(
+        'Product already in cart with this price slot:',
+        existingProduct,
+      );
+      let stringdata = cartdetail.map(_i => {
+        if (_i?.productid == productdata._id) {
+          console.log('enter');
+          return { ..._i, qty: _i?.qty + 1 };
+        } else {
+          return _i;
+        }
+      });
+      console.log(stringdata);
+      setcartdetail(stringdata);
+      await AsyncStorage.setItem('cartdata', JSON.stringify(stringdata));
+    }
+    // navigate('Cart');
+    setToast(t('Successfully added to cart.'));
+  };
+
+  const cartdataFromSale = async (productdata, items) => {
+    console.log('Adding to cart:', productdata, items);
+    const existingCart = Array.isArray(cartdetail) ? cartdetail : [];
+
+    const existingProduct = existingCart.find(
+      f =>
+        f.productid === productdata._id &&
+        f.price_slot?.value === productdata?.price_slot[0]?.value,
+    );
+
+    console.log('Existing Product:', items);
+
+    if (!existingProduct) {
+      const newProduct = {
+        productid: productdata._id,
+        productname: productdata.name,
+        vietnamiesName: productdata?.vietnamiesName,
+        price: items?.price_slot?.our_price,
+        offer: items?.price,
+        image: productdata.varients[0].image[0],
+        price_slot: items?.price_slot,
+        qty: 1,
+        seller_id: productdata.userid,
+        isShipmentAvailable: productdata.isShipmentAvailable,
+        isInStoreAvailable: productdata.isInStoreAvailable,
+        isCurbSidePickupAvailable: productdata.isCurbSidePickupAvailable,
+        isNextDayDeliveryAvailable: productdata.isNextDayDeliveryAvailable,
+        slug: productdata.slug,
+        tax_code: productdata.tax_code,
+        tax: productdata.tax,
+        productSource: productdata?.productSource || "NORMAL",
+        saleID: items?._id || null,
       };
 
       const updatedCart = [...existingCart, newProduct];
@@ -216,6 +331,7 @@ const Searchpage = () => {
                 /> */}
       </View>
       {/* <View style={{paddingHorizontal: 15, flex: 1}}> */}
+
       <FlatList
         data={productlist}
         // numColumns={Dimensions.get('window').width < 600 ? 2 : 3}
@@ -224,7 +340,7 @@ const Searchpage = () => {
         keyExtractor={(item, index) => index.toString()}
         contentContainerStyle={{ paddingHorizontal: 10, paddingTop: 10 }}
         showsVerticalScrollIndicator={false}
-         columnWrapperStyle={{ justifyContent: 'space-between' }}
+        columnWrapperStyle={{ justifyContent: 'space-between' }}
         ListEmptyComponent={() => (
           <View
             style={{
@@ -245,9 +361,9 @@ const Searchpage = () => {
         // style={{gap:'2%'}}
         renderItem={({ item }, i) => {
           const cartItem = Array.isArray(cartdetail)
-            ? cartdetail.find(it => it?.productid === item?._id)
+            ? cartdetail.find(it => it?.productid === item?._id || it?.productid === item?.product?._id)
             : undefined;
-
+          // const currentSale = countdown[item._id];
           return (
             <View
               key={i}
@@ -255,13 +371,26 @@ const Searchpage = () => {
                 styles.box,
                 // {marginRight: productlist.length === i + 1 ? 20 : 10}
               ]}>
-              <ProductCard
-                item={item}
-                cartItem={cartItem}
-                cartdata={cartdata}
-                setcartdetail={setcartdetail}
-                cartdetail={cartdetail}
-              />
+              {item?.startDateTime ?
+                <ProductCard
+                  item={item.product}
+                  cartItem={cartItem}
+                  cartdata={(e) => { cartdataFromSale(e, item) }}
+                  setcartdetail={setcartdetail}
+                  cartdetail={cartdetail}
+                  salePrice={item.price}
+                  currentSale={countdown[item._id]}
+                  saleVarient={item.price_slot}
+                />
+                :
+                <ProductCard
+                  item={item}
+                  cartItem={cartItem}
+                  cartdata={cartdata}
+                  setcartdetail={setcartdetail}
+                  cartdetail={cartdetail}
+                />
+              }
             </View>
           );
         }}
@@ -385,7 +514,7 @@ const styles = StyleSheet.create({
     //     : Dimensions.get('window').width / 3 - 20,
     // width: Dimensions.get('window').width < 600 ? '48%' : '31%',
     width: '48%',
-  marginVertical: 10,
+    marginVertical: 10,
   },
   cardimg: {
     height: 95,

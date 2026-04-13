@@ -12,7 +12,7 @@ import React, {useContext, useEffect, useState} from 'react';
 import Constants, {FONTS} from '../Helpers/constant';
 import {goBack, navigate, reset} from '../../../navigationRef';
 import {GetApi} from '../Helpers/Service';
-import {CartContext, UserContext} from '../../../App';
+import {CartContext, LanguageContext, UserContext} from '../../../App';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {BackIcon, CartFilledIcon} from '../../../Theme';
 import {useNavigation} from '@react-navigation/native';
@@ -21,6 +21,7 @@ const DriverHeader = props => {
   const [loading, setLoading] = useState(false);
   const [user, setuser] = useContext(UserContext);
   const [cartdetail, setcartdetail] = useContext(CartContext);
+  const [language, toggleLanguage] = useContext(LanguageContext);
   const [userDetail, setUserDetail] = useState({
     email: '',
     username: '',
@@ -71,27 +72,43 @@ const DriverHeader = props => {
         )}
         <Text style={styles.backtxt}>{props?.item}</Text>
       </View>
-      {props?.showCart && (
-        <Pressable
-          onPress={() =>
-            navigation.navigate('App', {
-              screen: 'Cart',
-            })
-          }>
-          <CartFilledIcon
-            height={28}
-            width={28}
-            style={{alignSelf: 'center'}}
-          />
-          {cartdetail && cartdetail.length > 0 ? (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>
-                {cartdetail.length > 99 ? '99+' : cartdetail.length}
-              </Text>
-            </View>
-          ) : null}
-        </Pressable>
-      )}
+      <View style={styles.rightSection}>
+        {props?.showEmptyCart && (
+          <TouchableOpacity onPress={props.onEmptyCart} style={styles.emptyCartBtn}>
+            <Text style={styles.emptyCartTxt}>Empty Cart</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={styles.langToggle} onPress={toggleLanguage}>
+          <View style={[styles.langOption, language === 'en' && styles.langActive]}>
+            <Text style={[styles.langText, language === 'en' && styles.langTextActive]}>EN</Text>
+          </View>
+          <View style={[styles.langOption, language === 'vi' && styles.langActive]}>
+            <Text style={[styles.langText, language === 'vi' && styles.langTextActive]}>VI</Text>
+          </View>
+        </TouchableOpacity>
+
+        {props?.showCart && (
+          <Pressable
+            onPress={() =>
+              navigation.navigate('App', {
+                screen: 'Cart',
+              })
+            }>
+            <CartFilledIcon
+              height={28}
+              width={28}
+              style={{alignSelf: 'center'}}
+            />
+            {cartdetail && cartdetail.length > 0 ? (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {cartdetail.length > 99 ? '99+' : cartdetail.length}
+                </Text>
+              </View>
+            ) : null}
+          </Pressable>
+        )}
+      </View>
     </View>
   );
 };
@@ -123,6 +140,46 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     // fontWeight:'bold'
     // fontFamily:FONTS.Bold
+  },
+  emptyCartBtn: {
+    backgroundColor: Constants.pink,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Constants.white,
+  },
+  emptyCartTxt: {
+    color: Constants.white,
+    fontSize: 13,
+    fontFamily: FONTS.Bold,
+  },
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  langToggle: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    padding: 3,
+  },
+  langOption: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 18,
+  },
+  langActive: {
+    backgroundColor: '#F28321',
+  },
+  langText: {
+    fontSize: 13,
+    fontFamily: FONTS.Bold,
+    color: Constants.white,
+  },
+  langTextActive: {
+    color: Constants.white,
   },
   badge: {
     position: 'absolute',

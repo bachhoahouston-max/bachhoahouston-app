@@ -23,6 +23,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from '../../Assets/Component/Header';
 import DriverHeader from '../../Assets/Component/DriverHeader';
 import { useTranslation } from 'react-i18next';
+import i18n from 'i18next';
 import ProductCard from './ProductCard';
 import { Dropdown } from 'react-native-element-dropdown';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -65,7 +66,7 @@ const CategoryFilter = props => {
 
                 console.log(res);
                 if (res.status) {
-                    let newCat = res.data.map(f => { return { ...f, label: f.name, value: f._id } })
+                    let newCat = res.data.map(f => { return { ...f, label: i18n.language === 'vi' ? (f.v_name || f.name) : f.name, value: f._id } })
                     setcategorylist([{ label: 'All Categories', value: 'All' }, ...newCat]);
                 }
             },

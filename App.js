@@ -103,6 +103,7 @@ export const CartContext = React.createContext('');
 export const AddressContext = React.createContext('');
 export const UserContext = React.createContext('');
 export const CheckoutContext = React.createContext();
+export const LanguageContext = React.createContext();
 // export const Context = React.createContext<any>('');
 const App = () => {
     const [initial, setInitial] = useState('');
@@ -117,6 +118,7 @@ const App = () => {
         deliveryTip: 0,
         couponDiscount: 0,
     });
+    const [language, setLanguage] = useState('vi');
 
     useEffect(() => {
         console.log(DeviceInfo?.getVersion());
@@ -202,7 +204,7 @@ const App = () => {
     // }
     async function checkIOSUpdate() {
         try {
-            const currentVersion = VersionCheck.getCurrentVersion();
+            const currentVersion = await VersionCheck.getCurrentVersion();
 
             // const latestVersion = await VersionCheck.getLatestVersion({
             //     provider: __DEV__ ? 'testflight' : 'appStore',
@@ -212,7 +214,7 @@ const App = () => {
                 provider: 'appStore',
             });
 
-            const update = VersionCheck.needUpdate({
+            const update = await VersionCheck.needUpdate({
                 currentVersion,
                 latestVersion,
             });
@@ -229,10 +231,12 @@ const App = () => {
                             text: 'Update',
                             onPress: () =>
                                 Linking.openURL(
-                                    'https://apps.apple.com/us/app/b%C3%A1ch-ho%C3%A1-houston/id6745395289'
+                                    'itms-apps://itunes.apple.com/app/id6745395289'
                                 ),
                         },
-                    ]
+
+                    ],
+                    { cancelable: false }
                 );
             }
         } catch (e) {
@@ -472,10 +476,19 @@ const App = () => {
         const x = await AsyncStorage.getItem('LANG');
         if (x != null) {
             i18n.changeLanguage(x);
+            setLanguage(x);
         } else {
             i18n.changeLanguage('vi');
+            setLanguage('vi');
             await AsyncStorage.setItem('LANG', 'vi');
         }
+    };
+
+    const toggleLanguage = async () => {
+        const next = language === 'vi' ? 'en' : 'vi';
+        i18n.changeLanguage(next);
+        setLanguage(next);
+        await AsyncStorage.setItem('LANG', next);
     };
     const [interval, setinter] = useState();
 
@@ -550,6 +563,7 @@ const App = () => {
     return (
         <GestureHandlerRootView>
             <PaperProvider>
+                <LanguageContext.Provider value={[language, toggleLanguage]}>
                 <Context.Provider value={[initial, setInitial]}>
                     <ToastContext.Provider value={[toast, setToast]}>
                         <LoadContext.Provider value={[loading, setLoading]}>
@@ -577,6 +591,7 @@ const App = () => {
                     </ToastContext.Provider>
                     <Toast />
                 </Context.Provider>
+                </LanguageContext.Provider>
             </PaperProvider>
         </GestureHandlerRootView>
     );
