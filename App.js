@@ -4,48 +4,6 @@
  *
  * @format
  */
-
-// import { NewAppScreen } from '@react-native/new-app-screen';
-// import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-// import {
-//   SafeAreaProvider,
-//   useSafeAreaInsets,
-// } from 'react-native-safe-area-context';
-
-// function App() {
-//   const isDarkMode = useColorScheme() === 'dark';
-
-//   return (
-//     <SafeAreaProvider>
-//       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-//       <AppContent />
-//     </SafeAreaProvider>
-//   );
-// }
-
-// function AppContent() {
-//   const safeAreaInsets = useSafeAreaInsets();
-
-//   return (
-//     <View style={styles.container}>
-//       <NewAppScreen
-//         templateFileName="App.tsx"
-//         safeAreaInsets={safeAreaInsets}
-//       />
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-// });
-
-// export default App;
-
-
-
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Root } from 'native-base';
 import React, { useEffect, useState } from 'react';
@@ -88,7 +46,7 @@ import SpInAppUpdates, {
 } from 'sp-react-native-in-app-updates';
 import DeviceInfo from 'react-native-device-info';
 import VersionCheck from 'react-native-version-check';
-
+import { checkVersion } from "react-native-check-version";
 
 
 
@@ -121,138 +79,104 @@ const App = () => {
     const [language, setLanguage] = useState('vi');
 
     useEffect(() => {
-        console.log(DeviceInfo?.getVersion());
-        const inAppUpdates = new SpInAppUpdates(
-            true, // isDebug
-        );
-        const currentVersion = VersionCheck.getCurrentVersion();
-        // curVersion is optional if you don't provide it will automatically take from the app using react-native-device-info
-        // {curVersion: VersionInfo?.appVersion}
         if (Platform.OS === 'android') {
             try {
-
+                const inAppUpdates = new SpInAppUpdates(false);
+                const currentVersion = VersionCheck.getCurrentVersion();
                 inAppUpdates.checkNeedsUpdate({ curVersion: currentVersion }).then(
                     result => {
-                        console.log(result);
+                        console.log('Android update check:', result);
                         if (result.shouldUpdate) {
-                            const updateOptions = Platform.select({
-                                ios: {
-                                    title: 'Update available',
-                                    message:
-                                        'Please update the app to the latest version to access new sales and enjoy a smoother experience.',
-                                    buttonUpgradeText: 'Update',
-                                    buttonCancelText: 'Cancel',
-                                },
-                                android: {
-                                    updateType: IAUUpdateKind.IMMEDIATE,
-                                },
-                            });
-                            inAppUpdates.startUpdate(updateOptions); // https://github.com/SudoPlz/sp-react-native-in-app-updates/blob/master/src/types.ts#L78
+                            inAppUpdates.startUpdate({ updateType: IAUUpdateKind.IMMEDIATE }).catch(() => initialSetup());
+                        } else {
+                            initialSetup()
                         }
                     },
                     err => {
-                        console.log(err);
+                        initialSetup()
+                        console.log('Android update check error:', err);
                     },
                 );
             } catch (err) {
-                console.log(err);
+                initialSetup()
+                console.log('Android update check failed:', err);
             }
-        }
-        if (Platform.OS === 'ios') {
-            checkIOSUpdate();
         }
     }, []);
 
-    // const checkIOSUpdate = async () => {
-    //     const latestVersion = await VersionCheck.getLatestVersion({
-    //         provider: 'appStore',
-    //     });
-
-
-
-    //     const currentVersion = VersionCheck.getCurrentVersion();
-    //     console.log('currentVersion', currentVersion)
-    //     console.log('latestVersion', latestVersion)
-
-    //     const updateNeeded = VersionCheck.needUpdate({
-    //         currentVersion,
-    //         latestVersion,
-    //     });
-
-
-    //     if (updateNeeded?.isNeeded) {
-    //         Alert.alert(
-    //             'Update Available',
-    //             'Please update the app to the latest version to access new sales and enjoy a smoother experience.',
-    //             [
-    //                 {
-    //                     text: 'Update',
-    //                     onPress: () =>
-    //                         Linking.openURL(
-    //                             'https://apps.apple.com/us/app/b%C3%A1ch-ho%C3%A1-houston/id6745395289'
-    //                         ),
-    //                 },
-    //                 {
-    //                     text: 'Cancel',
-    //                     onPress: () => { }
-
-    //                 },
-    //             ],
-    //             { cancelable: true }
-    //         );
-    //     }
-    // }
-    async function checkIOSUpdate() {
-        try {
-            const currentVersion = await VersionCheck.getCurrentVersion();
-
-            // const latestVersion = await VersionCheck.getLatestVersion({
-            //     provider: __DEV__ ? 'testflight' : 'appStore',
-            // });
-
-            const latestVersion = await VersionCheck.getLatestVersion({
-                provider: 'appStore',
-            });
-
-            const update = await VersionCheck.needUpdate({
-                currentVersion,
-                latestVersion,
-            });
-
-            console.log({ currentVersion, latestVersion, update });
-
-            // Alert.alert(latestVersion)
-            if (update?.isNeeded) {
-                Alert.alert(
-                    'Update Available',
-                    'Please update the app to the latest version to access new sales and enjoy a smoother experience.',
-                    [
-                        {
-                            text: 'Update',
-                            onPress: () =>
-                                Linking.openURL(
-                                    'itms-apps://itunes.apple.com/app/id6745395289'
-                                ),
-                        },
-
-                    ],
-                    { cancelable: false }
-                );
-            }
-        } catch (e) {
-            Alert.alert(e)
-            console.log('Update check failed', e);
-        }
-    }
-
-    useEffect(() => {
+    const initialSetup = async () => {
         SplashScreen.hide();
-
         setInitialRoute();
         checkLng();
         getCartDetail();
         CustomCurrentLocation();
+    }
+
+
+    useEffect(() => {
+        if (Platform.OS === 'ios') {
+            checkIOSUpdate(0);
+        }
     }, []);
+
+    function isVersionLower(current, latest) {
+        const a = current.split('.').map(Number);
+        const b = latest.split('.').map(Number);
+        for (let i = 0; i < Math.max(a.length, b.length); i++) {
+            const diff = (a[i] || 0) - (b[i] || 0);
+            if (diff < 0) return true;
+            if (diff > 0) return false;
+        }
+        return false;
+    }
+
+    async function checkIOSUpdate(attempt = 0) {
+        const MAX_RETRIES = 3;
+        try {
+            if (__DEV__) {
+                initialSetup();
+                return;
+            }
+
+            const version = await checkVersion();
+            console.log("iOS - Got version info:", version);
+            const currentVersion = DeviceInfo.getVersion();
+            console.log(currentVersion, version.version)
+            if (version) {
+                if (isVersionLower(currentVersion, version.version)) {
+                    Alert.alert(
+                        'Update Available',
+                        'Please update the app to the latest version to access new sales and enjoy a smoother experience.',
+                        [
+                            {
+                                text: 'Update',
+                                onPress: () => {
+                                    Linking.openURL(version.url);
+                                    initialSetup();
+                                },
+                            },
+                        ],
+                        { cancelable: false }
+                    );
+                } else {
+                    initialSetup();
+                }
+            } else if (attempt < MAX_RETRIES) {
+                checkIOSUpdate(attempt + 1);
+            } else {
+                initialSetup();
+            }
+        } catch (e) {
+            console.log('iOS update check failed:', e);
+            if (attempt < MAX_RETRIES) {
+                checkIOSUpdate(attempt + 1);
+            } else {
+                initialSetup();
+            }
+        }
+    }
+
+
     const setInitialRoute = async () => {
         // First show Welcome screen for all users
 
@@ -564,33 +488,33 @@ const App = () => {
         <GestureHandlerRootView>
             <PaperProvider>
                 <LanguageContext.Provider value={[language, toggleLanguage]}>
-                <Context.Provider value={[initial, setInitial]}>
-                    <ToastContext.Provider value={[toast, setToast]}>
-                        <LoadContext.Provider value={[loading, setLoading]}>
-                            <UserContext.Provider value={[user, setuser]}>
-                                <CartContext.Provider value={[cartdetail, setcartdetail]}>
-                                    <CheckoutContext.Provider value={[checkoutData, setCheckoutData]}>
-                                        <AddressContext.Provider value={[locationadd, setlocationadd]}>
-                                            <StripeProvider publishableKey="pk_test_51RJ8vERoENQzVclyyZC2YrXTIvGYvx2V8NR88vGDNjqbpBTaar4lovnanf5Df38kC9rzChaYGNAf3PjwTaHL8plP00QaOyY60A">
-                                                {/* <StripeProvider publishableKey="pk_live_51RGgXqLieGlAHmAUrFrRUpFsMqVkOCXm0xL8NKzseMnVs9eH1oF0ggqzfPXqg6Kl2MBB1FLpMhKKkOKNPc2aHbM1005DSI1QLJ"> */}
-                                                <SafeAreaView style={styles.container} edges={Platform.OS === 'ios' ? ['left', 'top', 'right'] : ['bottom', 'left', 'right', 'top']}>
+                    <Context.Provider value={[initial, setInitial]}>
+                        <ToastContext.Provider value={[toast, setToast]}>
+                            <LoadContext.Provider value={[loading, setLoading]}>
+                                <UserContext.Provider value={[user, setuser]}>
+                                    <CartContext.Provider value={[cartdetail, setcartdetail]}>
+                                        <CheckoutContext.Provider value={[checkoutData, setCheckoutData]}>
+                                            <AddressContext.Provider value={[locationadd, setlocationadd]}>
+                                                <StripeProvider publishableKey="pk_test_51RJ8vERoENQzVclyyZC2YrXTIvGYvx2V8NR88vGDNjqbpBTaar4lovnanf5Df38kC9rzChaYGNAf3PjwTaHL8plP00QaOyY60A">
+                                                    {/* <StripeProvider publishableKey="pk_live_51RGgXqLieGlAHmAUrFrRUpFsMqVkOCXm0xL8NKzseMnVs9eH1oF0ggqzfPXqg6Kl2MBB1FLpMhKKkOKNPc2aHbM1005DSI1QLJ"> */}
+                                                    <SafeAreaView style={styles.container} edges={Platform.OS === 'ios' ? ['left', 'top', 'right'] : ['bottom', 'left', 'right', 'top']}>
 
-                                                    <Spinner color={'#fff'} visible={loading} />
-                                                    <StatusBar
-                                                        barStyle='default'
-                                                        backgroundColor={Constants.greennew}
-                                                    />
-                                                    {initial !== '' && <Navigation initial={initial} />}
-                                                </SafeAreaView>
-                                            </StripeProvider>
-                                        </AddressContext.Provider>
-                                    </CheckoutContext.Provider>
-                                </CartContext.Provider>
-                            </UserContext.Provider>
-                        </LoadContext.Provider>
-                    </ToastContext.Provider>
-                    <Toast />
-                </Context.Provider>
+                                                        <Spinner color={'#fff'} visible={loading} />
+                                                        <StatusBar
+                                                            barStyle='default'
+                                                            backgroundColor={Constants.greennew}
+                                                        />
+                                                        {initial !== '' && <Navigation initial={initial} />}
+                                                    </SafeAreaView>
+                                                </StripeProvider>
+                                            </AddressContext.Provider>
+                                        </CheckoutContext.Provider>
+                                    </CartContext.Provider>
+                                </UserContext.Provider>
+                            </LoadContext.Provider>
+                        </ToastContext.Provider>
+                        <Toast />
+                    </Context.Provider>
                 </LanguageContext.Provider>
             </PaperProvider>
         </GestureHandlerRootView>

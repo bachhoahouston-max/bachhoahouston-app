@@ -59,6 +59,23 @@ pod 'react-native-maps/Google', :path => rn_maps_path
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+    # Patch fmt/base.h to disable consteval on all Apple Clang versions (broken in Clang 21 / Xcode 26)
+    fmt_base = Dir.glob("#{installer.sandbox.root}/fmt/include/fmt/base.h").first
+    if fmt_base && File.exist?(fmt_base)
+      content = File.read(fmt_base)
+      patched = content.gsub(
+        '#elif defined(__apple_build_version__) && __apple_build_version__ < 14000029L',
+        '#elif defined(__apple_build_version__)'
+      )
+      File.write(fmt_base, patched) if patched != content
+    end
+    # Patch StripeSwiftInterop.h: NSUInteger -> NSInteger to match Swift-generated enum type
+    stripe_interop = File.join(installer.sandbox.root, '../node_modules/@stripe/stripe-react-native/ios/StripeSwiftInterop.h')
+    if File.exist?(stripe_interop)
+      content = File.read(stripe_interop)
+      patched = content.gsub('typedef NS_ENUM(NSUInteger, STPPaymentStatus);', 'typedef NS_ENUM(NSInteger, STPPaymentStatus);')
+      File.write(stripe_interop, patched) if patched != content
+    end
   end
 end
 

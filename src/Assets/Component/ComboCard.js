@@ -175,6 +175,66 @@ const ComboCard = ({ combo, onAddCombo, }) => {
   //   }
   // }, [combo]);
 
+  const addCombo = async () => {
+    console.log('Available quantity:', combo.main_product._id === combo.free_product?.[0]?.product._id, combo.main_product._id, combo.free_product?.[0]?.product._id);
+    if (combo.main_product._id === combo.free_product?.[0]?.product._id) {
+      const availableQuantity = await checkQuantity(combo.main_product);
+      console.log('Available quantity for main/free product:', availableQuantity);
+      if (2 > availableQuantity) {
+        setToast(t('Main product is not available in this quantity in stock. Please choose a different item.'));
+        return
+      }
+    } else {
+      const availableQuantity = await checkQuantity(combo.main_product)
+
+      if (availableQuantity <= 0) {
+        // setToast(t('Main product is not available in this quantity in stock. Please choose a different item.'));
+        setToast('Main product is not available in this quantity in stock. Please choose a different item.');
+        return
+      }
+
+      const FreeavailableQuantity = await checkQuantity(combo.free_product?.[0]?.product)
+
+      if (FreeavailableQuantity <= 0) {
+        setToast('Free product is not available in this quantity in stock. Please choose a different item.');
+        return
+      }
+    }
+    const productdata = combo.main_product;
+    const newProduct = {
+      productid: productdata._id,
+      productId: productdata._id,
+      productname: productdata.name,
+      vietnamiesName: productdata?.vietnamiesName,
+      price: combo?.price,
+      offer: combo?.price,
+      image: productdata.varients[0].image[0],
+      price_slot: productdata?.price_slot[0],
+      qty: 1,
+      seller_id: productdata.userid,
+      isShipmentAvailable: productdata.isShipmentAvailable,
+      isInStoreAvailable: productdata.isInStoreAvailable,
+      isCurbSidePickupAvailable: productdata.isCurbSidePickupAvailable,
+      isNextDayDeliveryAvailable: productdata.isNextDayDeliveryAvailable,
+      slug: productdata.slug,
+      tax_code: productdata.tax_code,
+      tax: productdata.tax,
+      freeProducts: combo?.free_product,
+      combo_id: combo?._id,
+      productSource: "COMBO",
+      // saletype: "COMBO",
+      product: productdata,
+      accept_coupon: combo?.accept_coupon
+    };
+    console.log('Adding combo to cart:', newProduct);
+
+    const updatedCart = [...cartdetail, newProduct];
+    setcartdetail(updatedCart);
+    await AsyncStorage.setItem('cartdata', JSON.stringify(updatedCart));
+    console.log('Added to cart', cartdata);
+
+  }
+
   return (
     <View style={styles.card}>
 
@@ -311,66 +371,9 @@ const ComboCard = ({ combo, onAddCombo, }) => {
       ) : (
         <TouchableOpacity
           style={styles.addButton}
-          onPress={async () => {
-            console.log('Available quantity:', combo.main_product._id === combo.free_product?.[0]?.product._id, combo.main_product._id, combo.free_product?.[0]?.product._id);
-            if (combo.main_product._id === combo.free_product?.[0]?.product._id) {
-              const availableQuantity = await checkQuantity(combo.main_product);
-              console.log('Available quantity for main/free product:', availableQuantity);
-              if (2 > availableQuantity) {
-                setToast(t('Main product is not available in this quantity in stock. Please choose a different item.'));
-                return
-              }
-            } else {
-              const availableQuantity = await checkQuantity(combo.main_product)
-
-              if (availableQuantity <= 0) {
-                // setToast(t('Main product is not available in this quantity in stock. Please choose a different item.'));
-                setToast('Main product is not available in this quantity in stock. Please choose a different item.');
-                return
-              }
-
-              const FreeavailableQuantity = await checkQuantity(combo.free_product?.[0]?.product)
-
-              if (FreeavailableQuantity <= 0) {
-                setToast('Free product is not available in this quantity in stock. Please choose a different item.');
-                return
-              }
-            }
-            const productdata = combo.main_product;
-            const newProduct = {
-              productid: productdata._id,
-              productId: productdata._id,
-              productname: productdata.name,
-              vietnamiesName: productdata?.vietnamiesName,
-              price: combo?.price,
-              offer: combo?.price,
-              image: productdata.varients[0].image[0],
-              price_slot: productdata?.price_slot[0],
-              qty: 1,
-              seller_id: productdata.userid,
-              isShipmentAvailable: productdata.isShipmentAvailable,
-              isInStoreAvailable: productdata.isInStoreAvailable,
-              isCurbSidePickupAvailable: productdata.isCurbSidePickupAvailable,
-              isNextDayDeliveryAvailable: productdata.isNextDayDeliveryAvailable,
-              slug: productdata.slug,
-              tax_code: productdata.tax_code,
-              tax: productdata.tax,
-              freeProducts: combo?.free_product,
-              combo_id: combo?._id,
-              productSource: "COMBO",
-              // saletype: "COMBO",
-              product: productdata,
-              accept_coupon: combo?.accept_coupon
-            };
-            console.log('Adding combo to cart:', newProduct);
-
-            const updatedCart = [...cartdetail, newProduct];
-            setcartdetail(updatedCart);
-            await AsyncStorage.setItem('cartdata', JSON.stringify(updatedCart));
-            console.log('Added to cart', cartdata);
-          }}
+          onPress={addCombo}
           activeOpacity={0.85}>
-          <Text style={styles.addButtonText}>+ Add Combo</Text>
+          <Text style={styles.addButtonText}>+ Add Combo Now</Text>
         </TouchableOpacity>
       )
       }
@@ -511,17 +514,30 @@ const styles = StyleSheet.create({
     color: Constants.customgrey,
     fontFamily: FONTS.Regular,
     marginBottom: 6,
+    textAlign: 'center'
   },
   addButton: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#F6E27A',
     borderRadius: 12,
-    paddingVertical: 12,
+    // paddingVertical: 12,
     alignItems: 'center',
     marginTop: 'auto',
-    height: 40,
+    height: 30,
+    width: 180,
+    paddingTop: 4,
+    alignSelf: 'center',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.30,
+    shadowRadius: 4.65,
+
+    elevation: 8,
   },
   addButtonText: {
-    color: Constants.white,
+    color: "#2E7D32",
     fontSize: 16,
     fontFamily: FONTS.Bold,
     fontWeight: '700',
