@@ -106,11 +106,11 @@ android {
         applicationId "com.bachhoahouston"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 9
+        versionCode 11
         versionName "1.0"
-        // ndk {
-        //   abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
-        // }
+        ndk {
+            abiFilters "arm64-v8a"
+        }
           manifestPlaceholders = [
             GOOGLE_MAPS_API_KEY: localProperties.getProperty("GOOGLE_MAPS_API_KEY", "")
         ]

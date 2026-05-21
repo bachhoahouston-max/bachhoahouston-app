@@ -39,7 +39,7 @@ const Header = props => {
 
   return (
     <View style={{ backgroundColor: Constants.yellow }}>
-      <StatusBar barStyle={Platform.OS === 'android' ? "dark-content" : "dark-light"} backgroundColor={Constants.greennew} />
+      <StatusBar barStyle={Platform.OS === 'android' ? "light-content" : "light-content"} backgroundColor={Constants.greennew} />
       <View style={styles.toppart}>
         <View style={styles.firstrow}>
           <TouchableOpacity

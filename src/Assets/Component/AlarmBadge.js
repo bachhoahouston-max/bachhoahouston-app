@@ -124,6 +124,7 @@ const styles = StyleSheet.create({
         borderTopStartRadius: 20,
         borderTopEndRadius: 10,
         borderBottomEndRadius: 30,
+        overflow: 'hidden',
     },
     icon: {
         fontSize: 20,

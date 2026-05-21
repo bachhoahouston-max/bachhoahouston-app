@@ -6,7 +6,7 @@
  */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { Root } from 'native-base';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navigation from './src/navigation';
@@ -18,7 +18,8 @@ import {
     StatusBar,
     StyleSheet,
     Alert,
-    Linking
+    Linking,
+    AppState,
 } from 'react-native';
 import Spinner from './src/Assets/Component/Spinner';
 import Geolocation from 'react-native-geolocation-service';
@@ -66,6 +67,7 @@ export const LanguageContext = React.createContext();
 const App = () => {
     const [initial, setInitial] = useState('');
     const [toast, setToast] = useState('');
+    const isInitialized = useRef(false);
     const [loading, setLoading] = useState(false);
     const [cartdetail, setcartdetail] = useState([]);
     const [locationadd, setlocationadd] = useState('');
@@ -105,6 +107,7 @@ const App = () => {
     }, []);
 
     const initialSetup = async () => {
+        isInitialized.current = true;
         SplashScreen.hide();
         setInitialRoute();
         checkLng();
@@ -116,6 +119,12 @@ const App = () => {
     useEffect(() => {
         if (Platform.OS === 'ios') {
             checkIOSUpdate(0);
+            const subscription = AppState.addEventListener('change', nextState => {
+                if (nextState === 'active' && !isInitialized.current) {
+                    checkIOSUpdate(0);
+                }
+            });
+            return () => subscription.remove();
         }
     }, []);
 
@@ -142,7 +151,7 @@ const App = () => {
             console.log("iOS - Got version info:", version);
             const currentVersion = DeviceInfo.getVersion();
             console.log(currentVersion, version.version)
-            if (version) {
+            if (version && version.version) {
                 if (isVersionLower(currentVersion, version.version)) {
                     Alert.alert(
                         'Update Available',
@@ -152,7 +161,6 @@ const App = () => {
                                 text: 'Update',
                                 onPress: () => {
                                     Linking.openURL(version.url);
-                                    initialSetup();
                                 },
                             },
                         ],
@@ -501,7 +509,7 @@ const App = () => {
 
                                                         <Spinner color={'#fff'} visible={loading} />
                                                         <StatusBar
-                                                            barStyle='default'
+                                                            barStyle='light-content'
                                                             backgroundColor={Constants.greennew}
                                                         />
                                                         {initial !== '' && <Navigation initial={initial} />}
