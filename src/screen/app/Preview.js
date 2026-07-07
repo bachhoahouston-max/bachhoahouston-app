@@ -29,6 +29,8 @@ import moment from 'moment';
 // import { SafeAreaView } from 'react-native-safe-area-context';
 import ImageView from "react-native-image-viewing";
 import i18n from 'i18next';
+import Video from 'react-native-video';
+import { Play } from 'lucide-react-native';
 
 const Preview = props => {
   const productid = props?.route?.params;
@@ -48,6 +50,8 @@ const Preview = props => {
   const [images, setImages] = useState([])
   const [imageIndex, setImageIndex] = useState(0)
   const [visibleImg, setVisibleImg] = useState(false)
+  const [mediaList, setMediaList] = useState([])
+  const [playingVideoIndex, setPlayingVideoIndex] = useState(null)
   // const [isFlashSale, setIsFlashSale] = useState(false)
 
 
@@ -98,6 +102,12 @@ const Preview = props => {
         setLoading(false);
         console.log('product data', res);
         if (res.status) {
+          const medias = res.data.varients.flatMap(item => [
+            ...(item.image || []).map(url => ({ type: "image", url })),
+            ...(item.video || []).map(url => ({ type: "video", url }))
+          ]);
+          console.log(medias)
+          setMediaList(medias)
           getProductByIdActiveFlashSale(res.data._id, res.data);
           setProductReviews(res.data?.reviews);
           // setProductReviews([...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews, ...res.data?.reviews] || []);
@@ -120,7 +130,7 @@ const Preview = props => {
     GetApi(`getFlashSaleByProduct/${pro_id}`).then(
       async res => {
         setLoading(false);
-        console.log('product data', res);
+        // console.log('product data', res);
         if (res.status) {
           pro_data.price_slot.forEach(element => {
             if (JSON.stringify(element) === JSON.stringify(res.data.price_slot)) {
@@ -484,13 +494,8 @@ const Preview = props => {
             paginationStyleItem={{
               marginTop: -8,
             }}
-
-            data={productdata?.varients[0].image || []}
-            // renderItem={({item}) => (
-            //   <View style={[styles.child, {backgroundColor: item}]}>
-            //     <Text style={styles.text}>{item}</Text>
-            //   </View>
-            // )}
+            // data={productdata?.varients[0].image || []}
+            data={mediaList}
             renderItem={({ item, index }) => (
               <View style={{
                 paddingBottom: 55,
@@ -519,14 +524,16 @@ const Preview = props => {
                   elevation: 5,  // Android ke liye
                 }}>
                   <Pressable onPress={() => {
-                    const newImageArray = productdata?.varients[0].image.map(f => { return { uri: f } })
-                    setImages(newImageArray);
-                    setImageIndex(index);
-                    setVisibleImg(true)
+                    if (item.type === "image") {
+                      const newImageArray = mediaList.filter(m => m.type === 'image').map(f => { return { uri: f.url } })
+                      setImages(newImageArray);
+                      setImageIndex(index);
+                      setVisibleImg(true)
+                    }
                   }}
                     style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                    <Image
-                      source={{ uri: `${item}` }}
+                    {item.type === "image" && <Image
+                      source={{ uri: `${item.url}` }}
                       style={{
                         height: '100%',
                         width: '100%',
@@ -534,7 +541,28 @@ const Preview = props => {
                       }}
                       resizeMode="contain"
                       key={index}
-                    />
+                    />}
+                    {item.type === "video" && (
+                      <View style={{ width: '100%', aspectRatio: 16 / 9, justifyContent: 'center', alignItems: 'center' }}>
+                        <Video
+                          source={{ uri: `${item.url}` }}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                          }}
+                          controls
+                          paused={playingVideoIndex !== index}
+                          resizeMode="contain"
+                        />
+                        {playingVideoIndex !== index && (
+                          <Pressable
+                            onPress={() => setPlayingVideoIndex(index)}
+                            style={styles.playButtonOverlay}>
+                            <Play size={26} color={Constants.white} fill={Constants.white} style={{ marginLeft: 3 }} />
+                          </Pressable>
+                        )}
+                      </View>
+                    )}
                   </Pressable>
                 </View>
               </View>
@@ -1197,5 +1225,14 @@ const styles = StyleSheet.create({
   overlayText: {
     color: 'white',
     fontWeight: '600',
+  },
+  playButtonOverlay: {
+    position: 'absolute',
+    height: 56,
+    width: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
