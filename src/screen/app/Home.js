@@ -425,7 +425,7 @@ const Home = () => {
               horizontal={true}
               // numColumns={Dimensions.get('window').width < 500 ? 4 : 6}
               keyExtractor={(item, index) => item._id || index.toString()}
-              style={{ width: '100%', gap: 5, marginVertical: 10 }}
+              style={{ width: '100%', gap: 5 }}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={{ flex: 1, marginVertical: 10, width: Dimensions.get('window').width < 500 ? 100 : 120, alignItems: 'center' }}
@@ -448,7 +448,7 @@ const Home = () => {
                 </TouchableOpacity>
               )}
             />
-            <View style={{ height: 10, backgroundColor: 'transparent', marginVertical: 5 }} />
+            {/* <View style={{ height: 10, backgroundColor: 'transparent', marginVertical: 5 }} /> */}
 
             {combolist.length > 0 && (
               <>
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginHorizontal: 20,
-    marginVertical: 10,
+    marginBottom: 10,
     // backgroundColor:Constants.red
   },
   categorycircle: {

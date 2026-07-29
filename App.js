@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navigation from './src/navigation';
 import { GetApi, Post } from './src/Assets/Helpers/Service';
+import { getSyncedCart, saveSyncedCart } from './src/Assets/Helpers/CartSync';
 import {
     PermissionsAndroid,
     Platform,
@@ -79,6 +80,100 @@ const App = () => {
         couponDiscount: 0,
     });
     const [language, setLanguage] = useState('vi');
+
+    // ── Cross-platform cart sync (separate from the local-cart logic above) ──
+    // Tracks which account this device has already merged its local cart
+    // into. Persisted in AsyncStorage (not just a ref) so an app restart
+    // shortly after ordering is still recognized as "the same session" and
+    // just pulls the server's cart instead of re-merging with whatever's
+    // still in AsyncStorage at that instant.
+    const cartHydrated = useRef(false);
+    const cartPushTimer = useRef(null);
+
+    useEffect(() => {
+        const userId = user?._id;
+        if (!userId || !user?.token) {
+            AsyncStorage.removeItem('cartSyncUserId');
+            cartHydrated.current = true;
+            return;
+        }
+
+        let cancelled = false;
+
+        const syncCartOnLogin = async () => {
+            try {
+                const [res, syncedUserId] = await Promise.all([
+                    getSyncedCart(),
+                    AsyncStorage.getItem('cartSyncUserId'),
+                ]);
+                if (cancelled) return;
+
+                const serverItems = res?.data?.items || [];
+                const isNewSessionForUser = syncedUserId !== userId;
+                let finalItems = serverItems;
+
+                if (isNewSessionForUser) {
+                    // Merge this device's local/guest cart into the account's
+                    // synced cart on login, instead of discarding either side.
+                    // App items key on `productid`, web items key on `id` —
+                    // fall back across both so a cart merged from the web
+                    // still dedupes correctly.
+                    const keyOf = item => item.productid || item.id;
+                    const byId = new Map();
+                    serverItems.forEach(item => byId.set(keyOf(item), item));
+                    cartdetail.forEach(item => {
+                        if (!byId.has(keyOf(item))) byId.set(keyOf(item), item);
+                    });
+                    finalItems = Array.from(byId.values());
+                }
+
+                cartHydrated.current = false;
+                setcartdetail(finalItems);
+                await AsyncStorage.setItem('cartdata', JSON.stringify(finalItems));
+                await AsyncStorage.setItem('cartSyncUserId', userId);
+
+                if (isNewSessionForUser) {
+                    await saveSyncedCart(finalItems);
+                }
+            } catch (e) {
+                // Offline or sync failure — keep using the local cart as-is.
+            } finally {
+                cartHydrated.current = true;
+            }
+        };
+
+        syncCartOnLogin();
+        return () => {
+            cancelled = true;
+        };
+    }, [user?._id, user?.token]);
+
+    useEffect(() => {
+        if (!user?._id || !user?.token) return;
+        if (!cartHydrated.current) return;
+
+        clearTimeout(cartPushTimer.current);
+        cartPushTimer.current = setTimeout(() => {
+            console.log(cartdetail, 'cartdetail');
+            let cartData = [...cartdetail];
+            cartData.forEach(item => {
+                if (item.productSource === 'SALE') {
+                    item.price_slot.price = item.price;
+                    item.price_slot.our_price = item.offer;
+                    item.price_slot.other_price = item.price;
+                    item.regularPrice = item.price
+                }
+                console.log(cartData, 'cartData');
+            })
+
+            saveSyncedCart(cartData).catch(() => {
+                // Offline or sync failure — local cart already has the
+                // change, it'll be pushed again on the next cart edit.
+            });
+        }, 800);
+
+        return () => clearTimeout(cartPushTimer.current);
+    }, [cartdetail]);
 
     useEffect(() => {
         if (Platform.OS === 'android') {

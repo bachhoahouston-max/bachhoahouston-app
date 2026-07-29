@@ -61,7 +61,7 @@ const ProductCard = ({
 
 
       <View style={{ position: 'relative', width: '100%', overflow: 'visible', borderRadius: 10 }}>
-        {currentSale && currentSale?.status !== 'expired' && (<View style={{ position: 'absolute', top: -10, left: -10, zIndex: 1 }}>
+        {currentSale && currentSale?.status !== 'expired' && (<View style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}>
           <AlarmBadge currentSale={currentSale} />
         </View>
         )}
@@ -71,7 +71,7 @@ const ProductCard = ({
             uri: item?.varients?.[0]?.image?.[0] || '',
           }}
           style={[styles.cardimg, { borderRadius: 10 }]}
-          resizeMode="contain"
+          resizeMode="cover"
         />
 
         {/* {currentSale && currentSale?.status !== 'expired' && (
@@ -126,12 +126,12 @@ const ProductCard = ({
               alignItems: 'center',
               gap: 5,
             }}>
-            {item?.price_slot?.[0]?.other_price && (
+            {/* {item?.price_slot?.[0]?.other_price && (
               <Text style={[styles.maintxt, { fontFamily: FONTS.Bold, color: '#E53935' }]}>
                 {`${Currency} `}
                 {item.price_slot[0].other_price || ''}
               </Text>
-            )}
+            )} */}
 
             {(salePrice !== null
               ? !!salePrice
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
-    padding: 10,
+    // padding: 10,
     borderRadius: 10,
     backgroundColor: Constants.white,
     shadowColor: Constants.black,
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   cardimg: {
-    height: 150,
+    height: 170,
     width: '100%',
     // resizeMode: 'contain',
     // borderRadius: 20,
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   cardContent: {
     flex: 1,
     flexDirection: 'column',
-    padding: 5,
+    padding: 10,
     width: '100%',
   },
   cardContent2: {

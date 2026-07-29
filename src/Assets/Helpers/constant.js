@@ -1,6 +1,6 @@
 /* eslint-disable no-dupe-keys */
 // const prodUrl = 'http://192.168.1.3:8000/v1/api/';
-// const prodUrl = 'http://192.168.0.119:3005/v1/api/';
+// const prodUrl = 'http://192.168.1.13:3005/v1/api/';
 const prodUrl = 'https://api.bachhoahouston.com/v1/api/';
 
 let apiUrl = prodUrl;
