@@ -129,8 +129,6 @@ const Cart = ({ route }) => {
     }, [])
   )
 
-  console.log('cartdetails', cartdetail);
-
   const isZipAvailable = availableZipCodes.some(
     zip => String(zip.pincode) === String(localDeliveryAddress.zipcode),
   );
@@ -784,7 +782,7 @@ const Cart = ({ route }) => {
     // ordering, a pending debounce here can be lost, leaving the pre-order
     // cart on the server to reappear on next open.
     if (user?._id && user?.token) {
-      saveSyncedCart([]).catch(() => { });
+      saveSyncedCart([]).catch(() => {});
     }
     setPickupType(null);
     setPickupDate(null);
@@ -839,7 +837,7 @@ const Cart = ({ route }) => {
   };
   const extractProductObjects = (cartData) => {
     let result = [];
-    console.log(cartData)
+console.log(cartData)
     cartData.forEach((item) => {
       const source = item?.productSource || "NORMAL";
 
@@ -855,25 +853,25 @@ const Cart = ({ route }) => {
           .map((freeItem) => freeItem?.product?._id)
           .filter(Boolean);
       }
-      console.log('kjsaikosadad>', obj)
+console.log('kjsaikosadad>',obj)
       if (mainId) {
         result.push(obj);
       }
     });
-    console.log(result)
+console.log(result)
     return result;
   };
 
   const updateCartWithLatestData = (cartData, latestData) => {
     //  let cData = cartdetail;
     //  console.log()
-    const updatedCart = cartData.map((item, i) => {
+    const updatedCart = cartData.map((item,i) => {
       const match = latestData.find(
         (p) => String(p.productId) === String(item?._id || item?.product?._id || item?.productid),
       );
       if (!match) return item;
       let updatedItem = { ...item };
-      console.log(item)
+ console.log(item)
       if (item.productSource === "SALE") {
         if (item.offer !== match.price) {
           Alert.alert(
@@ -903,14 +901,14 @@ const Cart = ({ route }) => {
 
       updatedItem.productSource = match.productSource;
       //  shaloowarray[i].seletype = item.productSource;
-
+  
 
       return updatedItem;
     });
-    //  setcartdetail([...shaloowarray])
-    //  setTimeout(() => {
+  //  setcartdetail([...shaloowarray])
+  //  setTimeout(() => {
     return updatedCart;
-    //  }, 500);
+  //  }, 500);
   };
 
   const checkPRiceOFPRoduct = async (cartData) => {
@@ -923,11 +921,11 @@ const Cart = ({ route }) => {
       const updatedCart = updateCartWithLatestData(cartData, latestData);
       const isChanged = updatedCart.find(f => f.seletype !== f.productSource)
       console.log(isChanged)
-      // console.log(updatedCart);
-      // console.log(cartData);
-      //       const isChanged =
-      //         JSON.stringify(cartData) !== JSON.stringify(updatedCart);
-      // console.log(isChanged)
+// console.log(updatedCart);
+// console.log(cartData);
+//       const isChanged =
+//         JSON.stringify(cartData) !== JSON.stringify(updatedCart);
+// console.log(isChanged)
       if (isChanged?.seletype) {
         setcartdetail(updatedCart);
         await AsyncStorage.setItem("cartdata", JSON.stringify(updatedCart));
@@ -1063,7 +1061,7 @@ const Cart = ({ route }) => {
                                   );
                                   setCoupon(false);
                                   setCouponDiscount(0);
-                                  setIsPriceChanged(false)
+                                        setIsPriceChanged(false)
                                 }}>
                                 <Plus2Icon
                                   color={Constants.white}
@@ -1083,7 +1081,7 @@ const Cart = ({ route }) => {
                               JSON.stringify(shaloowarray),
                             );
                           JSON.stringify(shaloowarray);
-                          setIsPriceChanged(false)
+      setIsPriceChanged(false)
                           setcartdetail(shaloowarray);
                           setCoupon(false);
                           setCouponDiscount(0);
@@ -2113,7 +2111,7 @@ const Cart = ({ route }) => {
                       setPickupDate(null);
                       setPickupType(null);
                       if (user?._id && user?.token) {
-                        saveSyncedCart([]).catch(() => { });
+                        saveSyncedCart([]).catch(() => {});
                       }
                     }}>
                     <Text style={styles.modalText}>{t('Yes, Clear')}</Text>
