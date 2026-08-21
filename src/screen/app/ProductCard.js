@@ -135,12 +135,12 @@ const ProductCard = ({
               alignItems: 'center',
               gap: 5,
             }}>
-            {!isVendorClosed && item?.price_slot?.[0]?.other_price && (
+            {/* {!isVendorClosed && item?.price_slot?.[0]?.other_price && (
               <Text style={[styles.maintxt, { fontFamily: FONTS.Bold, color: '#E53935' }]}>
                 {`${Currency} `}
                 {item.price_slot[0].other_price || ''}
               </Text>
-            )}
+            )} */}
 
             {isVendorClosed ? null : (
               <>
