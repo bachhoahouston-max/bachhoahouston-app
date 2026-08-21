@@ -378,6 +378,7 @@ const Orderview = props => {
                 }}
                 height={18}
                 width={18}
+                color="#87848A"
                 onPress={() => {
                   setModalVisible(!modalVisible);
                   setuploadimg([]);

@@ -127,6 +127,11 @@ const App = () => {
                     finalItems = Array.from(byId.values());
                 }
 
+                // Items that were added on the web carry web's field names
+                // (id/price/...) — translate those to the app's shape before
+                // rendering, or price/name show up blank/NaN.
+                finalItems = normalizeForApp(finalItems);
+
                 cartHydrated.current = false;
                 setcartdetail(finalItems);
                 await AsyncStorage.setItem('cartdata', JSON.stringify(finalItems));

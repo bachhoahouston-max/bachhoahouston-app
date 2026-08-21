@@ -54,20 +54,43 @@ const ComboOfferCard = ({ combo, cartItem, isCartMode }) => {
     const handlePlus = async () => {
       console.log('Available quantity for main/free product:', cartItem.product._id === cartItem.freeProducts?.[0]?.product._id);
       if (cartItem.product._id === cartItem.freeProducts?.[0]?.product._id) {
-        const availableQuantity = await checkQuantity(cartItem.product)
-        if ((cartItem.qty * 2) > availableQuantity) {
+        const quantityResult = await checkQuantity(cartItem.product)
+
+        if (quantityResult.vendorClosed) {
+          setToast(t('{{name}} is currently closed. Ordering is unavailable right now.', {
+            name: quantityResult.vendorName || cartItem.product?.vendor?.name || 'This restaurant',
+          }));
+          return
+        }
+
+        if ((cartItem.qty * 2) > (quantityResult.qty ?? 0)) {
           setToast(t('Main product is not available in this quantity in stock. Please choose a different item.'));
           return
         }
       } else {
-        const availableQuantity = await checkQuantity(cartItem.product)
-        const FreeavailableQuantity = await checkQuantity(cartItem.freeProducts?.[0]?.product)
-        console.log('Available quantity:', availableQuantity, FreeavailableQuantity);
-        if (cartItem.qty + 1 > availableQuantity) {
+        const quantityResult = await checkQuantity(cartItem.product)
+        const freeQuantityResult = await checkQuantity(cartItem.freeProducts?.[0]?.product)
+        console.log('Available quantity:', quantityResult, freeQuantityResult);
+
+        if (quantityResult.vendorClosed) {
+          setToast(t('{{name}} is currently closed. Ordering is unavailable right now.', {
+            name: quantityResult.vendorName || cartItem.product?.vendor?.name || 'This restaurant',
+          }));
+          return
+        }
+
+        if (freeQuantityResult.vendorClosed) {
+          setToast(t('{{name}} is currently closed. Ordering is unavailable right now.', {
+            name: freeQuantityResult.vendorName || cartItem.freeProducts?.[0]?.product?.vendor?.name || 'This restaurant',
+          }));
+          return
+        }
+
+        if (cartItem.qty + 1 > (quantityResult.qty ?? 0)) {
           setToast(t('Main product is not available in this quantity in stock. Please choose a different item.'));
           return
         }
-        if (cartItem.qty + 1 >= FreeavailableQuantity) {
+        if (cartItem.qty + 1 >= (freeQuantityResult.qty ?? 0)) {
           setToast(t('Free product is not available in this quantity in stock. Please choose a different item.'));
           return
         }
@@ -92,9 +115,9 @@ const ComboOfferCard = ({ combo, cartItem, isCartMode }) => {
         const res = await GetApi(
           `checkQuantity/${item._id}`,
         );
-        return res.status ? res.data.qty : 0;
+        return res.status ? res.data : { qty: 0 };
       } catch (err) {
-        return 0;
+        return { qty: 0 };
       }
     };
 
@@ -104,6 +127,12 @@ const ComboOfferCard = ({ combo, cartItem, isCartMode }) => {
         <View style={styles.banner}>
           <Text style={styles.bannerText}>🏷️ COMBO DEAL</Text>
           <Text style={styles.bannerPromo} numberOfLines={1}>  {cartItem.promo_text ?? ''}</Text>
+          <TouchableOpacity
+            onPress={handleRemove}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={styles.bannerRemoveBtn}>
+            <Text style={styles.bannerRemoveText}>✕</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Main Product */}
@@ -137,9 +166,6 @@ const ComboOfferCard = ({ combo, cartItem, isCartMode }) => {
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalPrice}>{Currency}{(price * cartItem.qty).toFixed(2)}</Text>
-              <TouchableOpacity onPress={handleRemove}>
-                <Text style={styles.removeBtn}>✕</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -262,6 +288,14 @@ const ComboOfferCard = ({ combo, cartItem, isCartMode }) => {
       <View style={styles.banner}>
         <Text style={styles.bannerText}>🏷️ COMBO DEAL</Text>
         <Text style={styles.bannerPromo} numberOfLines={1}>  {promo_text}</Text>
+        {qty > 0 && (
+          <TouchableOpacity
+            onPress={handleRemove}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={styles.bannerRemoveBtn}>
+            <Text style={styles.bannerRemoveText}>✕</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.productRow}>
@@ -300,9 +334,6 @@ const ComboOfferCard = ({ combo, cartItem, isCartMode }) => {
               </View>
               <View style={styles.totalRow}>
                 <Text style={styles.totalPrice}>{Currency}{((price ?? 0) * qty).toFixed(2)}</Text>
-                <TouchableOpacity onPress={handleRemove}>
-                  <Text style={styles.removeBtn}>✕</Text>
-                </TouchableOpacity>
               </View>
             </>
           ) : (
@@ -379,6 +410,21 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Regular,
     fontSize: 12,
     flex: 1,
+  },
+  bannerRemoveBtn: {
+    marginLeft: 6,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#A72ABF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bannerRemoveText: {
+    color: Constants.white,
+    fontSize: 14,
+    fontFamily: FONTS.Bold,
+    fontWeight: '700',
   },
   productRow: {
     flexDirection: 'row',
@@ -495,11 +541,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Constants.black,
     fontFamily: FONTS.Bold,
-  },
-  removeBtn: {
-    fontSize: 14,
-    color: Constants.customgrey,
-    fontWeight: '700',
   },
   addBtn: {
     backgroundColor: '#2E7D32',

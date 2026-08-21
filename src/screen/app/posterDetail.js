@@ -35,6 +35,7 @@ const PosterDetail = props => {
   const [cartdetail, setcartdetail] = useContext(CartContext);
   const [loading, setLoading] = useContext(LoadContext);
   const [selectedslot, setsselectedslot] = useState();
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
   const [productdata, setproductdata] = useState();
   const [isInCart, setIsInCart] = useState(false);
   const [availableQty, setAvailableQty] = useState(0);
@@ -62,7 +63,7 @@ const PosterDetail = props => {
       const cartItem = cartdetail.find(
         f =>
           f.productid === productdata?._id &&
-          f.price_slot?.value === selectedslot?.value,
+          (f.priceSlotIndex ?? 0) === selectedSlotIndex,
       );
 
       if (cartItem) {
@@ -80,7 +81,7 @@ const PosterDetail = props => {
       setAvailableQty(0);
       setcurrentproduct({});
     }
-  }, [cartdetail, productdata, selectedslot]);
+  }, [cartdetail, productdata, selectedSlotIndex]);
 
   const getProductById = () => {
     setLoading(true);
@@ -93,6 +94,7 @@ const PosterDetail = props => {
           setproductdata(res.data);
           if (res?.data?.price_slot && res?.data?.price_slot?.length > 0) {
             setsselectedslot(res?.data?.price_slot[0]);
+            setSelectedSlotIndex(0);
           }
         }
       },
@@ -182,7 +184,7 @@ const PosterDetail = props => {
     const existingProduct = existingCart.find(
       f =>
         f.productid === productdata._id &&
-        f.price_slot?.value === selectedslot?.value,
+        (f.priceSlotIndex ?? 0) === selectedSlotIndex,
     );
 
     if (!existingProduct) {
@@ -197,6 +199,7 @@ const PosterDetail = props => {
         price: selectedslot.other_price,
         offer: selectedslot.our_price,
         price_slot: selectedslot,
+        priceSlotIndex: selectedSlotIndex,
         image: productdata.varients[0].image[0],
         qty: 1,
         seller_id: productdata.userid,
@@ -205,6 +208,7 @@ const PosterDetail = props => {
         isCurbSidePickupAvailable: productdata.isCurbSidePickupAvailable,
         isNextDayDeliveryAvailable: productdata.isNextDayDeliveryAvailable,
         slug: productdata.slug,
+        productSource: productdata?.productSource || "NORMAL",
       };
 
       const updatedCart = [...existingCart, newProduct];
@@ -265,7 +269,7 @@ const PosterDetail = props => {
     const existingProduct = existingCart.find(
       f =>
         f.productid === productdata._id &&
-        f.price_slot?.value === productdata?.price_slot[0]?.value,
+        (f.priceSlotIndex ?? 0) === 0,
     );
 
     if (!existingProduct) {
@@ -277,6 +281,7 @@ const PosterDetail = props => {
         offer: productdata?.price_slot[0]?.our_price,
         image: productdata.varients[0].image[0],
         price_slot: productdata?.price_slot[0],
+        priceSlotIndex: 0,
         qty: 1,
         seller_id: productdata.userid,
         isShipmentAvailable: productdata.isShipmentAvailable,
@@ -433,14 +438,15 @@ const PosterDetail = props => {
             productdata?.price_slot.length > 0 &&
             productdata?.price_slot[0].unit &&
             productdata.price_slot
+              .map((item, originalIndex) => ({ item, originalIndex }))
               .sort((a, b) => {
                 // Sort by our_price, then by value if prices are equal
-                if (a.our_price === b.our_price) {
-                  return a.value - b.value;
+                if (a.item.our_price === b.item.our_price) {
+                  return a.item.value - b.item.value;
                 }
-                return a.our_price - b.our_price;
+                return a.item.our_price - b.item.our_price;
               })
-              .map((item, i) => (
+              .map(({ item, originalIndex }, i) => (
                 <TouchableOpacity
                   style={[
                     styles.box,
@@ -458,7 +464,10 @@ const PosterDetail = props => {
                     },
                   ]}
                   key={i}
-                  onPress={() => setsselectedslot(item)}>
+                  onPress={() => {
+                    setsselectedslot(item);
+                    setSelectedSlotIndex(originalIndex);
+                  }}>
                   {item?.other_price && (
                     <ImageBackground
                       source={require('../../Assets/Images/star1.png')}
@@ -527,7 +536,7 @@ const PosterDetail = props => {
                     const updatedCart = cartdetail.map(item => {
                       if (
                         item.productid === currentproduct?.productid &&
-                        item.price_slot?.value === selectedslot?.value
+                        (item.priceSlotIndex ?? 0) === selectedSlotIndex
                       ) {
                         return {
                           ...item,
@@ -556,7 +565,7 @@ const PosterDetail = props => {
                     const updatedCart = cartdetail.filter(item => {
                       return !(
                         item.productid === currentproduct?.productid &&
-                        item.price_slot?.value === selectedslot?.value
+                        (item.priceSlotIndex ?? 0) === selectedSlotIndex
                       );
                     });
 
@@ -583,7 +592,7 @@ const PosterDetail = props => {
                   const updatedCart = cartdetail.map(item => {
                     if (
                       item.productid === currentproduct?.productid &&
-                      item.price_slot?.value === selectedslot?.value
+                      (item.priceSlotIndex ?? 0) === selectedSlotIndex
                     ) {
                       return {
                         ...item,

@@ -36,6 +36,9 @@ const ProductCard = ({
     return null;
   }
 
+  const isVendorClosed =
+    item?.vendor?.type === 'restaurant' && item?.vendor?.isOpen === false;
+
   const [toast, setToast] = useContext(ToastContext);
 
   useEffect(() => {
@@ -47,9 +50,9 @@ const ProductCard = ({
       const res = await GetApi(
         `checkQuantity/${item._id}`,
       );
-      return res.status ? res.data.qty : 0;
+      return res.status ? res.data : { qty: 0 };
     } catch (err) {
-      return 0;
+      return { qty: 0 };
     }
   };
 
@@ -60,8 +63,8 @@ const ProductCard = ({
       style={[styles.card]}>
 
 
-      <View style={{ position: 'relative', width: '100%', overflow: 'visible', borderRadius: 10 }}>
-        {currentSale && currentSale?.status !== 'expired' && (<View style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}>
+      <View style={{ position: 'relative', width: '100%', overflow: 'visible' }}>
+        {currentSale && currentSale?.status !== 'expired' && (<View style={{ position: 'absolute', top: 6, left: 6, zIndex: 1 }}>
           <AlarmBadge currentSale={currentSale} />
         </View>
         )}
@@ -70,9 +73,15 @@ const ProductCard = ({
           source={{
             uri: item?.varients?.[0]?.image?.[0] || '',
           }}
-          style={[styles.cardimg, { borderRadius: 10 }]}
+          style={styles.cardimg}
           resizeMode="cover"
         />
+
+        {isVendorClosed && (
+          <View style={styles.closedOverlay}>
+            <Text style={styles.closedOverlayText}>{t('Ordering Window Closed')}</Text>
+          </View>
+        )}
 
         {/* {currentSale && currentSale?.status !== 'expired' && (
           <View
@@ -126,43 +135,51 @@ const ProductCard = ({
               alignItems: 'center',
               gap: 5,
             }}>
-            {/* {item?.price_slot?.[0]?.other_price && (
+            {!isVendorClosed && item?.price_slot?.[0]?.other_price && (
               <Text style={[styles.maintxt, { fontFamily: FONTS.Bold, color: '#E53935' }]}>
                 {`${Currency} `}
                 {item.price_slot[0].other_price || ''}
               </Text>
-            )} */}
-
-            {(salePrice !== null
-              ? !!salePrice
-              : !!item?.price_slot?.[0]?.our_price) && (
-                <Text style={[styles.disctxt, {
-                  color: salePrice !== null ? '#FF0000' : '#E53935',
-                  fontFamily: FONTS.Bold
-                }]}>
-                  {`${Currency} `}
-                  {salePrice !== null
-                    ? salePrice.toFixed(2) || ''
-                    : (item?.price_slot?.[0]?.our_price).toFixed(2) || ''}
-                </Text>
-              )}
-
-            {salePrice !== null && (
-              <Text style={[styles.maintxt, { fontFamily: FONTS.Bold, color: '#6A7282' }]}>
-                {`${Currency} `}
-                {saleVarient?.our_price || ''}
-              </Text>
             )}
 
-            {salePrice !== null && (
-              <Text style={[styles.maintxt, { fontFamily: FONTS.Bold, color: '#E53935', textDecorationLine: 'none', backgroundColor: '#FDE2E2', padding: 2, fontSize: 12, fontWeight: '700', borderRadius: 4 }]}>
-                {Math.round(((saleVarient?.our_price - salePrice) / saleVarient?.our_price) * 100)}% OFF
-              </Text>
+            {isVendorClosed ? null : (
+              <>
+                {(salePrice !== null
+                  ? !!salePrice
+                  : !!item?.price_slot?.[0]?.our_price) && (
+                    <Text style={[styles.disctxt, {
+                      color: salePrice !== null ? '#FF0000' : '#E53935',
+                      fontFamily: FONTS.Bold
+                    }]}>
+                      {`${Currency} `}
+                      {salePrice !== null
+                        ? salePrice.toFixed(2) || ''
+                        : (item?.price_slot?.[0]?.our_price).toFixed(2) || ''}
+                    </Text>
+                  )}
+
+                {salePrice !== null && (
+                  <Text style={[styles.maintxt, { fontFamily: FONTS.Bold, color: '#6A7282' }]}>
+                    {`${Currency} `}
+                    {saleVarient?.our_price || ''}
+                  </Text>
+                )}
+
+                {salePrice !== null && (
+                  <Text style={[styles.maintxt, { fontFamily: FONTS.Bold, color: '#E53935', textDecorationLine: 'none', backgroundColor: '#FDE2E2', padding: 2, fontSize: 12, fontWeight: '700', borderRadius: 4 }]}>
+                    {Math.round(((saleVarient?.our_price - salePrice) / saleVarient?.our_price) * 100)}% OFF
+                  </Text>
+                )}
+              </>
             )}
           </View>
 
           <View>
-            {cartItem ? (
+            {isVendorClosed ? (
+              <View style={styles.unavailablePill}>
+                <Text style={styles.unavailablePillText}>{t('Ordering Window Closed')}</Text>
+              </View>
+            ) : cartItem ? (
               <View
                 style={[
                   styles.addcov,
@@ -173,7 +190,7 @@ const ProductCard = ({
                   onPress={() => {
                     const updatedCart = cartdetail
                       .map(_i =>
-                        _i.productid === item._id
+                        _i.productid === item._id && (_i.priceSlotIndex ?? 0) === 0
                           ? { ..._i, qty: _i.qty - 1 }
                           : _i,
                       )
@@ -193,16 +210,24 @@ const ProductCard = ({
                 <TouchableOpacity
                   style={styles.plus3}
                   onPress={async () => {
-                    const existingCartItem = cartdetail.find((cartItem) => cartItem.productid === item._id);
+                    const existingCartItem = cartdetail.find((cartItem) => cartItem.productid === item._id && (cartItem.priceSlotIndex ?? 0) === 0);
                     console.log('Existing cart item:', existingCartItem);
-                    const availableQuantity = await checkQuantity(item)
-                    console.log('Available quantity:', availableQuantity);
-                    if (existingCartItem.qty + 1 > availableQuantity) {
+                    const quantityResult = await checkQuantity(item)
+                    console.log('Available quantity:', quantityResult);
+
+                    if (quantityResult.vendorClosed) {
+                      setToast(t('{{name}} is currently closed. Ordering is unavailable right now.', {
+                        name: quantityResult.vendorName || item?.vendor?.name || 'This restaurant',
+                      }));
+                      return
+                    }
+
+                    if (existingCartItem.qty + 1 > (quantityResult.qty ?? 0)) {
                       setToast(t('Item is not available in this quantity in stock. Please choose a different item.'));
                       return
                     }
                     const updatedCart = cartdetail.map(_i =>
-                      _i.productid === item._id ? { ..._i, qty: _i.qty + 1 } : _i,
+                      _i.productid === item._id && (_i.priceSlotIndex ?? 0) === 0 ? { ..._i, qty: _i.qty + 1 } : _i,
                     );
 
                     setcartdetail(updatedCart);
@@ -220,8 +245,19 @@ const ProductCard = ({
                 style={styles.pluscov}
                 onPress={async () => {
                   // const itemQuantity = Number(item?.Quantity ?? 0);
-                  const availableQuantity = await checkQuantity(item);
-                  if (availableQuantity <= 0) {
+                  const quantityResult = await checkQuantity(item);
+
+                  if (quantityResult.vendorClosed) {
+                    Toast.show({
+                      type: 'error',
+                      text1: t('{{name}} is currently closed. Ordering is unavailable right now.', {
+                        name: quantityResult.vendorName || item?.vendor?.name || 'This restaurant',
+                      }),
+                    });
+                    return;
+                  }
+
+                  if ((quantityResult.qty ?? 0) <= 0) {
                     Toast.show({
                       type: 'error',
                       text1: t('This item is currently out of stock.'),
@@ -275,8 +311,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
-    // padding: 10,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: Constants.white,
     shadowColor: Constants.black,
     position: 'relative',
@@ -291,15 +326,49 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   cardimg: {
-    height: 170,
+    height: 165,
     width: '100%',
-    // resizeMode: 'contain',
-    // borderRadius: 20,
+    borderRadius: 12,
+  },
+  closedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 165,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closedOverlayText: {
+    backgroundColor: '#DC2626',
+    color: Constants.white,
+    fontSize: 11,
+    fontFamily: FONTS.Bold,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    textAlign: 'center',
+  },
+  unavailablePill: {
+    backgroundColor: Constants.customgrey3,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  unavailablePillText: {
+    color: Constants.customgrey,
+    fontSize: 10,
+    fontFamily: FONTS.Bold,
+    textAlign: 'center',
   },
   cardContent: {
     flex: 1,
     flexDirection: 'column',
-    padding: 10,
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+    paddingTop: 5,
     width: '100%',
   },
   cardContent2: {

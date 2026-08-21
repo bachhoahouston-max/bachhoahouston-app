@@ -104,7 +104,7 @@ export const TabNav = () => {
             ]}>
             <IconComponent
               color={isFocused ? '#2E7D32' : Constants.customgrey3}
-              size={26}
+              size={22}
               strokeWidth={isFocused ? 2.5 : 2}
             />
           </TouchableOpacity>
@@ -136,12 +136,12 @@ export const TabNav = () => {
         tabBarStyle: {
           position: 'absolute',
           width: '100%',
-          minHeight: Platform?.OS === 'android' ? 95 : 95,
+          minHeight: Platform?.OS === 'android' ? 75 : 75,
           backgroundColor: '#2E7D32',
           borderTopRightRadius: 15,
           borderTopLeftRadius: 15,
           borderTopWidth: 0,
-          paddingTop: 20,
+          paddingTop: 12,
         },
       }}>
       {TabArr.map((item, index) => {
@@ -174,9 +174,9 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   tabBtn: {
-    height: 50,
-    width: 50,
-    borderRadius: 25,
+    height: 42,
+    width: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
@@ -195,22 +195,23 @@ const styles = StyleSheet.create({
   tabtxt: {
     color: Constants.black,
     fontFamily: FONTS.Medium,
-    marginTop: 4,
+    fontSize: 11,
+    marginTop: 2,
   },
   badge: {
     position: 'absolute',
     top: -2,
     right: -2,
     backgroundColor: Constants.green,
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
+    borderRadius: 9,
+    minWidth: 17,
+    height: 17,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',
   },

@@ -151,7 +151,7 @@ const Searchpage = () => {
     const existingProduct = existingCart.find(
       f =>
         f.productid === productdata._id &&
-        f.price_slot?.value === productdata?.price_slot[0]?.value,
+        (f.priceSlotIndex ?? 0) === 0,
     );
 
     if (!existingProduct) {
@@ -163,6 +163,7 @@ const Searchpage = () => {
         offer: productdata?.price_slot[0]?.our_price,
         image: productdata.varients[0].image[0],
         price_slot: productdata?.price_slot[0],
+        priceSlotIndex: 0,
         qty: 1,
         seller_id: productdata.userid,
         isShipmentAvailable: productdata.isShipmentAvailable,
@@ -172,6 +173,7 @@ const Searchpage = () => {
         slug: productdata.slug,
         tax_code: productdata.tax_code,
         tax: productdata.tax,
+        productSource: productdata?.productSource || "NORMAL",
       };
 
       const updatedCart = [...existingCart, newProduct];
@@ -184,9 +186,19 @@ const Searchpage = () => {
         existingProduct,
       );
       let stringdata = cartdetail.map(_i => {
-        if (_i?.productid == productdata._id) {
+        if (
+          _i?.productid == productdata._id &&
+          _i?.price_slot?.value === productdata?.price_slot[0]?.value
+        ) {
           console.log('enter');
-          return { ..._i, qty: _i?.qty + 1 };
+          return {
+            ..._i,
+            qty: _i?.qty + 1,
+            price: productdata?.price_slot[0]?.other_price,
+            offer: productdata?.price_slot[0]?.our_price,
+            price_slot: productdata?.price_slot[0],
+            productSource: productdata?.productSource || "NORMAL",
+          };
         } else {
           return _i;
         }
@@ -206,7 +218,7 @@ const Searchpage = () => {
     const existingProduct = existingCart.find(
       f =>
         f.productid === productdata._id &&
-        f.price_slot?.value === productdata?.price_slot[0]?.value,
+        (f.priceSlotIndex ?? 0) === 0,
     );
 
     console.log('Existing Product:', items);
@@ -243,9 +255,20 @@ const Searchpage = () => {
         existingProduct,
       );
       let stringdata = cartdetail.map(_i => {
-        if (_i?.productid == productdata._id) {
+        if (
+          _i?.productid == productdata._id &&
+          _i?.price_slot?.value === items?.price_slot?.value
+        ) {
           console.log('enter');
-          return { ..._i, qty: _i?.qty + 1 };
+          return {
+            ..._i,
+            qty: _i?.qty + 1,
+            price: items?.price_slot?.our_price,
+            offer: items?.price,
+            price_slot: items?.price_slot,
+            productSource: productdata?.productSource || "NORMAL",
+            saleID: items?._id || null,
+          };
         } else {
           return _i;
         }
@@ -361,7 +384,7 @@ const Searchpage = () => {
         // style={{gap:'2%'}}
         renderItem={({ item }, i) => {
           const cartItem = Array.isArray(cartdetail)
-            ? cartdetail.find(it => it?.productid === item?._id || it?.productid === item?.product?._id)
+            ? cartdetail.find(it => (it?.productid === item?._id || it?.productid === item?.product?._id) && (it?.priceSlotIndex ?? 0) === 0)
             : undefined;
           // const currentSale = countdown[item._id];
           return (
@@ -417,6 +440,7 @@ const Searchpage = () => {
             <CrossIcon
               height={15}
               width={15}
+              color="#87848A"
               style={{alignSelf: 'center'}}
               onPress={() => sortRef.current.hide()}
             />

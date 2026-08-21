@@ -41,7 +41,10 @@ const Preview = props => {
   const [cartdetail, setcartdetail] = useContext(CartContext);
   const [loading, setLoading] = useContext(LoadContext);
   const [selectedslot, setsselectedslot] = useState();
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
   const [productdata, setproductdata] = useState();
+  const isVendorClosed =
+    productdata?.vendor?.type === 'restaurant' && productdata?.vendor?.isOpen === false;
   const [isInCart, setIsInCart] = useState(false);
   const [availableQty, setAvailableQty] = useState(0);
   const [productList, SetProductList] = useState([]);
@@ -74,7 +77,7 @@ const Preview = props => {
       const cartItem = cartdetail.find(
         f =>
           f.productid === productdata?._id &&
-          f.price_slot?.value === selectedslot?.value,
+          (f.priceSlotIndex ?? 0) === selectedSlotIndex,
       );
 
       if (cartItem) {
@@ -92,7 +95,7 @@ const Preview = props => {
       setAvailableQty(0);
       setcurrentproduct({});
     }
-  }, [cartdetail, productdata, selectedslot]);
+  }, [cartdetail, productdata, selectedSlotIndex]);
 
   const getProductById = () => {
     setLoading(true);
@@ -144,12 +147,14 @@ const Preview = props => {
           setproductdata(pro_data);
           if (pro_data?.price_slot && pro_data?.price_slot?.length > 0) {
             setsselectedslot(pro_data?.price_slot[0]);
+            setSelectedSlotIndex(0);
           }
 
         } else {
           setproductdata(pro_data);
           if (pro_data?.price_slot && pro_data?.price_slot?.length > 0) {
             setsselectedslot(pro_data?.price_slot[0]);
+            setSelectedSlotIndex(0);
           }
         }
       },
@@ -157,6 +162,7 @@ const Preview = props => {
         setproductdata(pro_data);
         if (pro_data?.price_slot && pro_data?.price_slot?.length > 0) {
           setsselectedslot(pro_data?.price_slot[0]);
+          setSelectedSlotIndex(0);
         }
         setLoading(false);
         console.log(err);
@@ -194,9 +200,9 @@ const Preview = props => {
       const res = await GetApi(
         `checkQuantity/${productdata._id}`,
       );
-      return res.status ? res.data.qty : 0;
+      return res.status ? res.data : { qty: 0 };
     } catch (err) {
-      return 0;
+      return { qty: 0 };
     }
   };
 
@@ -219,7 +225,7 @@ const Preview = props => {
     const existingProduct = existingCart.find(
       f =>
         f.productid === productdata._id &&
-        f.price_slot?.value === selectedslot?.value,
+        (f.priceSlotIndex ?? 0) === selectedSlotIndex,
     );
 
 
@@ -236,6 +242,7 @@ const Preview = props => {
         price: selectedslot.other_price,
         offer: selectedslot.our_price,
         price_slot: selectedslot,
+        priceSlotIndex: selectedSlotIndex,
         image: productdata.varients[0].image[0],
         qty: 1,
         seller_id: productdata.userid,
@@ -265,7 +272,7 @@ const Preview = props => {
     const existingProduct = existingCart.find(
       f =>
         f.productid === productdata._id &&
-        f.price_slot?.value === productdata?.price_slot[0]?.value,
+        (f.priceSlotIndex ?? 0) === 0,
     );
 
     if (!existingProduct) {
@@ -277,6 +284,7 @@ const Preview = props => {
         offer: productdata?.price_slot[0]?.our_price,
         image: productdata.varients[0].image[0],
         price_slot: productdata?.price_slot[0],
+        priceSlotIndex: 0,
         qty: 1,
         seller_id: productdata.userid,
         isShipmentAvailable: productdata.isShipmentAvailable,
@@ -286,7 +294,7 @@ const Preview = props => {
         slug: productdata.slug,
         tax_code: productdata.tax_code,
         tax: productdata.tax,
-        // productSource: selectedslot.isFlashSale ? "SALE" : "NORMAL",
+        productSource: productdata?.productSource || "NORMAL",
       };
 
       const updatedCart = [...existingCart, newProduct];
@@ -513,6 +521,7 @@ const Preview = props => {
                   justifyContent: 'center',
                   alignItems: 'center',
                   marginTop: 15,
+                  position: 'relative',
                   // Shadow properties
                   shadowColor: '#000',
                   shadowOffset: {
@@ -564,6 +573,11 @@ const Preview = props => {
                       </View>
                     )}
                   </Pressable>
+                  {isVendorClosed && (
+                    <View style={styles.closedOverlay}>
+                      <Text style={styles.closedOverlayText}>{t('Ordering Window Closed')}</Text>
+                    </View>
+                  )}
                 </View>
               </View>
             )}
@@ -581,27 +595,40 @@ const Preview = props => {
         </Text>
         <View style={[styles.pricecov, { marginTop: 10, marginBottom: 0 }]}>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Text style={styles.maintxt2}>
-              {Currency} {selectedslot?.our_price}
-            </Text>
-            {selectedslot?.other_price && (
-              <Text
-                style={[styles.weight, { textDecorationLine: 'line-through' }]}>
-                {Currency} {selectedslot?.other_price}
-              </Text>
-            )}
-            {selectedslot?.other_price && (
-              <Text style={styles.disctxt2}>
-                {(
-                  ((selectedslot?.other_price - selectedslot?.our_price) /
-                    selectedslot?.other_price) *
-                  100
-                ).toFixed(0)}
-                % {t('off')}
-              </Text>
+            {!isVendorClosed && (
+              <>
+                <Text style={styles.maintxt2}>
+                  {Currency} {selectedslot?.our_price}
+                </Text>
+                {selectedslot?.other_price && (
+                  <Text
+                    style={[styles.weight, { textDecorationLine: 'line-through' }]}>
+                    {Currency} {selectedslot?.other_price}
+                  </Text>
+                )}
+                {selectedslot?.other_price && (
+                  <Text style={styles.disctxt2}>
+                    {(
+                      ((selectedslot?.other_price - selectedslot?.our_price) /
+                        selectedslot?.other_price) *
+                      100
+                    ).toFixed(0)}
+                    % {t('off')}
+                  </Text>
+                )}
+              </>
             )}
           </View>
-          {isInCart ? (
+          {isVendorClosed ? (
+            <View>
+              <Text style={styles.vendorClosedBtn}>{t('Ordering Window Closed')}</Text>
+              <Text style={styles.vendorClosedNote}>
+                {t('{{name}} is currently closed. Ordering is unavailable right now.', {
+                  name: productdata?.vendor?.name || 'This restaurant',
+                })}
+              </Text>
+            </View>
+          ) : isInCart ? (
             <View style={styles.addcov}>
               <TouchableOpacity
                 style={styles.plus}
@@ -611,7 +638,7 @@ const Preview = props => {
                     const updatedCart = cartdetail.map(item => {
                       if (
                         item.productid === currentproduct?.productid &&
-                        item.price_slot?.value === selectedslot?.value
+                        (item.priceSlotIndex ?? 0) === selectedSlotIndex
                       ) {
                         return {
                           ...item,
@@ -640,7 +667,7 @@ const Preview = props => {
                     const updatedCart = cartdetail.filter(item => {
                       return !(
                         item.productid === currentproduct?.productid &&
-                        item.price_slot?.value === selectedslot?.value
+                        (item.priceSlotIndex ?? 0) === selectedSlotIndex
                       );
                     });
 
@@ -664,12 +691,22 @@ const Preview = props => {
               <TouchableOpacity
                 style={styles.plus3}
                 onPress={async () => {
-                  const existingCartItem = cartdetail.find((cartItem) => cartItem.productid === currentproduct?.productid && cartItem.price_slot?.value === selectedslot?.value);
+                  const existingCartItem = cartdetail.find((cartItem) => cartItem.productid === currentproduct?.productid && (cartItem.priceSlotIndex ?? 0) === selectedSlotIndex);
                   console.log('Existing cart item:', existingCartItem);
-                  const availableQuantity = await checkQuantity()
-                  console.log('Available quantity:', availableQuantity);
+                  const quantityResult = await checkQuantity()
+                  console.log('Available quantity:', quantityResult);
 
-                  if (existingCartItem.qty + 1 > availableQuantity) {
+                  if (quantityResult.vendorClosed) {
+                    Toast.show({
+                      type: 'error',
+                      text1: t('{{name}} is currently closed. Ordering is unavailable right now.', {
+                        name: quantityResult.vendorName || productdata?.vendor?.name || 'This restaurant',
+                      }),
+                    })
+                    return
+                  }
+
+                  if (existingCartItem.qty + 1 > (quantityResult.qty ?? 0)) {
                     Toast.show({
                       type: 'error',
                       text1: t('Item is not available in this quantity in stock. Please choose a different item.'),
@@ -680,7 +717,7 @@ const Preview = props => {
                   cartdetail.forEach(item => {
                     if (
                       item.productid === currentproduct?.productid &&
-                      item.price_slot?.value === selectedslot?.value
+                      (item.priceSlotIndex ?? 0) === selectedSlotIndex
                     ) {
                       item.qty = item.qty + 1;
                       item.price = selectedslot.other_price;
@@ -725,19 +762,20 @@ const Preview = props => {
             </TouchableOpacity>
           )}
         </View>
-        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={{ marginTop: 5 }}>
-          {productdata?.price_slot &&
+        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={{ marginTop: 5, display: isVendorClosed ? 'none' : 'flex' }}>
+          {!isVendorClosed && productdata?.price_slot &&
             productdata?.price_slot.length > 0 &&
             productdata?.price_slot[0].unit &&
             productdata.price_slot
+              .map((item, originalIndex) => ({ item, originalIndex }))
               .sort((a, b) => {
                 // Sort by our_price, then by value if prices are equal
-                if (a.our_price === b.our_price) {
-                  return a.value - b.value;
+                if (a.item.our_price === b.item.our_price) {
+                  return a.item.value - b.item.value;
                 }
-                return a.our_price - b.our_price;
+                return a.item.our_price - b.item.our_price;
               })
-              .map((item, i) => (
+              .map(({ item, originalIndex }, i) => (
                 <TouchableOpacity
                   style={[
                     styles.box,
@@ -755,7 +793,10 @@ const Preview = props => {
                     },
                   ]}
                   key={i}
-                  onPress={() => setsselectedslot(item)}>
+                  onPress={() => {
+                    setsselectedslot(item);
+                    setSelectedSlotIndex(originalIndex);
+                  }}>
                   {item?.other_price && (
                     <ImageBackground
                       source={require('../../Assets/Images/star1.png')}
@@ -1013,6 +1054,44 @@ const styles = StyleSheet.create({
     height: 40,
     // position: 'absolute',
     // right: 0,
+  },
+  closedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 15,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closedOverlayText: {
+    backgroundColor: '#DC2626',
+    color: Constants.white,
+    fontSize: 13,
+    fontFamily: FONTS.Bold,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    textAlign: 'center',
+  },
+  vendorClosedBtn: {
+    backgroundColor: Constants.customgrey3,
+    color: Constants.customgrey,
+    paddingHorizontal: 25,
+    paddingVertical: 10,
+    borderRadius: 25,
+    fontSize: 16,
+    fontFamily: FONTS.Bold,
+    textAlign: 'center',
+    overflow: 'hidden',
+  },
+  vendorClosedNote: {
+    color: '#C2410C',
+    fontSize: 12,
+    fontFamily: FONTS.Regular,
+    marginTop: 6,
   },
   line: {
     height: 4,

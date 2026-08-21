@@ -78,9 +78,9 @@ const ComboCard = ({ combo, onAddCombo, }) => {
       const res = await GetApi(
         `checkQuantity/${item._id}`,
       );
-      return res.status ? res.data.qty : 0;
+      return res.status ? res.data : { qty: 0 };
     } catch (err) {
-      return 0;
+      return { qty: 0 };
     }
   };
 
@@ -178,24 +178,46 @@ const ComboCard = ({ combo, onAddCombo, }) => {
   const addCombo = async () => {
     console.log('Available quantity:', combo.main_product._id === combo.free_product?.[0]?.product._id, combo.main_product._id, combo.free_product?.[0]?.product._id);
     if (combo.main_product._id === combo.free_product?.[0]?.product._id) {
-      const availableQuantity = await checkQuantity(combo.main_product);
-      console.log('Available quantity for main/free product:', availableQuantity);
-      if (2 > availableQuantity) {
+      const quantityResult = await checkQuantity(combo.main_product);
+      console.log('Available quantity for main/free product:', quantityResult);
+
+      if (quantityResult.vendorClosed) {
+        setToast(t('{{name}} is currently closed. Ordering is unavailable right now.', {
+          name: quantityResult.vendorName || combo.main_product?.vendor?.name || 'This restaurant',
+        }));
+        return
+      }
+
+      if (2 > (quantityResult.qty ?? 0)) {
         setToast(t('Main product is not available in this quantity in stock. Please choose a different item.'));
         return
       }
     } else {
-      const availableQuantity = await checkQuantity(combo.main_product)
+      const quantityResult = await checkQuantity(combo.main_product)
 
-      if (availableQuantity <= 0) {
+      if (quantityResult.vendorClosed) {
+        setToast(t('{{name}} is currently closed. Ordering is unavailable right now.', {
+          name: quantityResult.vendorName || combo.main_product?.vendor?.name || 'This restaurant',
+        }));
+        return
+      }
+
+      if ((quantityResult.qty ?? 0) <= 0) {
         // setToast(t('Main product is not available in this quantity in stock. Please choose a different item.'));
         setToast('Main product is not available in this quantity in stock. Please choose a different item.');
         return
       }
 
-      const FreeavailableQuantity = await checkQuantity(combo.free_product?.[0]?.product)
+      const freeQuantityResult = await checkQuantity(combo.free_product?.[0]?.product)
 
-      if (FreeavailableQuantity <= 0) {
+      if (freeQuantityResult.vendorClosed) {
+        setToast(t('{{name}} is currently closed. Ordering is unavailable right now.', {
+          name: freeQuantityResult.vendorName || combo.free_product?.[0]?.product?.vendor?.name || 'This restaurant',
+        }));
+        return
+      }
+
+      if ((freeQuantityResult.qty ?? 0) <= 0) {
         setToast('Free product is not available in this quantity in stock. Please choose a different item.');
         return
       }
@@ -335,21 +357,43 @@ const ComboCard = ({ combo, onAddCombo, }) => {
               const existingCartItem = cartdetail.find((cartItem) => cartItem.combo_id === combo._id);
               console.log('Existing cart item:', existingCartItem);
               if (combo.main_product._id === combo.free_product?.[0]?.product._id) {
-                const availableQuantity = await checkQuantity(combo.main_product)
-                if ((existingCartItem.qty * 2) > availableQuantity) {
+                const quantityResult = await checkQuantity(combo.main_product)
+
+                if (quantityResult.vendorClosed) {
+                  setToast(t('{{name}} is currently closed. Ordering is unavailable right now.', {
+                    name: quantityResult.vendorName || combo.main_product?.vendor?.name || 'This restaurant',
+                  }));
+                  return
+                }
+
+                if ((existingCartItem.qty * 2) > (quantityResult.qty ?? 0)) {
                   setToast(t('Main product is not available in this quantity in stock. Please choose a different item.'));
                   return
                 }
               } else {
-                console.log('Available quantity for main/free product:', availableQuantity);
-                const availableQuantity = await checkQuantity(combo.main_product)
-                const FreeavailableQuantity = await checkQuantity(combo.free_product?.[0]?.product)
-                console.log('Available quantity:', availableQuantity, FreeavailableQuantity);
-                if (existingCartItem.qty + 1 > availableQuantity) {
+                const quantityResult = await checkQuantity(combo.main_product)
+                const freeQuantityResult = await checkQuantity(combo.free_product?.[0]?.product)
+                console.log('Available quantity:', quantityResult, freeQuantityResult);
+
+                if (quantityResult.vendorClosed) {
+                  setToast(t('{{name}} is currently closed. Ordering is unavailable right now.', {
+                    name: quantityResult.vendorName || combo.main_product?.vendor?.name || 'This restaurant',
+                  }));
+                  return
+                }
+
+                if (freeQuantityResult.vendorClosed) {
+                  setToast(t('{{name}} is currently closed. Ordering is unavailable right now.', {
+                    name: freeQuantityResult.vendorName || combo.free_product?.[0]?.product?.vendor?.name || 'This restaurant',
+                  }));
+                  return
+                }
+
+                if (existingCartItem.qty + 1 > (quantityResult.qty ?? 0)) {
                   setToast(t('Main product is not available in this quantity in stock. Please choose a different item.'));
                   return
                 }
-                if (existingCartItem.qty + 1 >= FreeavailableQuantity) {
+                if (existingCartItem.qty + 1 >= (freeQuantityResult.qty ?? 0)) {
                   setToast(t('Free product is not available in this quantity in stock. Please choose a different item.'));
                   return
                 }

@@ -142,9 +142,20 @@ const Sale = ({ setIsSale }) => {
         existingProduct,
       );
       let stringdata = cartdetail.map(_i => {
-        if (_i?.productid == productdata._id) {
+        if (
+          _i?.productid == productdata._id &&
+          _i?.price_slot?.value === items?.price_slot?.value
+        ) {
           console.log('enter');
-          return { ..._i, qty: _i?.qty + 1 };
+          return {
+            ..._i,
+            qty: _i?.qty + 1,
+            price: items?.price_slot?.our_price,
+            offer: items?.price,
+            price_slot: items?.price_slot,
+            productSource: productdata?.productSource || "NORMAL",
+            saleID: items?._id || null,
+          };
         } else {
           return _i;
         }

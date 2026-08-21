@@ -58,7 +58,7 @@ export const Employeetab = () => {
             ]}>
             <IconComponent 
               color={isFocused ? '#2E7D32' : Constants.customgrey3} 
-              size={26}
+              size={22}
               strokeWidth={isFocused ? 2.5 : 2}
             />
           </TouchableOpacity>
@@ -83,12 +83,12 @@ export const Employeetab = () => {
         tabBarStyle: {
           position: 'absolute',
           width: '100%',
-          minHeight: Platform?.OS === 'android' ? 95 : 95,
+          minHeight: Platform?.OS === 'android' ? 75 : 75,
           backgroundColor: Constants.greennew,
           borderTopRightRadius: 15,
           borderTopLeftRadius: 15,
           borderTopWidth: 0,
-          paddingTop: 20,
+          paddingTop: 12,
         },
         tabBarItemStyle: {
           // Removed custom padding to use default styling
@@ -124,9 +124,9 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   tabBtn: {
-    height: 50,
-    width: 50,
-    borderRadius: 25,
+    height: 42,
+    width: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
@@ -145,6 +145,7 @@ const styles = StyleSheet.create({
   tabtxt: {
     color: Constants.white,
     fontFamily: FONTS.Medium,
-    marginTop: 4,
+    fontSize: 11,
+    marginTop: 2,
   },
 });

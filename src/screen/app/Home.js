@@ -258,7 +258,7 @@ const Home = () => {
     const existingProduct = existingCart.find(
       f =>
         f.productid === productdata._id &&
-        f.price_slot?.value === productdata?.price_slot[0]?.value,
+        (f.priceSlotIndex ?? 0) === 0,
     );
 
     if (!existingProduct) {
@@ -270,6 +270,7 @@ const Home = () => {
         offer: productdata?.price_slot[0]?.our_price,
         image: productdata.varients[0].image[0],
         price_slot: productdata?.price_slot[0],
+        priceSlotIndex: 0,
         qty: 1,
         seller_id: productdata.userid,
         isShipmentAvailable: productdata.isShipmentAvailable,
@@ -279,6 +280,7 @@ const Home = () => {
         slug: productdata.slug,
         tax_code: productdata.tax_code,
         tax: productdata.tax,
+        productSource: productdata?.productSource || "NORMAL",
       };
 
       const updatedCart = [...existingCart, newProduct];
@@ -291,9 +293,19 @@ const Home = () => {
         existingProduct,
       );
       let stringdata = cartdetail.map(_i => {
-        if (_i?.productid == productdata._id) {
+        if (
+          _i?.productid == productdata._id &&
+          _i?.price_slot?.value === productdata?.price_slot[0]?.value
+        ) {
           console.log('enter');
-          return { ..._i, qty: _i?.qty + 1 };
+          return {
+            ..._i,
+            qty: _i?.qty + 1,
+            price: productdata?.price_slot[0]?.other_price,
+            offer: productdata?.price_slot[0]?.our_price,
+            price_slot: productdata?.price_slot[0],
+            productSource: productdata?.productSource || "NORMAL",
+          };
         } else {
           return _i;
         }
@@ -425,7 +437,7 @@ const Home = () => {
               horizontal={true}
               // numColumns={Dimensions.get('window').width < 500 ? 4 : 6}
               keyExtractor={(item, index) => item._id || index.toString()}
-              style={{ width: '100%', gap: 5 }}
+              style={{ width: '100%', gap: 5, marginVertical: 10 }}
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={{ flex: 1, marginVertical: 10, width: Dimensions.get('window').width < 500 ? 100 : 120, alignItems: 'center' }}
@@ -448,7 +460,7 @@ const Home = () => {
                 </TouchableOpacity>
               )}
             />
-            {/* <View style={{ height: 10, backgroundColor: 'transparent', marginVertical: 5 }} /> */}
+            <View style={{ height: 10, backgroundColor: 'transparent', marginVertical: 5 }} />
 
             {combolist.length > 0 && (
               <>
@@ -503,7 +515,7 @@ const Home = () => {
         }
         renderItem={({ item, index }) => {
           const cartItem = Array.isArray(cartdetail)
-            ? cartdetail.find(it => it?.productid === item?._id)
+            ? cartdetail.find(it => it?.productid === item?._id && (it?.priceSlotIndex ?? 0) === 0)
             : undefined;
 
           return (
@@ -650,7 +662,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginHorizontal: 20,
-    marginBottom: 10,
+    marginVertical: 10,
     // backgroundColor:Constants.red
   },
   categorycircle: {

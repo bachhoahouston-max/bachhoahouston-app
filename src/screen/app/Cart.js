@@ -830,9 +830,9 @@ const Cart = ({ route }) => {
       const res = await GetApi(
         `checkQuantity/${items.productid}`,
       );
-      return res.status ? res.data.qty : 0;
+      return res.status ? res.data : { qty: 0 };
     } catch (err) {
-      return 0;
+      return { qty: 0 };
     }
   };
   const extractProductObjects = (cartData) => {
@@ -846,6 +846,8 @@ console.log(cartData)
       let obj = {
         productSource: source,
         productId: mainId,
+        price: item?.offer || item?.price || 0,
+        priceSlotIndex: item?.priceSlotIndex ?? 0,
       };
 
       if (source === "COMBO" && item?.free_product?.length > 0) {
@@ -966,6 +968,24 @@ console.log(result)
                   <ComboOfferCard key={i} cartItem={item} isCartMode />
                 ) : (
                   <View style={[styles.box, { borderBottomWidth: 1 }]} key={i}>
+                    <TouchableOpacity
+                      onPress={async () => {
+                        shaloowarray.splice(i, 1),
+                          await AsyncStorage.setItem(
+                            'cartdata',
+                            JSON.stringify(shaloowarray),
+                          );
+                        JSON.stringify(shaloowarray);
+                        setIsPriceChanged(false)
+                        setcartdetail(shaloowarray);
+                        setCoupon(false);
+                        setCouponDiscount(0);
+
+                      }}
+                      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                      style={styles.removeIconBtn}>
+                      <CrossIcon color={Constants.white} height={12} width={12} />
+                    </TouchableOpacity>
                     <View style={styles.firstpart}>
                       <View style={styles.firstleftpart}>
                         <Pressable onPress={() => navigate('Preview', item.slug)}>
@@ -1006,8 +1026,8 @@ console.log(result)
                                   const updatedCart = cartdetail.map(cartItem => {
                                     if (
                                       cartItem.productid === item?.productid &&
-                                      cartItem.price_slot?.value ===
-                                      item?.price_slot?.value
+                                      (cartItem.priceSlotIndex ?? 0) ===
+                                      (item?.priceSlotIndex ?? 0)
                                     ) {
                                       if (cartItem.qty > 1) {
                                         return {
@@ -1040,10 +1060,21 @@ console.log(result)
                                 onPress={async () => {
 
 
-                                  const availableQuantity = await checkQuantity(item)
-                                  console.log('Available quantity:', availableQuantity);
-                                  console.log('Current quantity in cart:', item, availableQuantity);
-                                  if (item.qty + 1 > availableQuantity) {
+                                  const quantityResult = await checkQuantity(item)
+                                  console.log('Available quantity:', quantityResult);
+                                  console.log('Current quantity in cart:', item, quantityResult);
+
+                                  if (quantityResult.vendorClosed) {
+                                    Toast.show({
+                                      type: 'error',
+                                      text1: t('{{name}} is currently closed. Ordering is unavailable right now.', {
+                                        name: quantityResult.vendorName || 'This restaurant',
+                                      }),
+                                    })
+                                    return
+                                  }
+
+                                  if (item.qty + 1 > (quantityResult.qty ?? 0)) {
                                     Toast.show({
                                       type: 'error',
                                       text1: t('Item is not available in this quantity in stock. Please choose a different item.'),
@@ -1073,7 +1104,7 @@ console.log(result)
                           </View>
                         </View>
                       </View>
-                      <CrossIcon
+                      <TouchableOpacity
                         onPress={async () => {
                           shaloowarray.splice(i, 1),
                             await AsyncStorage.setItem(
@@ -1087,8 +1118,10 @@ console.log(result)
                           setCouponDiscount(0);
 
                         }}
-                        style={{ marginTop: 10, marginRight: 10 }}
-                      />
+                        hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                        style={{ marginTop: 10, marginRight: 10, padding: 8 }}>
+                        <CrossIcon />
+                      </TouchableOpacity>
                     </View>
                     {/* inavailibility message */}
                     {item?.saletype === "COMBO" && (
@@ -2457,6 +2490,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 1,
+  },
+  removeIconBtn: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    zIndex: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#A72ABF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   firstpart: {
     flexDirection: 'row',

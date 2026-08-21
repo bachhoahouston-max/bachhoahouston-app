@@ -625,6 +625,7 @@ const Products = () => {
                   </Text>
                   <CrossIcon
                     style={styles.cros}
+                    color="#87848A"
                     onPress={() => {
                       const slotdata = userDetail.price_slot;
                       slotdata.splice(i, 1),

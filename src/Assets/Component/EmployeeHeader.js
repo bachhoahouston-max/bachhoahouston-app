@@ -140,6 +140,7 @@ const EmployeeHeader = props => {
               }}>
               <CrossIcon
                 style={{position: 'absolute', right: 0, top: 0}}
+                color="#87848A"
                 onPress={() => setFilterVisible(false)}
               />
               <Text style={styles.textStyle}>{t('Filter Options')}</Text>
