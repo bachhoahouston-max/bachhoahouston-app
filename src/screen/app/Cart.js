@@ -1104,24 +1104,6 @@ console.log(result)
                           </View>
                         </View>
                       </View>
-                      <TouchableOpacity
-                        onPress={async () => {
-                          shaloowarray.splice(i, 1),
-                            await AsyncStorage.setItem(
-                              'cartdata',
-                              JSON.stringify(shaloowarray),
-                            );
-                          JSON.stringify(shaloowarray);
-      setIsPriceChanged(false)
-                          setcartdetail(shaloowarray);
-                          setCoupon(false);
-                          setCouponDiscount(0);
-
-                        }}
-                        hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-                        style={{ marginTop: 10, marginRight: 10, padding: 8 }}>
-                        <CrossIcon />
-                      </TouchableOpacity>
                     </View>
                     {/* inavailibility message */}
                     {item?.saletype === "COMBO" && (

@@ -38,42 +38,46 @@ const Products = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [assignmodel, setassignmodel] = useState(false);
   const [orderid, setorderid] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     if (IsFocused) {
       setproductlist([]);
-      getProducts();
+      getProducts(1);
     }
   }, [IsFocused, getProducts]);
 
   const getProducts = useCallback(
-    tab => {
-      // setPage(p);
-      // let url;
-      // if (tab==='pending') {
-      //   url=`getOrderBySeller`
-      // } else {
-      //   url=`getAssignedOrder`
-
-      // }
+    (p = 1) => {
+      setPage(p);
       setLoading(true);
-      GetApi('getProduct', {}).then(
+      GetApi(`getProduct?page=${p}&limit=20`, {}).then(
         async res => {
           setLoading(false);
           console.log(res);
-          console.log(res.data);
-
-          setproductlist(res.data);
+          setTotalPages(res?.pagination?.totalPages || 1);
+          setproductlist(prev =>
+            p === 1 ? res?.data || [] : [...prev, ...(res?.data || [])],
+          );
         },
         err => {
           setLoading(false);
-          setproductlist([]);
+          if (p === 1) {
+            setproductlist([]);
+          }
           console.log('errrrrrr===>', err);
         },
       );
     },
     [setLoading],
   );
+
+  const fetchNextPage = () => {
+    if (page < totalPages) {
+      getProducts(page + 1);
+    }
+  };
 
   const assigdriver = id => {
     const body = {
@@ -85,7 +89,7 @@ const Products = () => {
       async res => {
         setLoading(false);
         console.log(res);
-        getProducts('pending');
+        getProducts(1);
       },
       err => {
         setLoading(false);
@@ -173,7 +177,7 @@ const Products = () => {
                         Delete(`deleteProduct/${item._id}`, {id: item._id})
                           .then(res => {
                             console.log(res);
-                            getProducts();
+                            getProducts(1);
                             setModalVisible(null);
                           })
                           .catch(err => {
@@ -208,6 +212,12 @@ const Products = () => {
             </Text>
           </View>
         )}
+        onEndReached={() => {
+          if (productlist && productlist.length > 0) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.05}
       />
       {/* </View> */}
       <Modal

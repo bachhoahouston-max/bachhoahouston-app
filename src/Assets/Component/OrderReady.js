@@ -1,613 +1,416 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useContext, useEffect, useState } from 'react';
+/* Per-order inline action / status control for the staff order list.
+ * RN port of the OrderReady cell in grocerypickup-admin/pages/orders.js —
+ * covers every pickup / drive-up / local-delivery / shipment badge + action,
+ * and routes "Order Ready", "Add Tracking Info" and "Assign Order" through the
+ * packing checklist first (OrderChecklistModal). */
+import React, {useContext, useEffect, useState} from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
-  Alert,
   StyleSheet,
   Modal,
   TextInput,
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { GetApi, Post } from '../Helpers/Service';
-import Constants, { FONTS } from '../Helpers/constant';
-import { useTranslation } from 'react-i18next';
-import { Toast } from 'toastify-react-native';
-import { Dropdown } from 'react-native-element-dropdown';
-import { LoadContext } from '../../../App';
+import {GetApi, Post} from '../Helpers/Service';
+import Constants, {FONTS} from '../Helpers/constant';
+import {useTranslation} from 'react-i18next';
+import {Toast} from 'toastify-react-native';
+import {Dropdown} from 'react-native-element-dropdown';
+import {LoadContext} from '../../../App';
+import {BRAND, fmtShort} from '../Helpers/orderUtils';
+import OrderChecklistModal from '../../screen/Employee/components/OrderChecklistModal';
 
-const OrderReady = ({ row, props, getProducts }) => {
-  const { t } = useTranslation();
+const Badge = ({label, bg, color}) => (
+  <View style={[styles.badge, {backgroundColor: bg}]}>
+    <Text style={[styles.badgeTxt, {color}]}>{label}</Text>
+  </View>
+);
+
+const ActionBadge = ({label, onPress}) => (
+  <TouchableOpacity style={styles.actionBadge} onPress={onPress}>
+    <Text style={styles.actionBadgeTxt}>{label}</Text>
+  </TouchableOpacity>
+);
+
+const OrderReady = ({row, getProducts}) => {
+  const {t} = useTranslation();
   const order = row;
-  const shouldShowButton =
-    order.isDriveUp === true || order.isOrderPickup === true;
-  const isCompleted = order.status === 'Completed';
-  const isCancelOrder = order.status === 'Cancel';
-  const localStorageKey = `inProcess-${order._id}`;
-  const [inProcess, setInProcess] = useState(false);
-  const [open1, setopen1] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [fortrackingOrderId, setFortrackingOrderId] = useState(null);
-  const [modalText, setModalText] = useState({
-    trackingNo: '',
-    companyName: '',
-    driverId: '',
-  });
+  const [, setLoading] = useContext(LoadContext);
+
+  const [confirmPrep, setConfirmPrep] = useState(false);
+  const [trackModal, setTrackModal] = useState(false);
+  const [assignModal, setAssignModal] = useState(false);
+  const [checklist, setChecklist] = useState({open: false, type: null});
   const [driverList, setDriverList] = useState([]);
-  const [loading, setLoading] = useContext(LoadContext);
+  const [form, setForm] = useState({trackingNo: '', companyName: '', driverId: ''});
+
+  const shouldShowPickup = order.isDriveUp === true || order.isOrderPickup === true;
+  const isCompleted = order.status === 'Completed';
+  const isCancel = order.status === 'Cancel';
+  const inProcess = order.status === 'Preparing';
 
   useEffect(() => {
-    const loadInProcess = async () => {
-      const stored = await AsyncStorage.getItem(localStorageKey);
-      if (stored === 'true') {
-        setInProcess(true);
-      }
-    };
-    loadInProcess();
-  }, [localStorageKey]);
-
-  useEffect(() => {
-    const fetchDrivers = async () => {
-      try {
-        const response = await GetApi('getDriverList', {});
-        if (response.status) {
-          setDriverList(response.data.drivers);
-          console.log('Driver List:', response.data);
-        } else {
-          Toast.error(response.message || 'Failed to fetch drivers');
-        }
-      } catch (error) {
-        console.error('Error fetching drivers:', error);
-        Toast.error(error?.message || 'Something went wrong');
-      }
-    };
-    if (isOpen) {
-      fetchDrivers();
+    if (assignModal) {
+      GetApi('getVerifiedDriverList', {})
+        .then(res => setDriverList(res?.data || []))
+        .catch(() => {});
     }
-  }, [isOpen]);
+  }, [assignModal]);
 
-  const handleInProcessClick = async () => {
+  const openChecklist = type => setChecklist({open: true, type});
+  const closeChecklist = () => setChecklist({open: false, type: null});
+
+  const markPreparing = () => {
+    setConfirmPrep(false);
     setLoading(true);
-    Post('markOrderAsPreparing', { orderId: order._id })
+    Post('markOrderAsPreparing', {orderId: order._id})
       .then(res => {
-        if (res.status) {
-          Toast.success(res.message || 'Order is preparing');
-          console.log(res);
-          getProducts();
-        } else {
-          Toast.error(res.message || 'Failed to prepare order');
+        setLoading(false);
+        Toast.success(res?.message || t('Order is preparing'));
+        getProducts && getProducts();
+      })
+      .catch(err => {
+        setLoading(false);
+        Toast.error(err?.message || t('Something went wrong'));
+      });
+  };
+
+  const orderReady = () => {
+    setLoading(true);
+    Post('orderreadyNotification', {id: order._id})
+      .then(res => {
+        setLoading(false);
+        Toast.success(res?.message || t('Notification sent successfully'));
+        getProducts && getProducts();
+      })
+      .catch(err => {
+        setLoading(false);
+        Toast.error(err?.message || t('Something went wrong'));
+      });
+  };
+
+  const returnOrder = () => {
+    setLoading(true);
+    Post('ReturnConform', {id: order._id})
+      .then(res => {
+        setLoading(false);
+        if (res?.status === false) {
+          Toast.error(res?.message || t('Failed to confirm return'));
+          return;
         }
-        setLoading(false);
+        Toast.success(res?.message || t('Return confirmed successfully'));
+        getProducts && getProducts();
       })
       .catch(err => {
-        console.log(err);
-        Toast.error(err?.message || 'Something went wrong');
         setLoading(false);
+        Toast.error(err?.message || t('Something went wrong'));
       });
   };
 
-  const ReturnOrder = id => {
+  const submitTracking = () => {
     setLoading(true);
-    Post('ReturnConform', { orderId: id })
+    Post('updateTrackingInfo', {
+      id: order._id,
+      trackingNo: form.trackingNo,
+      trackingLink: form.companyName,
+    })
       .then(res => {
         setLoading(false);
-        if (res.status) {
-          Toast.success(res.message || 'Return confirmed successfully');
-          getProducts();
-        } else {
-          Toast.error(res.message || 'Failed to confirm return');
+        if (res?.status === false && !res?.order) {
+          Toast.error(res?.message || t('Failed to update tracking info'));
+          return;
         }
+        Toast.success(t('Tracking info updated successfully'));
+        setTrackModal(false);
+        setForm({trackingNo: '', companyName: '', driverId: ''});
+        getProducts && getProducts();
       })
       .catch(err => {
         setLoading(false);
-        console.log(err);
-        Toast.error(err?.message || 'Something went wrong');
+        Toast.error(err?.message || t('Something went wrong'));
       });
   };
 
-  const orderready = id => {
+  const submitAssign = () => {
+    if (!form.driverId) return Toast.error(t('Please select a driver'));
     setLoading(true);
-    Post('orderreadyNotification', { id: id })
+    Post('assignDriver', {orderId: order._id, driverId: form.driverId})
       .then(res => {
         setLoading(false);
-        Toast.success(res.message || 'Order is ready');
-        getProducts();
-      })
-      .catch(err => {
-        setLoading(false);
-        console.log(err);
-        Toast.error(err?.message || 'Something went wrong');
-      });
-  };
-
-  const updateTrackingInfo = (id, data) => {
-    setLoading(true);
-    const raw = {
-      id,
-      trackingNo: data.trackingNo,
-      trackingLink: data.companyName,
-      driverId: data.driverId,
-    };
-    console.log('Update Tracking Info:', raw);
-    Post('updateTrackingInfo', raw)
-      .then(res => {
-        setLoading(false);
-        if (res.status) {
-          Toast.success(res.message || 'Tracking info updated successfully');
-          setIsOpen(false);
-          setModalText({
-            trackingNo: '',
-            companyName: '',
-            driverId: '',
-          });
-          setFortrackingOrderId(null);
-          getProducts();
-        } else {
-          Toast.error(res.message || 'Failed to update tracking info');
-          console.log('Error:', res);
+        if (res?.status === false && !res?.data) {
+          Toast.error(res?.message || t('Failed to assign driver'));
+          return;
         }
+        Toast.success(t('Order assigned to driver successfully'));
+        setAssignModal(false);
+        setForm({trackingNo: '', companyName: '', driverId: ''});
+        getProducts && getProducts();
       })
       .catch(err => {
         setLoading(false);
-        console.log(err);
-        Toast.error(err?.message || 'Something went wrong');
+        Toast.error(err?.message || t('Something went wrong'));
       });
   };
+
+  const Delivered = () => (
+    <View style={{alignItems: 'center'}}>
+      <Badge label={t('Delivered')} bg="#DCFCE7" color="#15803D" />
+      {!!order.deliveredAt && (
+        <Text style={styles.stamp}>{fmtShort(order.deliveredAt)}</Text>
+      )}
+    </View>
+  );
 
   return (
-    <View>
-      <View style={styles.container}>
-        {isCancelOrder ? (
-          <View style={styles.buttonDisabled}>
-            <Text style={styles.buttonTextDisabled}>Order Cancelled</Text>
-          </View>
-        ) : (
-          <>
-            {shouldShowButton && (
-              <>
-                {isCompleted ? (
-                  <View style={styles.buttonCompleted}>
-                    <Text style={styles.buttonText}>Order Delivered</Text>
-                  </View>
+    <View style={styles.container}>
+      {isCancel ? (
+        <Badge label={t('Order Cancelled')} bg="#FEE2E2" color="#B91C1C" />
+      ) : (
+        <>
+          {/* Pickup / drive-up */}
+          {shouldShowPickup &&
+            (isCompleted ? (
+              <Delivered />
+            ) : !inProcess ? (
+              <ActionBadge label={t('In-Process')} onPress={() => setConfirmPrep(true)} />
+            ) : order.isReady ? (
+              <Badge label={t('Ready & email sent')} bg="#CCFBF1" color="#0F766E" />
+            ) : (
+              <ActionBadge
+                label={t('Order Ready')}
+                onPress={() => openChecklist('pickup')}
+              />
+            ))}
+
+          {/* Shipment / local delivery */}
+          {(order.isShipmentDelivery || order.isLocalDelivery) && (
+            <>
+              {order.status === 'Return Requested' && (
+                <ActionBadge label={t('Return Confirm')} onPress={returnOrder} />
+              )}
+              {order.status === 'Return' && (
+                <Badge label={t('Return Successful')} bg="#DBEAFE" color="#1D4ED8" />
+              )}
+              {order.status === 'Order Ready' && (
+                <Badge label={t('Order Ready')} bg="#CCFBF1" color="#0F766E" />
+              )}
+              {order.status === 'Out for Delivery' && (
+                <Badge label={t('Out for Delivery')} bg="#E0E7FF" color="#4338CA" />
+              )}
+
+              {order.status !== 'Return Requested' &&
+                order.status !== 'Return' &&
+                (order.status === 'Completed' ? (
+                  <Delivered />
+                ) : order.trackingNo && order.trackingLink ? (
+                  <Badge label={t('Order Shipped')} bg="#EDE9FE" color="#6D28D9" />
                 ) : (
-                  <>
-                    {order?.status !== 'Preparing' ? (
-                      <TouchableOpacity
-                        style={styles.buttonPrimary}
-                        onPress={() => {
-                          setopen1(true);
-                        }}>
-                        <Text style={styles.buttonText}>In-Process</Text>
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        style={styles.buttonGrey}
-                        onPress={() => {
-                          orderready(order._id);
-                        }}>
-                        <Text style={styles.buttonTextBlack}>Order Ready</Text>
-                      </TouchableOpacity>
-                    )}
-                  </>
-                )}
-              </>
-            )}
+                  order.isShipmentDelivery && (
+                    <ActionBadge
+                      label={t('Add Tracking Info')}
+                      onPress={() => openChecklist('shipment')}
+                    />
+                  )
+                ))}
+            </>
+          )}
 
-            {order.isShipmentDelivery && (
-              <>
-                {order.status === 'Return Requested' && (
-                  <TouchableOpacity
-                    style={styles.buttonGrey}
-                    onPress={() => {
-                      ReturnOrder(order._id);
-                    }}>
-                    <Text style={styles.buttonTextBlack}>Return Confirm</Text>
-                  </TouchableOpacity>
-                )}
+          {/* Local-delivery sub-statuses */}
+          {order.isLocalDelivery &&
+            (order.status === 'Pending' ? (
+              <ActionBadge
+                label={t('Assign Order')}
+                onPress={() => openChecklist('localDelivery')}
+              />
+            ) : order.status === 'Driverassigned' ? (
+              <Badge label={t('Driver Assigned')} bg="#CFFAFE" color="#0E7490" />
+            ) : order.status === 'Shipped' ? (
+              <Badge label={t('Order Shipped')} bg="#EDE9FE" color="#6D28D9" />
+            ) : null)}
+        </>
+      )}
 
-                {order.status === 'Return' && (
-                  <View style={styles.buttonCompleted}>
-                    <Text style={styles.buttonText}>Return Successfully</Text>
-                  </View>
-                )}
-
-                {order.status !== 'Return Requested' &&
-                  order.status !== 'Return' &&
-                  (order.status === 'Completed' ? (
-                    <View style={styles.buttonCompleted}>
-                      <Text style={styles.buttonText}>Order Delivered</Text>
-                    </View>
-                  ) : order.trackingNo && order.trackingLink ? (
-                    <View style={styles.buttonPrimary}>
-                      <Text style={styles.buttonText}>Order Shipped</Text>
-                    </View>
-                  ) : !(
-                    (order.isShipmentDelivery || order?.isLocalDelivery) &&
-                    order.status === 'Shipped'
-                  ) ? (
-                    <TouchableOpacity
-                      style={[
-                        styles.buttonGrey,
-                        { backgroundColor: Constants.pink },
-                      ]}
-                      onPress={() => {
-                        setIsOpen(true);
-                        setFortrackingOrderId(order._id);
-                      }}>
-                      <Text style={styles.buttonTextBlack}>
-                        {t('Add Tracking Info')}
-                      </Text>
-                    </TouchableOpacity>
-                  ) : null)}
-              </>
-            )}
-
-            {order.isLocalDelivery && (
-              <>
-                {order.status === 'Return Requested' && (
-                  <TouchableOpacity
-                    style={styles.buttonGrey}
-                    onPress={() => ReturnOrder(order._id)}>
-                    <Text style={styles.buttonTextBlack}>Return Confirm</Text>
-                  </TouchableOpacity>
-                )}
-
-                {order.status === 'Return' && (
-                  <View style={styles.buttonCompleted}>
-                    <Text style={styles.buttonText}>Return Successfully</Text>
-                  </View>
-                )}
-
-                {order.status !== 'Return Requested' &&
-                  order.status !== 'Return' &&
-                  (order.status === 'Completed' ? (
-                    <View style={styles.buttonCompleted}>
-                      <Text style={styles.buttonText}>Order Delivered</Text>
-                    </View>
-                  ) : order.trackingNo && order.trackingLink ? (
-                    <View style={styles.buttonPrimary}>
-                      <Text style={styles.buttonText}>Order Shipped</Text>
-                    </View>
-                  ) : !(
-                    (order.isShipmentDelivery || order?.isLocalDelivery) &&
-                    order.status === 'Shipped'
-                  ) ? (
-                    <TouchableOpacity
-                      style={[
-                        styles.buttonGrey,
-                        { backgroundColor: Constants.pink },
-                      ]}
-                      onPress={() => {
-                        setIsOpen(true);
-                        setFortrackingOrderId(order._id);
-                      }}>
-                      <Text style={styles.buttonTextBlack}>
-                        {t('Assign Driver')}
-                      </Text>
-                    </TouchableOpacity>
-                  ) : null)}
-              </>
-            )}
-          </>
-        )}
-      </View>
-      <Modal
-        animationType="none"
-        transparent={true}
-        visible={open1}
-        onRequestClose={() => {
-          setopen1(!open1);
-        }}>
-        <View style={styles.centeredView2}>
-          <View style={styles.modalView2}>
-            <Text style={styles.alrt}>{t('Start Preparing Order?')}</Text>
-            <View
-              style={{
-                backgroundColor: 'white',
-                alignItems: 'center',
-                paddingHorizontal: 30,
-              }}>
-              <Text style={styles.textStyle}>
-                {t('Are you sure you want to start preparing the order?')}
-              </Text>
-              <View style={styles.cancelAndLogoutButtonWrapStyle}>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => setopen1(!open1)}
-                  style={styles.cancelButtonStyle}>
-                  <Text style={[styles.modalText, { color: Constants.saffron }]}>
-                    {t('No')}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  style={styles.logOutButtonStyle}
-                  onPress={() => {
-                    setopen1(false);
-                    handleInProcessClick();
-                  }}>
-                  <Text style={styles.modalText}>{t('Yes, Proceed')}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
-      <Modal
-        animationType="none"
-        transparent={true}
-        visible={isOpen}
-        onRequestClose={() => {
-          // Alert.alert('Modal has been closed.');
-          setIsOpen(!isOpen);
-        }}>
-        <View style={styles.centeredView2}>
-          <View style={styles.modalView2}>
-            <Text style={styles.alrt}>
-              {order.isLocalDelivery ? t('Assign Driver') : t('Tracking Info')}
+      {/* Confirm start preparing */}
+      <Modal visible={confirmPrep} transparent animationType="fade" onRequestClose={() => setConfirmPrep(false)}>
+        <View style={styles.backdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{t('Start Preparing Order?')}</Text>
+            <Text style={styles.modalBody}>
+              {t('Are you sure you want to start preparing the order?')}
             </Text>
-            <View
-              style={{
-                backgroundColor: 'white',
-                // alignItems: 'center',
-                paddingHorizontal: 20,
-                width: '100%',
-                marginTop: 10,
-              }}>
-              {order?.isShipmentDelivery && (
-                <View>
-                  <Text style={styles.label}>{t('Tracking Number')}</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t('Enter Tracking Number')}
-                    placeholderTextColor={Constants.customgrey}
-                    value={modalText?.trackingNo}
-                    onChangeText={trackingNo =>
-                      setModalText(prev => ({ ...prev, trackingNo }))
-                    }
-                    autoCapitalize="none"
-                  />
-                  <Text style={styles.label}>{t('Company Name')}</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholder={t('Enter Company Name')}
-                    placeholderTextColor={Constants.customgrey}
-                    value={modalText?.companyName}
-                    onChangeText={companyName =>
-                      setModalText(prev => ({ ...prev, companyName }))
-                    }
-                    autoCapitalize="none"
-                  />
-                </View>
-              )}
-              {order?.isLocalDelivery && (
-                <View>
-                  <Text style={styles.label}>{t('Assign Driver')}</Text>
-                  <Dropdown
-                    style={styles.input}
-                    data={driverList?.map(item => ({
-                      label: item.username,
-                      value: item._id,
-                    }))}
-                    value={modalText?.driverId}
-                    onChange={item => {
-                      setModalText(prev => ({ ...prev, driverId: item.value }));
-                    }}
-                    placeholder={t('Select Driver')}
-                    placeholderStyle={{ color: Constants.customgrey }}
-                    selectedTextStyle={{ color: Constants.black }}
-                    maxHeight={200}
-                    labelField="label"
-                    valueField="value"
-                    renderItem={item => (
-                      <Text style={{ padding: 10, color: Constants.black }}>
-                        {item.label}
-                      </Text>
-                    )}
-                  />
-                </View>
-              )}
-
-              <View style={styles.cancelAndLogoutButtonWrapStyle}>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => {
-                    setIsOpen(!isOpen);
-                    setModalText({
-                      trackingNo: '',
-                      companyName: '',
-                      driverId: '',
-                    });
-                    setFortrackingOrderId(null);
-                  }}
-                  style={styles.cancelButtonStyle}>
-                  <Text style={[styles.modalText, { color: Constants.saffron }]}>
-                    {t('No')}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  style={styles.logOutButtonStyle}
-                  onPress={() => {
-                    updateTrackingInfo(fortrackingOrderId, modalText);
-                    setIsOpen(false);
-                  }}>
-                  <Text style={styles.modalText}>{t('Yes, Update')}</Text>
-                </TouchableOpacity>
-              </View>
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setConfirmPrep(false)}>
+                <Text style={styles.modalCancelTxt}>{t('No')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalOk} onPress={markPreparing}>
+                <Text style={styles.modalOkTxt}>{t('Yes, Proceed')}</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
+
+      {/* Tracking info */}
+      <Modal visible={trackModal} transparent animationType="fade" onRequestClose={() => setTrackModal(false)}>
+        <View style={styles.backdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{t('Tracking Info')}</Text>
+            <Text style={styles.label}>{t('Tracking Number')}</Text>
+            <TextInput
+              style={styles.input}
+              value={form.trackingNo}
+              onChangeText={v => setForm(p => ({...p, trackingNo: v}))}
+              placeholder={t('Enter Tracking Number')}
+              placeholderTextColor={Constants.customgrey}
+              autoCapitalize="none"
+            />
+            <Text style={styles.label}>{t('Company Name')}</Text>
+            <TextInput
+              style={styles.input}
+              value={form.companyName}
+              onChangeText={v => setForm(p => ({...p, companyName: v}))}
+              placeholder={t('Enter Company Name')}
+              placeholderTextColor={Constants.customgrey}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setTrackModal(false)}>
+                <Text style={styles.modalCancelTxt}>{t('Cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalOk} onPress={submitTracking}>
+                <Text style={styles.modalOkTxt}>{t('Submit')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Assign driver */}
+      <Modal visible={assignModal} transparent animationType="fade" onRequestClose={() => setAssignModal(false)}>
+        <View style={styles.backdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{t('Assign Order')}</Text>
+            <Dropdown
+              style={styles.dropdown}
+              data={driverList.map(d => ({label: d.username, value: d._id}))}
+              value={form.driverId}
+              onChange={it => setForm(p => ({...p, driverId: it.value}))}
+              placeholder={t('Select Driver')}
+              placeholderStyle={{color: Constants.customgrey}}
+              selectedTextStyle={{color: Constants.black}}
+              labelField="label"
+              valueField="value"
+              maxHeight={220}
+            />
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setAssignModal(false)}>
+                <Text style={styles.modalCancelTxt}>{t('Cancel')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalOk} onPress={submitAssign}>
+                <Text style={styles.modalOkTxt}>{t('Submit')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {checklist.open && (
+        <OrderChecklistModal
+          type={checklist.type}
+          order={order}
+          onClose={closeChecklist}
+          onComplete={() => {
+            if (checklist.type === 'pickup') {
+              orderReady();
+            } else if (checklist.type === 'shipment') {
+              setForm({
+                trackingNo: order?.trackingNo || '',
+                companyName: order?.trackingLink || '',
+                driverId: '',
+              });
+              setTrackModal(true);
+            } else if (checklist.type === 'localDelivery') {
+              setAssignModal(true);
+            }
+          }}
+        />
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonPrimary: {
-    backgroundColor: '#F38529',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+  container: {padding: 8, alignItems: 'center', justifyContent: 'center'},
+  badge: {paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, marginVertical: 4},
+  badgeTxt: {fontFamily: FONTS.Bold, fontSize: 11},
+  actionBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
     marginVertical: 4,
-  },
-  buttonCompleted: {
-    backgroundColor: 'green',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginVertical: 4,
-  },
-  buttonGrey: {
-    backgroundColor: '#00000020',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginVertical: 4,
-  },
-  buttonDisabled: {
-    backgroundColor: 'red',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginVertical: 4,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 15,
-  },
-  buttonTextBlack: {
-    color: 'black',
-    fontSize: 15,
-  },
-  buttonTextDisabled: {
-    color: 'white',
-    fontSize: 15,
-  },
-  backdrop: {
-    height: '100%',
-    width: '100%',
-    position: 'absolute',
-    top: 0,
-  },
-  popuptxt: {
-    fontSize: 16,
-    fontFamily: FONTS.Regular,
-    color: Constants.black,
-    paddingRight: 5,
-  },
-
-  centeredView2: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#rgba(0, 0, 0, 0.5)',
-  },
-  modalView2: {
-    margin: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    paddingVertical: 20,
-    alignItems: 'center',
-    width: '90%',
-  },
-
-  textStyle: {
-    color: Constants.black,
-    textAlign: 'center',
-    fontFamily: FONTS.Medium,
-    fontSize: 16,
-    margin: 20,
-    marginBottom: 10,
-  },
-  cancelAndLogoutButtonWrapStyle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-    gap: 3,
-  },
-  alrt: {
-    color: Constants.black,
-    fontSize: 18,
-    fontFamily: FONTS.Bold,
-    // backgroundColor: 'red',
-    width: '100%',
-    textAlign: 'center',
-    borderBottomWidth: 1.5,
-    borderBottomColor: Constants.customgrey2,
-    paddingBottom: 20,
-  },
-  cancelButtonStyle: {
-    flex: 0.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
-    marginRight: 10,
-    borderColor: Constants.saffron,
+    backgroundColor: '#FFEDD5',
     borderWidth: 1,
-    borderRadius: 10,
+    borderColor: '#FDBA74',
   },
-  logOutButtonStyle: {
-    flex: 0.5,
-    backgroundColor: Constants.saffron,
-    borderRadius: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 5,
-    alignItems: 'center',
+  actionBadgeTxt: {fontFamily: FONTS.Bold, fontSize: 11, color: '#C2410C'},
+  stamp: {fontFamily: FONTS.Regular, fontSize: 10, color: Constants.customgrey, marginTop: 2},
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
-    marginLeft: 10,
+    padding: 20,
   },
-  status: {
-    color: Constants.saffron,
-    fontSize: 18,
-    fontFamily: FONTS.Bold,
-  },
-  statuscov: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    alignItems: 'center',
-  },
-  modalText: {
-    color: Constants.white,
-    fontSize: 16,
-    fontFamily: FONTS.Bold,
-  },
-  timeslotxt: {
-    color: Constants.saffron,
-    fontSize: 14,
-    fontFamily: FONTS.Medium,
-    // alignSelf:'center'
-  },
-  label: {
-    color: Constants.black,
-    fontSize: 16,
+  modalCard: {backgroundColor: '#fff', borderRadius: 12, padding: 18},
+  modalTitle: {fontFamily: FONTS.Bold, fontSize: 16, color: Constants.black, textAlign: 'center'},
+  modalBody: {
     fontFamily: FONTS.Regular,
-    fontWeight: '700',
-    marginBottom: 1,
+    fontSize: 14,
+    color: Constants.black,
+    textAlign: 'center',
+    marginVertical: 14,
   },
+  label: {fontFamily: FONTS.Medium, fontSize: 13, color: Constants.black, marginTop: 10, marginBottom: 4},
   input: {
     borderWidth: 1,
     borderColor: Constants.customgrey3,
-    color: Constants.black,
-    fontWeight: '500',
-    borderRadius: 10,
-    textAlign: 'left',
-    fontSize: 16,
-    fontFamily: FONTS.Regular,
-    marginTop: 5,
+    borderRadius: 8,
     paddingHorizontal: 10,
-    height: 45,
-    width: '100%',
-    marginBottom: 10,
+    paddingVertical: 8,
+    color: Constants.black,
   },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: Constants.customgrey3,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 44,
+    marginTop: 10,
+  },
+  modalActions: {flexDirection: 'row', justifyContent: 'center', gap: 10, marginTop: 16},
+  modalCancel: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Constants.saffron,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  modalCancelTxt: {fontFamily: FONTS.Bold, color: Constants.saffron},
+  modalOk: {
+    flex: 1,
+    backgroundColor: BRAND,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  modalOkTxt: {fontFamily: FONTS.Bold, color: '#fff'},
 });
 
 export default OrderReady;

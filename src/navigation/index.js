@@ -15,6 +15,7 @@ import VendorForm from '../screen/vendor/VendorForm';
 import { Drivertab } from './DriverTab';
 import Driverform from '../screen/driver/Driverform';
 import OrderDetail from '../screen/Employee/OrderDetail';
+import EmployeeOrderDetail from '../screen/Employee/EmployeeOrderDetail';
 import OrderStatus from '../screen/vendor/OrderStatus';
 import Map from '../screen/driver/Map';
 import DriverOrder from '../screen/driver/DriverOrder';
@@ -79,6 +80,7 @@ export default function Navigation(props) {
         <Stack.Screen name="VendorForm" component={VendorForm} />
         <Stack.Screen name="Driverform" component={Driverform} />
         <Stack.Screen name="OrderDetail" component={OrderDetail} />
+        <Stack.Screen name="EmployeeOrderDetail" component={EmployeeOrderDetail} />
         <Stack.Screen name="OrderStatus" component={OrderStatus} />
         <Stack.Screen name="Map" component={Map} />
         <Stack.Screen name="DriverOrder" component={DriverOrder} />

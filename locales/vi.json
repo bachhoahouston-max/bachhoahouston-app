@@ -609,5 +609,11 @@
     "Extended Zone Delivery Fee": "Phụ Phí Giao Zipcode Xa",
     "Some sale items have expired. Prices have been updated. Please review you cart": "Một số ưu đãi trong giỏ hàng của bạn đã hết hạn. Giá đã được cập nhật—vui lòng kiểm tra lại giỏ hàng trước khi thanh toán.",
     "Combo Sale Ended - Free Item Removed": "Ưu đãi combo đã kết thúc - Sản phẩm miễn phí đã bị xóa khỏi giỏ hàng",
-    "Sale Ended - Price changed to regular price": "Ưu đãi đã kết thúc - Giá đã được thay đổi về giá thông thường"
+    "Sale Ended - Price changed to regular price": "Ưu đãi đã kết thúc - Giá đã được thay đổi về giá thông thường",
+    "Acknowledge": "Xác nhận",
+    "Customer waiting for pickup": "Khách hàng đang chờ nhận hàng",
+    "Parking spot": "Vị trí đậu xe",
+    "In-store pickup counter": "Quầy nhận hàng trong cửa hàng",
+    "Pickup acknowledged": "Đã xác nhận nhận hàng",
+    "Could not acknowledge, please retry": "Không thể xác nhận, vui lòng thử lại"
 }

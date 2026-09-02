@@ -6,395 +6,335 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
-  Modal,
 } from 'react-native';
-import React, {useContext, useEffect, useState, useCallback} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import Constants, {Currency, FONTS} from '../../Assets/Helpers/constant';
 import {navigate} from '../../../navigationRef';
 import {useIsFocused} from '@react-navigation/native';
-import {LoadContext, ToastContext} from '../../../App';
+import {LoadContext, UserContext} from '../../../App';
 import {Post} from '../../Assets/Helpers/Service';
-import {StatusIcon, ThreedotIcon, ViewIcon} from '../../../Theme';
 import {useTranslation} from 'react-i18next';
+import moment from 'moment-timezone';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import {Dropdown} from 'react-native-element-dropdown';
+import {Toast} from 'toastify-react-native';
 import LabelWithColon from '../../Assets/Helpers/LabelWithColon';
 import EmployeeHeader from '../../Assets/Component/EmployeeHeader';
 import OrderReady from '../../Assets/Component/OrderReady';
-import moment from 'moment';
+import PickupAlertBanner from '../../Assets/Component/PickupAlertBanner';
+import {
+  BRAND,
+  PICKUP_FILTER_OPTIONS,
+  statusStyle,
+  fmtDate,
+} from '../../Assets/Helpers/orderUtils';
+
+const LIMIT = 20;
 
 const Orders = () => {
   const {t} = useTranslation();
-  const IsFocused = useIsFocused();
-  const [, setToast] = useContext(ToastContext);
+  const isFocused = useIsFocused();
   const [, setLoading] = useContext(LoadContext);
-  const [productlist, setproductlist] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [assignmodel, setassignmodel] = useState(false);
-  const [orderid, setorderid] = useState('');
-  const [filterType, setFilterType] = useState({
-    orderType: null,
-    date: null,
-  });
+  const [user] = useContext(UserContext);
 
-  useEffect(() => {
-    if (IsFocused) {
-      setproductlist([]);
-      getProducts();
+  const [list, setList] = useState([]);
+  const [page, setPage] = useState(1);
+  const [lastCount, setLastCount] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // filters — mirror grocerypickup-admin/pages/orders.js
+  const [orderId, setOrderId] = useState('');
+  const [pickupOption, setPickupOption] = useState('All');
+  const [orderDate, setOrderDate] = useState(null);
+  const [pickupDate, setPickupDate] = useState(null);
+  const [datePickerFor, setDatePickerFor] = useState(null); // 'order' | 'pickup'
+
+  const buildBody = () => {
+    const body = {};
+    if (orderDate) {
+      body.curentDate = moment
+        .tz(orderDate, 'America/Chicago')
+        .startOf('day')
+        .toISOString();
     }
-  }, [IsFocused]);
-
-  const getProducts = filters => {
-    const params = {
-      orderType: filters?.orderType ?? '', 
-      date: filters?.date ?? '',
-    };
-    console.log('Fetching orders with filters:', params);
-    setLoading(true);
-    Post(
-      `getPendingOrdersByAdmin?filter=${encodeURIComponent(
-        JSON.stringify(params),
-      )}`,
-      {},
-    ).then(
-      async res => {
-        console.log('Orders fetched successfully:', res.data);
-        setLoading(false);
-        setproductlist(res.data);
-      },
-      err => {
-        console.error('Error fetching orders:', err);
-        setLoading(false);
-        setproductlist([]);
-      },
-    );
+    if (pickupOption) body.PickupOption = pickupOption;
+    if (orderId.trim()) body.orderId = orderId.trim();
+    if (pickupDate) body.pickupDate = moment(pickupDate).toISOString();
+    return body;
   };
 
-  const assigdriver = id => {
-    console.log('Assigning driver for order ID:', id);
-    const body = {
-      id: id,
-      status: 'Driverassigned',
-    };
+  const fetchOrders = (p = 1) => {
+    setPage(p);
     setLoading(true);
-    Post('changeorderstatus', body).then(
-      async res => {
-        console.log('Driver assignment response:', res);
+    Post(`NewgetOrderBySeller?page=${p}&limit=${LIMIT}`, buildBody())
+      .then(res => {
         setLoading(false);
-        getProducts();
-      },
-      err => {
-        console.error('Error assigning driver:', err);
+        const data = res?.data || [];
+        setLastCount(data.length);
+        setList(prev => (p === 1 ? data : [...prev, ...data]));
+      })
+      .catch(err => {
         setLoading(false);
-      },
+        if (p === 1) setList([]);
+        Toast.error(err?.message || t('Failed to load orders'));
+      });
+  };
+
+  useEffect(() => {
+    if (isFocused) fetchOrders(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFocused]);
+
+  // re-query whenever a filter changes (debounced for the text field)
+  useEffect(() => {
+    if (!isFocused) return;
+    const id = setTimeout(() => fetchOrders(1), 400);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId, pickupOption, orderDate, pickupDate]);
+
+  const resetFilters = () => {
+    setOrderId('');
+    setPickupOption('All');
+    setOrderDate(null);
+    setPickupDate(null);
+  };
+
+  const loadMore = () => {
+    if (lastCount === LIMIT) fetchOrders(page + 1);
+  };
+
+  const deleteOrder = id => {
+    setLoading(true);
+    Post(`delete-order/${id}`, null)
+      .then(() => {
+        setLoading(false);
+        Toast.success(t('Order deleted successfully'));
+        fetchOrders(1);
+      })
+      .catch(err => {
+        setLoading(false);
+        Toast.error(err?.message || t('Failed to delete order'));
+      });
+  };
+
+  const methodLabel = item =>
+    item?.isOrderPickup
+      ? t('In Store Pickup')
+      : item?.isDriveUp
+      ? t('Curbside Pickup')
+      : item?.isLocalDelivery
+      ? t('Next Day Local Delivery')
+      : item?.isShipmentDelivery
+      ? t('Shipping')
+      : t('Delivery');
+
+  const renderItem = ({item}) => {
+    const s = statusStyle(item?.status);
+    return (
+      <View style={styles.box}>
+        <View style={styles.topRow}>
+          <View style={{flexDirection: 'row', flex: 1}}>
+            <Image
+              source={
+                item?.user?.img
+                  ? {uri: `${item?.user?.img}`}
+                  : require('../../Assets/Images/profile.png')
+              }
+              style={styles.avatar}
+            />
+            <View style={{flex: 1}}>
+              <Text style={styles.name}>{item?.user?.username}</Text>
+              <Text style={styles.method}>{methodLabel(item)}</Text>
+            </View>
+          </View>
+          <View style={[styles.statusPill, {backgroundColor: s.bg}]}>
+            <Text style={[styles.statusPillTxt, {color: s.text}]}>{s.label}</Text>
+          </View>
+        </View>
+
+        <View style={styles.kvRow}>
+          <LabelWithColon labelKey="Order ID" textStyle={styles.kvBold} />
+          <Text style={styles.kvVal}>{item?.orderId || item?._id}</Text>
+        </View>
+        {!!item?.dateOfDelivery && (
+          <View style={styles.kvRow}>
+            <LabelWithColon labelKey="Delivery Date" textStyle={styles.kvBold} />
+            <Text style={styles.kvVal}>{fmtDate(item?.dateOfDelivery)}</Text>
+          </View>
+        )}
+        <View style={styles.kvRow}>
+          <LabelWithColon labelKey="Order Date" textStyle={styles.kvBold} />
+          <Text style={styles.kvVal}>
+            {moment(item?.createdAt).format('MM-DD-YYYY')}
+          </Text>
+        </View>
+        {!!item?.Local_address?.address && (
+          <View style={styles.kvRow}>
+            <LabelWithColon labelKey="Location" textStyle={styles.kvBold} />
+            <Text style={styles.kvVal}>{item?.Local_address?.address}</Text>
+          </View>
+        )}
+
+        <View style={styles.prodList}>
+          {item?.productDetail?.map((prod, i) => (
+            <View key={i} style={styles.prodRow}>
+              <Image
+                source={
+                  (
+                    Array.isArray(prod.image) ? prod.image[0] : prod.image
+                  )
+                    ? {
+                        uri: Array.isArray(prod.image)
+                          ? prod.image[0]
+                          : prod.image,
+                      }
+                    : require('../../Assets/Images/veg.png')
+                }
+                style={styles.prodImg}
+                resizeMode="contain"
+              />
+              <View style={{flex: 1}}>
+                <Text style={styles.prodName}>{prod?.product?.name}</Text>
+                <View style={styles.prodMeta}>
+                  <Text style={styles.prodMetaTxt}>
+                    {t('Qty')}: {prod?.qty}
+                  </Text>
+                  <Text style={styles.prodPrice}>
+                    {Currency}
+                    {Number(prod?.price ?? 0).toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.bottomRow}>
+          <View>
+            <Text style={styles.qtyTxt}>
+              {t('Items')}: {item?.productDetail?.length}
+            </Text>
+            <Text style={styles.amount}>
+              {Currency}
+              {item?.total}
+            </Text>
+          </View>
+          <OrderReady row={item} getProducts={() => fetchOrders(1)} />
+        </View>
+
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            style={styles.detailsBtn}
+            onPress={() => navigate('EmployeeOrderDetail', {order: item})}>
+            <Text style={styles.detailsTxt}>{t('View Details')}</Text>
+          </TouchableOpacity>
+          {user?.type === 'ADMIN' && (
+            <TouchableOpacity
+              style={styles.deleteBtn}
+              onPress={() => deleteOrder(item._id)}>
+              <Text style={styles.deleteTxt}>{t('Delete Order')}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
     );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <EmployeeHeader
-        filter={true}
-        item={t('My orders')}
-        filterType={filterType}
-        setFilterType={setFilterType}
-       onApplyFilter={filters => {
-    getProducts(filters);
-  }}
-      />
-      <FlatList
-        data={productlist}
-        style={{marginBottom: 70}}
-        showsVerticalScrollIndicator={false}
-        renderItem={({item}, index) => (
-          <View key={index}>
-            <TouchableOpacity style={[styles.box]}>
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  marginBottom: 10,
-                }}>
-                <View style={{flexDirection: 'row'}}>
-                  <Image
-                    source={
-                      item?.user?.img
-                        ? {
-                            uri: `${item?.user?.img}`,
-                          }
-                        : require('../../Assets/Images/profile.png')
-                    }
-                    style={styles.hi}
-                    // onPress={()=>navigate('Account')}
-                  />
-                  <View>
-                    <Text style={styles.name}>{item?.user?.username}</Text>
-                    {/* <Text style={styles.redeembtn}>
-                      {moment(item?.createdAt).format('DD-MM-YYYY ')}
-                    </Text> */}
-                    <Text style={styles.timeslotxt}>
-                      {item?.isOrderPickup
-                        ? t('In Store Pickup')
-                        : item?.isDriveUp
-                        ? t('Curbside Pickup')
-                        : item?.isLocalDelivery
-                        ? t('Next Day Local Delivery')
-                        : item?.isShipmentDelivery
-                        ? t('Shipping')
-                        : t('Delivery')}
-                    </Text>
-                  </View>
-                </View>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <Text style={styles.status}>{item?.status}</Text>
-                  {/* <TouchableOpacity
-                    onPress={() => {
-                      setModalVisible(item._id);
-                      console.log(item._id);
-                    }}
-                    style={{height: 30, width: 30, alignItems: 'flex-end'}}>
-                    <ThreedotIcon />
-                  </TouchableOpacity> */}
-                </View>
-              </View>
-              <View style={styles.secendpart}>
-                <LabelWithColon
-                  labelKey="Order ID"
-                  textStyle={styles.secendboldtxt}
-                />
-                <Text style={styles.secendtxt2}>
-                  {item?.orderId ? item?.orderId : item?._id}
-                </Text>
-              </View>
-              {item?.dateOfDelivery && (
-                <View style={styles.secendpart}>
-                  <LabelWithColon
-                    labelKey="Delivery Date"
-                    textStyle={styles.secendboldtxt}
-                  />
-                  <Text style={styles.secendtxt2}>
-                    {moment(item?.dateOfDelivery).format('MM-DD-YYYY')}
-                  </Text>
-                </View>
-              )}
-              <View style={styles.secendpart}>
-                <LabelWithColon
-                  labelKey="Order Date"
-                  textStyle={styles.secendboldtxt}
-                />
-                <Text style={styles.secendtxt2}>
-                  {moment(item?.createdAt).format('MM-DD-YYYY')}
-                </Text>
-              </View>
-              {item?.Local_address && (
-                <View style={styles.secendpart}>
-                  <LabelWithColon
-                    labelKey="Location"
-                    textStyle={styles.secendboldtxt}
-                  />
-                  <Text style={styles.secendtxt2}>
-                    {item?.Local_address?.address}
-                  </Text>
-                </View>
-              )}
-              <View style={styles.secendpart}>
-                <View style={{flexDirection: 'column', width: '90%', gap: 10}}>
-                  {item?.productDetail.map((prod, prodIndex) => (
-                    <View key={prodIndex}>
-                      <View
-                        style={{
-                          flexDirection: 'row',
-                          marginBottom: 5,
-                          width: '100%',
-                        }}>
-      <Image
-  source={
-    prod?.image && 
-    (Array.isArray(prod.image) ? prod.image[0] : prod.image)
-      ? {
-          uri: Array.isArray(prod.image) ? prod.image[0] : prod.image,
-        }
-      : require('../../Assets/Images/veg.png')
-  }
-  style={styles.cartimg}
-  resizeMode="contain"
-/>
-                        <View style={{width: '100%'}}>
-                          <Text style={styles.boxtxt}>
-                            {prod?.product?.name}
-                          </Text>
-                          <View
-                            style={{
-                              flexDirection: 'row',
-                              justifyContent: 'space-between',
-                              alignItems: 'start',
-                              // marginVertical: 10,
-                            }}>
-                            <View
-                              style={{
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                              }}>
-                              <Text style={{fontWeight: FONTS.Bold}}>
-                                {t('Qty')}
-                              </Text>
-                              <Text style={{fontWeight: FONTS.Medium}}>
-                                :- {prod?.qty}
-                              </Text>
-                            </View>
-                            <Text style={{fontWeight: FONTS.Bold}}>
-                              {Currency} {Number(prod?.price ?? 0).toFixed(2)}
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </View>
-              <View style={styles.txtcol}>
-                <View style={{}}>
-                  <View style={styles.secendpart}>
-                    <LabelWithColon
-                      labelKey="Qty"
-                      textStyle={styles.secendboldtxt}
-                    />
-                    <Text style={styles.secendtxt}>
-                      {item?.productDetail?.length}
-                    </Text>
-                  </View>
-                  <Text style={styles.amount}>
-                    {Currency}
-                    {item?.total}
-                  </Text>
-                </View>
-                <OrderReady
-                  row={item}
-                  props={{
-                    loader: setLoading,
-                  }}
-                  getProducts={getProducts}
-                />
-                {/* <Text style={styles.amount}>
-                  {Currency}
-                  {item?.total}
-                </Text> */}
-              </View>
-            </TouchableOpacity>
+      <EmployeeHeader item={t('My orders')} />
+      <PickupAlertBanner />
 
-            {modalVisible === item._id && (
-              <TouchableOpacity
-                style={styles.backdrop}
-                onPress={() => setModalVisible(null)}>
-                <View style={styles.centeredView}>
-                  <View style={styles.modalView}>
-                    {/* {item.status === 'Pending' && (
-                      <TouchableOpacity
-                        style={styles.popuplistcov}
-                        onPress={() => {
-                          navigate('OrderDetail', item);
-                          setModalVisible(null);
-                        }}>
-                        <View style={styles.popuplistcov2}>
-                          <ViewIcon />
-                          <Text>{t('View Order Details')}</Text>
-                        </View>
-                      </TouchableOpacity>
-                    )} */}
-                    {item.status === 'Packed' && (
-                      <TouchableOpacity
-                        style={styles.popuplistcov}
-                        onPress={() => {
-                          setassignmodel(true);
-                          setModalVisible(null);
-                          setorderid(item._id);
-                        }}>
-                        <View style={styles.popuplistcov2}>
-                          <ViewIcon />
-                          <Text style={styles.popuptxt}>
-                            {t('Assign Driver')}
-                          </Text>
-                        </View>
-                      </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                      // style={styles.popuplistcov}
-                      onPress={() => {
-                        navigate('EmployeeOrderStatus', item);
-                        setModalVisible(null);
-                      }}>
-                      <View style={styles.popuplistcov2}>
-                        <StatusIcon />
-                        <Text style={styles.popuptxt}>{t('Status')}</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            )}
+      <View style={styles.filterBar}>
+        <TouchableOpacity
+          style={styles.filterToggle}
+          onPress={() => setShowFilters(v => !v)}>
+          <Text style={styles.filterToggleTxt}>
+            {showFilters ? t('Hide Filters') : t('Filter Orders')}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => fetchOrders(1)}>
+          <Text style={styles.refreshTxt}>{t('Refresh')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {showFilters && (
+        <View style={styles.filterPanel}>
+          <TextInput
+            style={styles.filterInput}
+            value={orderId}
+            onChangeText={setOrderId}
+            placeholder={t('Search by order ID')}
+            placeholderTextColor={Constants.customgrey}
+          />
+          <Dropdown
+            style={styles.filterDropdown}
+            data={PICKUP_FILTER_OPTIONS}
+            value={pickupOption}
+            onChange={it => setPickupOption(it.value)}
+            labelField="label"
+            valueField="value"
+            selectedTextStyle={{color: Constants.black, fontSize: 13}}
+            maxHeight={260}
+          />
+          <View style={styles.dateRow}>
+            <TouchableOpacity
+              style={styles.dateBtn}
+              onPress={() => setDatePickerFor('order')}>
+              <Text style={styles.dateBtnTxt}>
+                {orderDate
+                  ? moment(orderDate).format('MM-DD-YYYY')
+                  : t('Order Date')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.dateBtn}
+              onPress={() => setDatePickerFor('pickup')}>
+              <Text style={styles.dateBtnTxt}>
+                {pickupDate
+                  ? moment(pickupDate).format('MM-DD-YYYY')
+                  : t('Pickup Date')}
+              </Text>
+            </TouchableOpacity>
           </View>
-        )}
+          <TouchableOpacity style={styles.resetBtn} onPress={resetFilters}>
+            <Text style={styles.resetTxt}>{t('Reset Filters')}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <DateTimePickerModal
+        isVisible={!!datePickerFor}
+        mode="date"
+        date={
+          (datePickerFor === 'pickup' ? pickupDate : orderDate) || new Date()
+        }
+        onConfirm={d => {
+          if (datePickerFor === 'pickup') setPickupDate(d);
+          else setOrderDate(d);
+          setDatePickerFor(null);
+        }}
+        onCancel={() => setDatePickerFor(null)}
+      />
+
+      <FlatList
+        data={list}
+        style={{marginBottom: 70}}
+        keyExtractor={(item, i) => item?._id || String(i)}
+        showsVerticalScrollIndicator={false}
+        renderItem={renderItem}
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.1}
         ListEmptyComponent={() => (
-          <View
-            style={{
-              alignItems: 'center',
-              justifyContent: 'center',
-              height: Dimensions.get('window').height - 200,
-            }}>
-            <Text
-              style={{
-                color: Constants.black,
-                fontSize: 20,
-                fontFamily: FONTS.Bold,
-              }}>
-              {t('No Order Available')}
-            </Text>
+          <View style={styles.empty}>
+            <Text style={styles.emptyTxt}>{t('No Order Available')}</Text>
           </View>
         )}
       />
-      {/* </View> */}
-      <Modal
-        animationType="none"
-        transparent={true}
-        visible={assignmodel}
-        onRequestClose={() => {
-          // Alert.alert('Modal has been closed.');
-          setassignmodel(!assignmodel);
-        }}>
-        <View style={styles.centeredView2}>
-          <View style={styles.modalView2}>
-            {/* <Text style={styles.alrt}>Alert !</Text> */}
-            <View
-              style={{
-                backgroundColor: 'white',
-                alignItems: 'center',
-                paddingHorizontal: 30,
-              }}>
-              <Text style={styles.textStyle}>
-                {t('Are you sure you want to assign driver !')}
-              </Text>
-              <View style={styles.cancelAndLogoutButtonWrapStyle}>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => setassignmodel(!assignmodel)}
-                  style={styles.cancelButtonStyle}>
-                  <Text style={[styles.modalText, {color: Constants.saffron}]}>
-                    {t('No')}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  activeOpacity={0.9}
-                  style={styles.logOutButtonStyle}
-                  onPress={() => {
-                    assigdriver(orderid);
-                    setassignmodel(false);
-                  }}>
-                  <Text style={styles.modalText}>{t('Yes')}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -402,232 +342,122 @@ const Orders = () => {
 export default Orders;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Constants.lightgrey,
+  container: {flex: 1, backgroundColor: Constants.lightgrey},
+  box: {backgroundColor: Constants.white, marginVertical: 8, padding: 18},
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+    gap: 8,
   },
-  box: {
-    backgroundColor: Constants.white,
-    marginVertical: 10,
-    padding: 20,
-  },
-  hi: {
+  avatar: {
     marginRight: 10,
     height: 40,
     width: 40,
-    borderRadius: 50,
+    borderRadius: 20,
     backgroundColor: Constants.lightgrey,
-    alignSelf: 'center',
     borderWidth: 1,
     borderColor: Constants.customgrey3,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  redeembtn: {
-    color: Constants.white,
-    fontSize: 16,
-    fontFamily: FONTS.Medium,
-    backgroundColor: Constants.saffron,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginVertical: 7,
+  name: {color: Constants.black, fontFamily: FONTS.Bold, fontSize: 14},
+  method: {color: Constants.saffron, fontSize: 13, fontFamily: FONTS.Medium},
+  statusPill: {paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999},
+  statusPillTxt: {fontFamily: FONTS.Bold, fontSize: 10},
+  kvRow: {flexDirection: 'row', marginHorizontal: 4, marginVertical: 4},
+  kvBold: {color: Constants.black, fontSize: 14, fontFamily: FONTS.Bold, alignSelf: 'center'},
+  kvVal: {color: Constants.black, fontSize: 14, flex: 1},
+  prodList: {marginVertical: 6, gap: 10},
+  prodRow: {flexDirection: 'row', gap: 10},
+  prodImg: {height: 50, width: 50},
+  prodName: {color: Constants.black, fontSize: 14, fontFamily: FONTS.Medium},
+  prodMeta: {flexDirection: 'row', justifyContent: 'space-between', marginTop: 4},
+  prodMetaTxt: {fontFamily: FONTS.Bold, color: Constants.black},
+  prodPrice: {fontFamily: FONTS.Bold, color: Constants.black},
+  bottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  qtyTxt: {color: Constants.black, fontSize: 13, fontFamily: FONTS.Bold},
+  amount: {color: Constants.saffron, fontSize: 16, fontFamily: FONTS.Bold, marginTop: 2},
+  actionRow: {flexDirection: 'row', gap: 10, marginTop: 12},
+  detailsBtn: {
+    flex: 1,
+    backgroundColor: BRAND,
     borderRadius: 8,
-  },
-  name: {
-    color: Constants.black,
-    fontFamily: FONTS.Bold,
-    fontSize: 14,
-  },
-  secendpart: {
-    flexDirection: 'row',
-    marginHorizontal: 5,
-    marginVertical: 5,
-  },
-  secendboldtxt: {
-    color: Constants.black,
-    fontSize: 15,
-    fontFamily: FONTS.Bold,
-    alignSelf: 'center',
-  },
-  secendtxt: {
-    color: Constants.black,
-    fontSize: 15,
-    textAlign: 'left',
-  },
-  secendtxt2: {
-    color: Constants.black,
-    fontSize: 15,
-    textAlign: 'left',
-    flex: 1,
-  },
-  txtcol: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  amount: {
-    color: Constants.saffron,
-    fontSize: 16,
-    fontFamily: FONTS.Bold,
-    alignSelf: 'flex-end',
-  },
-  centeredView: {
-    position: 'absolute',
-    right: 20,
-    top: 60,
-  },
-  modalView: {
-    backgroundColor: 'white',
-    borderRadius: 5,
-    boxShadow: '0 0 8 0.05 grey',
-  },
-  popuplistcov: {
-    borderBottomWidth: 1,
-    borderColor: Constants.customgrey,
-  },
-  popuplistcov2: {
-    flexDirection: 'row',
-    gap: 10,
-    margin: 10,
-    minWidth: 150,
-    alignItems: 'center',
-  },
-  backdrop: {
-    height: '100%',
-    width: '100%',
-    position: 'absolute',
-    top: 0,
-  },
-  popuptxt: {
-    fontSize: 16,
-    fontFamily: FONTS.Regular,
-    color: Constants.black,
-    paddingRight: 5,
-  },
-
-  centeredView2: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#rgba(0, 0, 0, 0.5)',
-  },
-  modalView2: {
-    margin: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    paddingVertical: 20,
-    alignItems: 'center',
-    width: '90%',
-  },
-
-  textStyle: {
-    color: Constants.black,
-    textAlign: 'center',
-    fontFamily: FONTS.Medium,
-    fontSize: 16,
-    margin: 20,
-    marginBottom: 10,
-  },
-  cancelAndLogoutButtonWrapStyle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-    gap: 3,
-  },
-  alrt: {
-    color: Constants.black,
-    fontSize: 18,
-    fontFamily: FONTS.Bold,
-    // backgroundColor: 'red',
-    width: '100%',
-    textAlign: 'center',
-    borderBottomWidth: 1.5,
-    borderBottomColor: Constants.customgrey2,
-    paddingBottom: 20,
-  },
-  cancelButtonStyle: {
-    flex: 0.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 15,
-    marginRight: 10,
-    borderColor: Constants.saffron,
-    borderWidth: 1,
-    borderRadius: 10,
-  },
-  logOutButtonStyle: {
-    flex: 0.5,
-    backgroundColor: Constants.saffron,
-    borderRadius: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 10,
-  },
-  status: {
-    backgroundColor: Constants.saffron + 20,
-    fontSize: 14,
-    color: Constants.saffron,
-    height: 20,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    fontFamily: FONTS.Regular,
-    marginBottom: 5,
-  },
-  statuscov: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    alignItems: 'center',
-  },
-  modalText: {
-    color: Constants.white,
-    fontSize: 16,
-    fontFamily: FONTS.Bold,
-  },
-  timeslotxt: {
-    color: Constants.saffron,
-    fontSize: 14,
-    fontFamily: FONTS.Medium,
-    // alignSelf:'center'
-  },
-  cartimg: {
-    height: 50,
-    width: 50,
-    // resizeMode: 'contain',
-  },
-  boxtxt: {
-    color: Constants.black,
-    fontSize: 14,
-    // fontWeight: '500',
-    fontFamily: FONTS.Medium,
-  },
-  favfiltxt: {
-    color: Constants.saffron,
-    fontSize: 16,
-    fontFamily: FONTS.Bold,
-  },
-  favfilcov: {
-    borderWidth: 1,
-    borderColor: Constants.saffron,
-    // width:'50%',
-    gap: 5,
-    flexDirection: 'row',
     paddingVertical: 10,
-    paddingHorizontal: 10,
-    alignSelf: 'flex-end',
-    marginTop: 10,
-    marginRight: 20,
+    alignItems: 'center',
+  },
+  detailsTxt: {color: '#fff', fontFamily: FONTS.Bold, fontSize: 13},
+  deleteBtn: {
+    borderWidth: 1,
+    borderColor: Constants.red,
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+  },
+  deleteTxt: {color: Constants.red, fontFamily: FONTS.Medium, fontSize: 13},
+  filterBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  filterToggle: {
+    backgroundColor: BRAND,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  filterToggleTxt: {color: '#fff', fontFamily: FONTS.Medium, fontSize: 13},
+  refreshTxt: {color: BRAND, fontFamily: FONTS.Bold, fontSize: 15},
+  filterPanel: {
+    backgroundColor: '#fff',
+    marginHorizontal: 12,
     borderRadius: 10,
+    padding: 12,
+    gap: 10,
+  },
+  filterInput: {
+    borderWidth: 1,
+    borderColor: Constants.customgrey3,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    color: Constants.black,
+  },
+  filterDropdown: {
+    borderWidth: 1,
+    borderColor: Constants.customgrey3,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    height: 42,
+  },
+  dateRow: {flexDirection: 'row', gap: 10},
+  dateBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: Constants.customgrey3,
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  dateBtnTxt: {color: Constants.black, fontFamily: FONTS.Regular, fontSize: 13},
+  resetBtn: {
+    backgroundColor: BRAND,
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  resetTxt: {color: '#fff', fontFamily: FONTS.Medium, fontSize: 13},
+  empty: {
     alignItems: 'center',
     justifyContent: 'center',
+    height: Dimensions.get('window').height - 260,
   },
-  qty: {
-    fontSize: 14,
-    color: Constants.customgrey,
-    fontFamily: FONTS.Bold,
-    // marginBottom: 5,
-  },
+  emptyTxt: {color: Constants.black, fontSize: 18, fontFamily: FONTS.Bold},
 });

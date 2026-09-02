@@ -65,6 +65,30 @@ export const UserContext = React.createContext('');
 export const CheckoutContext = React.createContext();
 export const LanguageContext = React.createContext();
 // export const Context = React.createContext<any>('');
+
+// Cart items added on the web use web's field names (id/name/price/
+// selectedImage/...). The backend's cart-sync merge already copies most of
+// them onto the app-native names, but fill in anything still missing here so
+// price/name/image never render blank or NaN in the app cart. Idempotent, so
+// it's safe to run on items that are already app-shaped.
+const normalizeForApp = items =>
+    (Array.isArray(items) ? items : []).map(item => {
+        if (!item || typeof item !== 'object') return item;
+        const next = { ...item };
+        if (next.productid === undefined) next.productid = next.id;
+        if (next.productname === undefined) next.productname = next.name;
+        if (next.image === undefined) next.image = next.selectedImage;
+        if (next.offer === undefined) next.offer = next.price;
+        if (next.price === undefined) next.price = next.offer;
+        if (next.priceSlotIndex === undefined || next.priceSlotIndex === null) {
+            next.priceSlotIndex = 0;
+        }
+        if (!next.price_slot || typeof next.price_slot !== 'object') {
+            next.price_slot = {};
+        }
+        return next;
+    });
+
 const App = () => {
     const [initial, setInitial] = useState('');
     const [toast, setToast] = useState('');
@@ -106,6 +130,7 @@ const App = () => {
                     getSyncedCart(),
                     AsyncStorage.getItem('cartSyncUserId'),
                 ]);
+                console.log('Synced cart response:', res, syncedUserId);
                 if (cancelled) return;
 
                 const serverItems = res?.data?.items || [];
@@ -125,6 +150,7 @@ const App = () => {
                         if (!byId.has(keyOf(item))) byId.set(keyOf(item), item);
                     });
                     finalItems = Array.from(byId.values());
+                    console.log('Merged cart items for new session:', finalItems);
                 }
 
                 // Items that were added on the web carry web's field names
@@ -179,6 +205,34 @@ const App = () => {
 
         return () => clearTimeout(cartPushTimer.current);
     }, [cartdetail]);
+
+    // The login pull above only runs once (when user id/token first appears).
+    // Re-pull whenever the app returns to the foreground so items added on the
+    // web — or another device — show up without a cold restart. Server is the
+    // source of truth here, same as the "existing session" login path; the
+    // debounced push stays paused via cartHydrated until this settles.
+    useEffect(() => {
+        if (!user?._id || !user?.token) return;
+
+        const pullSyncedCart = async () => {
+            try {
+                const res = await getSyncedCart();
+                const serverItems = normalizeForApp(res?.data?.items || []);
+                cartHydrated.current = false;
+                setcartdetail(serverItems);
+                await AsyncStorage.setItem('cartdata', JSON.stringify(serverItems));
+            } catch (e) {
+                // Offline or sync failure — keep the local cart as-is.
+            } finally {
+                cartHydrated.current = true;
+            }
+        };
+
+        const subscription = AppState.addEventListener('change', nextState => {
+            if (nextState === 'active') pullSyncedCart();
+        });
+        return () => subscription.remove();
+    }, [user?._id, user?.token]);
 
     useEffect(() => {
         if (Platform.OS === 'android') {
@@ -341,7 +395,7 @@ const App = () => {
                     AsyncStorage.setItem('userDetail', JSON.stringify(res.data));
                     setuser(res.data);
                     // setTimeout(async () => {
-                    if (userDetail.type === 'ADMIN') {
+                    if (userDetail.type === 'ADMIN' || userDetail.type === 'EMPLOYEE') {
                         setInitial('Employeetab');
                     } else if (userDetail.type === 'DRIVER') {
                         if (userDetail.status === 'Verified') {
@@ -442,17 +496,33 @@ const App = () => {
 
             await OneSignal.Notifications.requestPermission(true);
 
-            OneSignal.User.pushSubscription.addEventListener('change', event => {
-                const newId = event?.current?.id;
-                console.log('Subscription changed, new ID:', newId);
-                if (newId) {
-                    // Store the new player ID immediately
-                    AsyncStorage.setItem('oneSignalPlayerId', newId);
-                    // triggerDeviceRegistrationAfterSignIn();
-                }
-            });
+            // OneSignal.User.pushSubscription.addEventListener('change', event => {
+            //     const newId = event?.current?.id;
+            //     console.log('Subscription changed, new ID:', newId);
+            //     if (newId) {
+            //         // Store the new player ID immediately
+            //         AsyncStorage.setItem('oneSignalPlayerId', newId);
+            //         // triggerDeviceRegistrationAfterSignIn();
+            //     }
+            // });
 
             OneSignal.Notifications.addEventListener('click', event => {
+                const data = event?.notification?.additionalData || {};
+                const actionId = event?.result?.actionId;
+
+                // Curbside / in-store "I'm Here" arrival alert for staff.
+                if (data?.type === 'pickup_alert') {
+                    if (actionId === 'acknowledge' && data?.alertId) {
+                        Post('acknowledgePickupAlert', { alertId: data.alertId, source: 'notification' }).then(
+                            res => console.log('Pickup acknowledged:', res?.data?.message),
+                            err => console.log('Pickup acknowledge failed:', err),
+                        );
+                        return;
+                    }
+                    navigate('Employeetab');
+                    return;
+                }
+
                 navigate('Notification')
                 if (initial === '') {
                     setInitial('Notification')
@@ -465,21 +535,21 @@ const App = () => {
             const existingPlayerId = await AsyncStorage.getItem('oneSignalPlayerId');
             console.log('Existing stored player ID:', existingPlayerId);
 
-            setTimeout(() => {
-                const subscriptionId = OneSignal.User.pushSubscription.id;
-                console.log('Current subscription ID:', subscriptionId);
+            // setTimeout(() => {
+            //     const subscriptionId = OneSignal.User.pushSubscription.id;
+            //     console.log('Current subscription ID:', subscriptionId);
 
-                if (subscriptionId) {
-                    AsyncStorage.setItem('oneSignalPlayerId', subscriptionId);
-                    triggerDeviceRegistrationAfterSignIn();
-                } else if (existingPlayerId) {
-                    console.log('Using existing player ID for registration');
-                    triggerDeviceRegistrationAfterSignIn();
-                } else {
-                    console.log('No subscription ID available, retrying...');
-                    retrySubscriptionId(1);
-                }
-            }, 1000);
+            //     if (subscriptionId) {
+            //         AsyncStorage.setItem('oneSignalPlayerId', subscriptionId);
+            //         triggerDeviceRegistrationAfterSignIn();
+            //     } else if (existingPlayerId) {
+            //         console.log('Using existing player ID for registration');
+            //         triggerDeviceRegistrationAfterSignIn();
+            //     } else {
+            //         console.log('No subscription ID available, retrying...');
+            //         retrySubscriptionId(1);
+            //     }
+            // }, 1000);
         } catch (error) {
             console.log('OneSignal init error:', error);
         }

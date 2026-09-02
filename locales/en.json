@@ -451,5 +451,11 @@
   "Extended Zone Delivery Fee": "Extended Zone Delivery Fee",
   "Some sale items have expired. Prices have been updated. Please review your cart": "Some deals in your cart have expired. We’ve updated the prices—please review your cart before checkout.",
   "Combo Sale Ended - Free Item Removed": "Combo Sale Ended - Free Item Removed",
-  "Sale Ended - Price changed to regular price": "Sale Ended - Price changed to regular price"
+  "Sale Ended - Price changed to regular price": "Sale Ended - Price changed to regular price",
+  "Acknowledge": "Acknowledge",
+  "Customer waiting for pickup": "Customer waiting for pickup",
+  "Parking spot": "Parking spot",
+  "In-store pickup counter": "In-store pickup counter",
+  "Pickup acknowledged": "Pickup acknowledged",
+  "Could not acknowledge, please retry": "Could not acknowledge, please retry"
 }

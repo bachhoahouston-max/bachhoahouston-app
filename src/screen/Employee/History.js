@@ -39,28 +39,29 @@ const History = () => {
   useEffect(() => {
     if (IsFocused) {
       setproductlist([]);
-      getProducts(1, 1);
+      getProducts(1);
     }
   }, [IsFocused]);
 
-  const getProducts = (tab, p) => {
+  const getProducts = p => {
     setPage(p);
     setLoading(true);
-    setCurrentTab(tab);
     Post(`getOrderHistoryByAdmin?page=${p}`, {}).then(
       async res => {
         setLoading(false);
         console.log(res);
-        setCurrentData(res?.data);
+        setCurrentData(res?.data || []);
         if (p === 1) {
-          setproductlist(res?.data);
+          setproductlist(res?.data || []);
         } else {
-          setproductlist([...productlist, ...res?.data]);
+          setproductlist([...productlist, ...(res?.data || [])]);
         }
       },
       err => {
         setLoading(false);
-        setproductlist([]);
+        if (p === 1) {
+          setproductlist([]);
+        }
         console.log('errrrrrr===>', err);
       },
     );
@@ -76,7 +77,7 @@ const History = () => {
       async res => {
         setLoading(false);
         console.log(res);
-        getProducts('pending');
+        getProducts(1);
       },
       err => {
         setLoading(false);
@@ -87,7 +88,7 @@ const History = () => {
 
   const fetchNextPage = () => {
     if (curentData.length === 20) {
-      getorders(page + 1);
+      getProducts(page + 1);
     }
   };
 

@@ -82,13 +82,16 @@ const SignIn = props => {
       })
       return;
     }
-
+    const player_id = await OneSignal.User.pushSubscription.getIdAsync();
+    const device_token = await OneSignal.User.pushSubscription.getTokenAsync();
     let data = {
       username: userDetail.username.toLowerCase().trim(),
       password: userDetail.password,
+      player_id,
+      device_token,
     };
 
-    console.log('data==========>', userDetail);
+    console.log('data==========>', data);
     setLoading(true);
     console.log('data2==========>', userDetail);
     Post('login', data, { ...props }).then(
@@ -128,7 +131,7 @@ const SignIn = props => {
               })
               reset('Driverform');
             }
-          } else if (res.data.type === 'ADMIN') {
+          } else if (res.data.type === 'ADMIN' || res.data.type === 'EMPLOYEE') {
             setLoading(false);
             reset('Employeetab');
           } else {

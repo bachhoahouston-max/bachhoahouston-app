@@ -64,7 +64,7 @@ const ProductCard = ({
 
 
       <View style={{ position: 'relative', width: '100%', overflow: 'visible' }}>
-        {currentSale && currentSale?.status !== 'expired' && (<View style={{ position: 'absolute', top: 6, left: 6, zIndex: 1 }}>
+        {currentSale && currentSale?.status !== 'expired' && (<View style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}>
           <AlarmBadge currentSale={currentSale} />
         </View>
         )}
