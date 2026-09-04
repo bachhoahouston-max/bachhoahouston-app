@@ -2,7 +2,8 @@ buildscript {
     
     ext {
         buildToolsVersion = "36.0.0"
-        minSdkVersion = 24
+        // react-native-vision-camera (barcode scanner) requires minSdk 26
+        minSdkVersion = 26
         compileSdkVersion = 36
         targetSdkVersion = 36
         ndkVersion = "29.0.14206865"

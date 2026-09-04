@@ -77,6 +77,8 @@ const EmployeeOrderDetail = props => {
   const [reason, setReason] = useState('');
   const [secretOpen, setSecretOpen] = useState(false);
   const [secret, setSecret] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState(null); // { status: 'success' | 'error', message }
   const [trackOpen, setTrackOpen] = useState(false);
   const [trackNo, setTrackNo] = useState(order?.trackingNo || '');
   const [trackCompany, setTrackCompany] = useState(order?.trackingLink || '');
@@ -95,6 +97,10 @@ const EmployeeOrderDetail = props => {
   );
 
   useEffect(() => {
+    // Pull the full, current order from the server — the nav param can be a
+    // trimmed/stale list row (e.g. missing SecretCode), which would hide the
+    // Verify Order button even when the order actually has a secret code.
+    refresh();
     if (order?.isShipmentDelivery && order?.trackingNo) {
       getTracking(order.trackingNo);
     }
@@ -104,10 +110,12 @@ const EmployeeOrderDetail = props => {
   const refresh = () => {
     if (!order?.orderId) return;
     setLoading(true);
-    Post(`NewgetOrderBySeller?page=1&limit=1`, {orderId: order.orderId})
+    Post(`NewgetOrderBySeller?page=1&limit=20`, {orderId: order.orderId})
       .then(res => {
         setLoading(false);
-        const fresh = res?.data?.[0];
+        const rows = res?.data || [];
+        // orderId is matched as a regex substring server-side, so pick the exact one.
+        const fresh = rows.find(r => r?.orderId === order.orderId) || rows[0];
         if (fresh) {
           setOrder(fresh);
           setNoteHistory(fresh.noteHistory || []);
@@ -171,27 +179,53 @@ const EmployeeOrderDetail = props => {
     });
   };
 
+  const closeSecretModal = () => {
+    setSecretOpen(false);
+    setSecret('');
+    setVerifying(false);
+    setVerifyResult(null);
+  };
+
   const verifySecret = () => {
-    setLoading(true);
+    const code = String(secret).trim();
+    if (!code) {
+      setVerifyResult({
+        status: 'error',
+        message: t('Please enter the customer secret code.'),
+      });
+      return;
+    }
+    setVerifying(true);
+    setVerifyResult(null);
     Post('verifyOrderStatusWithCode', {
-      SecretCode: String(secret).trim(),
+      SecretCode: code,
       id: order._id,
       status: 'Completed',
     })
       .then(res => {
-        setLoading(false);
+        setVerifying(false);
         if (res?.error || res?.status === false) {
-          Toast.error(res?.error || res?.message || t('Verification failed'));
+          setVerifyResult({
+            status: 'error',
+            message: t('Incorrect code. Please try again.'),
+          });
           return;
         }
-        Toast.success(t('Verified successfully'));
-        setSecret('');
-        setSecretOpen(false);
+        setVerifyResult({
+          status: 'success',
+          message: t('Customer code verified.'),
+        });
         refresh();
+        setTimeout(() => {
+          closeSecretModal();
+        }, 1600);
       })
       .catch(err => {
-        setLoading(false);
-        Toast.error(err?.message || t('Verification failed'));
+        setVerifying(false);
+        setVerifyResult({
+          status: 'error',
+          message: err?.message || t('Incorrect code. Please try again.'),
+        });
       });
   };
 
@@ -496,7 +530,12 @@ const EmployeeOrderDetail = props => {
             {!!order?.SecretCode && (order?.isDriveUp || order?.isOrderPickup) && (
               <TouchableOpacity
                 style={styles.primaryBtn}
-                onPress={() => setSecretOpen(true)}>
+                onPress={() => {
+                  setSecret('');
+                  setVerifyResult(null);
+                  setVerifying(false);
+                  setSecretOpen(true);
+                }}>
                 <Text style={styles.primaryTxt}>{t('Verify Order')}</Text>
               </TouchableOpacity>
             )}
@@ -726,26 +765,75 @@ const EmployeeOrderDetail = props => {
       </Modal>
 
       {/* Secret code modal */}
-      <Modal visible={secretOpen} transparent animationType="fade" onRequestClose={() => setSecretOpen(false)}>
+      <Modal visible={secretOpen} transparent animationType="fade" onRequestClose={closeSecretModal}>
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>{t('Secret Code to Verify Order')}</Text>
-            <TextInput
-              style={[styles.noteInput, {minHeight: 44, marginTop: 10}]}
-              value={secret}
-              onChangeText={setSecret}
-              placeholder={t('Enter Secret Code')}
-              placeholderTextColor={Constants.customgrey}
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.modalCancelBtn}
-                onPress={() => setSecretOpen(false)}>
-                <Text style={styles.modalCancelTxt}>{t('Cancel')}</Text>
+          <View style={styles.verifyCard}>
+            {/* Header */}
+            <View style={styles.verifyHeader}>
+              <Text style={styles.verifyHeaderTxt}>Bách Hoá Houston</Text>
+              <TouchableOpacity onPress={closeSecretModal} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+                <Text style={styles.verifyClose}>✕</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.primaryBtn} onPress={verifySecret}>
-                <Text style={styles.primaryTxt}>{t('Verify')}</Text>
-              </TouchableOpacity>
+            </View>
+
+            <View style={styles.verifyBody}>
+              <Text style={styles.verifyOrderId}>
+                {t('Order')} #{order?.orderId}
+              </Text>
+              <Text style={styles.verifySubtitle}>
+                {order?.isDriveUp ? t('Curbside Pickup') : t('In Store Pickup')}
+              </Text>
+
+              {/* Verify card */}
+              <View style={styles.verifyInner}>
+                <Text style={styles.verifyLabel}>{t('Customer Secret Code')}</Text>
+                <TextInput
+                  style={styles.verifyInput}
+                  value={secret}
+                  onChangeText={txt => {
+                    setSecret(txt);
+                    if (verifyResult) setVerifyResult(null);
+                  }}
+                  keyboardType="number-pad"
+                  autoFocus
+                  placeholder={t('Enter code')}
+                  placeholderTextColor={Constants.customgrey}
+                />
+                <TouchableOpacity
+                  style={[styles.primaryBtn, {paddingVertical: 12}, verifying && {opacity: 0.6}]}
+                  disabled={verifying}
+                  onPress={verifySecret}>
+                  <Text style={styles.primaryTxt}>
+                    {verifying ? t('Verifying…') : t('Verify Code')}
+                  </Text>
+                </TouchableOpacity>
+
+                {!!verifyResult && (
+                  <View
+                    style={[
+                      styles.verifyResult,
+                      {backgroundColor: verifyResult.status === 'success' ? '#ECFDF3' : '#FEF3F2'},
+                    ]}>
+                    <Text
+                      style={[
+                        styles.verifyResultIcon,
+                        {color: verifyResult.status === 'success' ? BRAND : '#D92D20'},
+                      ]}>
+                      {verifyResult.status === 'success' ? '✓' : '✕'}
+                    </Text>
+                    <View style={{flex: 1}}>
+                      <Text
+                        style={[
+                          styles.verifyResultTitle,
+                          {color: verifyResult.status === 'success' ? BRAND : '#D92D20'},
+                        ]}>
+                        {verifyResult.status === 'success' ? t('Matched') : t('Rejected')}
+                      </Text>
+                      <Text style={styles.verifyResultMsg}>{verifyResult.message}</Text>
+                    </View>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
         </View>
@@ -974,6 +1062,67 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   modalCancelTxt: {fontFamily: FONTS.Medium, color: '#374151'},
+  verifyCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  verifyHeader: {
+    backgroundColor: BRAND,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  verifyHeaderTxt: {color: '#fff', fontFamily: FONTS.Bold, fontSize: 18},
+  verifyClose: {color: 'rgba(255,255,255,0.85)', fontSize: 16},
+  verifyBody: {padding: 16},
+  verifyOrderId: {
+    fontFamily: FONTS.Bold,
+    fontSize: 15,
+    color: Constants.black,
+  },
+  verifySubtitle: {
+    fontFamily: FONTS.Medium,
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginBottom: 14,
+  },
+  verifyInner: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 14,
+  },
+  verifyLabel: {
+    fontFamily: FONTS.Bold,
+    fontSize: 13,
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  verifyInput: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontFamily: FONTS.Bold,
+    fontSize: 24,
+    color: Constants.black,
+    marginBottom: 12,
+  },
+  verifyResult: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 12,
+  },
+  verifyResultIcon: {fontFamily: FONTS.Bold, fontSize: 18, lineHeight: 20},
+  verifyResultTitle: {fontFamily: FONTS.Bold, fontSize: 14},
+  verifyResultMsg: {fontFamily: FONTS.Regular, fontSize: 12, color: '#374151', marginTop: 2},
 });
 
 export default EmployeeOrderDetail;

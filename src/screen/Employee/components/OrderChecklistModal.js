@@ -4,7 +4,7 @@
  *  - checklist items
  *  - payment verification (Stripe amount vs invoice total, gated)
  *  - per-product quantity verification (packed qty, shortage, reason, est. refund,
- *    manual barcode verify — the app has no camera barcode scanner)
+ *    barcode verify — camera scan via BarcodeScannerModal, or manual type/paste)
  *  - required photos (+ optional packing video)
  *  - submit -> saveOrderChecklist
  */
@@ -30,6 +30,7 @@ import Constants, {FONTS} from '../../../Assets/Helpers/constant';
 import {LoadContext} from '../../../../App';
 import {Post, ApiFormData} from '../../../Assets/Helpers/Service';
 import OrderInvoice from './OrderInvoice';
+import BarcodeScannerModal from './BarcodeScannerModal';
 import {
   BRAND,
   CHECKLIST_ITEMS,
@@ -57,7 +58,9 @@ const buildRows = order =>
       barcode: item?.product?.BarCode ? String(item.product.BarCode) : '',
       orderedQty,
       packedQty: orderedQty,
-      receivedQty: String(orderedQty),
+      // Starts at 0 — the packed/received count is filled in as staff scan
+      // units (or edited by hand). Mirrors grocerypickup-admin ChecklistModal.
+      receivedQty: '0',
       reason: '',
       note: '',
       scannedQty: 0,
@@ -78,7 +81,7 @@ const buildRows = order =>
       barcode: fp?.product?.BarCode ? String(fp.product.BarCode) : '',
       orderedQty,
       packedQty: orderedQty,
-      receivedQty: String(orderedQty),
+      receivedQty: '0',
       reason: '',
       note: '',
       scannedQty: 0,
@@ -122,6 +125,8 @@ const OrderChecklistModal = ({type, order, onClose, onComplete}) => {
   const [photos, setPhotos] = useState(photoLabels.map(() => []));
   const [videos, setVideos] = useState([]);
   const [error, setError] = useState('');
+  // Index of the row whose barcode is being scanned with the camera, or null.
+  const [scanRowIndex, setScanRowIndex] = useState(null);
 
   const toggleItem = i =>
     setItems(prev =>
@@ -158,11 +163,17 @@ const OrderChecklistModal = ({type, order, onClose, onComplete}) => {
     }).catch(() => {});
   };
 
-  const verifyScan = i => {
+  // Match a barcode value against row i. `rawValue` is passed by the camera
+  // scanner; when omitted the manually typed row.scanInput is used instead.
+  // A match bumps scannedQty (capped at ordered) and mirrors it into
+  // receivedQty; a mismatch flags the row without losing verified units.
+  const applyScan = (i, rawValue) => {
     setRows(prev =>
       prev.map((row, idx) => {
         if (idx !== i) return row;
-        const scanned = String(row.scanInput || '').trim();
+        const scanned = String(
+          rawValue != null ? rawValue : row.scanInput || '',
+        ).trim();
         if (!scanned) return row;
         const matched = !!row.barcode && scanned === row.barcode.trim();
         logScan(row, scanned, matched);
@@ -181,6 +192,14 @@ const OrderChecklistModal = ({type, order, onClose, onComplete}) => {
         return {...row, ...patch};
       }),
     );
+  };
+
+  const verifyScan = i => applyScan(i);
+
+  const onBarcodeDetected = value => {
+    const i = scanRowIndex;
+    setScanRowIndex(null);
+    if (i != null) applyScan(i, value);
   };
 
   const pickPhoto = (index, fromCamera) => {
@@ -596,29 +615,47 @@ const OrderChecklistModal = ({type, order, onClose, onComplete}) => {
                   </View>
 
                   {!!row.barcode && (
-                    <View style={styles.scanWrap}>
-                      <TextInput
-                        style={styles.scanInput}
-                        value={row.scanInput}
-                        onChangeText={v => updateRow(i, {scanInput: v})}
-                        placeholder={t('Enter / scan barcode')}
-                        placeholderTextColor={Constants.customgrey}
-                        autoCapitalize="none"
-                      />
-                      <TouchableOpacity
-                        style={styles.scanBtn}
-                        onPress={() => verifyScan(i)}>
-                        <Text style={styles.scanBtnTxt}>{t('Verify')}</Text>
-                      </TouchableOpacity>
-                      <Text
-                        style={[
-                          styles.muted,
-                          row.lastScanMismatch && {color: Constants.red},
-                        ]}>
-                        {row.lastScanMismatch
-                          ? t('Wrong item')
-                          : `${row.scannedQty}/${row.orderedQty}`}
-                      </Text>
+                    <View style={{marginTop: 8}}>
+                      <View style={styles.scanWrap}>
+                        <TouchableOpacity
+                          style={[
+                            styles.scanCameraBtn,
+                            row.scannedQty >= row.orderedQty &&
+                              styles.scanCameraBtnDone,
+                          ]}
+                          disabled={row.scannedQty >= row.orderedQty}
+                          onPress={() => setScanRowIndex(i)}>
+                          <Text style={styles.scanCameraBtnTxt}>
+                            {row.scannedQty >= row.orderedQty
+                              ? `✓ ${t('Verified')}`
+                              : `📷 ${t('Scan')}`}
+                          </Text>
+                        </TouchableOpacity>
+                        <Text
+                          style={[
+                            styles.muted,
+                            row.lastScanMismatch && {color: Constants.red},
+                          ]}>
+                          {row.lastScanMismatch
+                            ? t('Wrong item')
+                            : `${row.scannedQty}/${row.orderedQty} ${t('scanned')}`}
+                        </Text>
+                      </View>
+                      <View style={[styles.scanWrap, {marginTop: 6}]}>
+                        <TextInput
+                          style={styles.scanInput}
+                          value={row.scanInput}
+                          onChangeText={v => updateRow(i, {scanInput: v})}
+                          placeholder={t('or enter barcode manually')}
+                          placeholderTextColor={Constants.customgrey}
+                          autoCapitalize="none"
+                        />
+                        <TouchableOpacity
+                          style={styles.scanBtn}
+                          onPress={() => verifyScan(i)}>
+                          <Text style={styles.scanBtnTxt}>{t('Verify')}</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   )}
 
@@ -737,6 +774,17 @@ const OrderChecklistModal = ({type, order, onClose, onComplete}) => {
               </Text>
             </TouchableOpacity>
           </View>
+
+          <BarcodeScannerModal
+            visible={scanRowIndex != null}
+            onClose={() => setScanRowIndex(null)}
+            onDetected={onBarcodeDetected}
+            title={
+              scanRowIndex != null
+                ? `${t('Scan')}: ${rows[scanRowIndex]?.name || ''}`
+                : t('Scan Barcode')
+            }
+          />
         </View>
       </View>
     </Modal>
@@ -865,6 +913,17 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   scanBtnTxt: {color: '#fff', fontFamily: FONTS.Medium, fontSize: 12},
+  scanCameraBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: BRAND,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  scanCameraBtnDone: {backgroundColor: '#DCFCE7', borderColor: BRAND},
+  scanCameraBtnTxt: {color: BRAND, fontFamily: FONTS.Medium, fontSize: 12},
   reasonDropdown: {
     borderWidth: 1,
     borderColor: Constants.red,

@@ -13,7 +13,7 @@ import React, {useContext, useEffect, useState, useRef} from 'react';
 import Constants, {FONTS} from '../Helpers/constant';
 import {goBack, navigate, reset} from '../../../navigationRef';
 import {GetApi} from '../Helpers/Service';
-import {UserContext} from '../../../App';
+import {LanguageContext, UserContext} from '../../../App';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {BackIcon, CrossIcon, FilterIcon, SignoutIcon} from '../../../Theme';
 import {useTranslation} from 'react-i18next';
@@ -23,6 +23,7 @@ const EmployeeHeader = props => {
   const {t} = useTranslation();
   const [loading, setLoading] = useState(false);
   const [user, setuser] = useContext(UserContext);
+  const [language, toggleLanguage] = useContext(LanguageContext);
   const [modalVisible, setModalVisible] = useState(false);
   const [filterVisible, setFilterVisible] = useState(false);
   const [tempFilterType, setTempFilterType] = useState({
@@ -70,6 +71,34 @@ const EmployeeHeader = props => {
           }}>
           <Text style={styles.backtxt}>{props?.item}</Text>
           <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
+            <TouchableOpacity style={styles.langToggle} onPress={toggleLanguage}>
+              <View
+                style={[
+                  styles.langOption,
+                  language === 'en' && styles.langActive,
+                ]}>
+                <Text
+                  style={[
+                    styles.langText,
+                    language === 'en' && styles.langTextActive,
+                  ]}>
+                  EN
+                </Text>
+              </View>
+              <View
+                style={[
+                  styles.langOption,
+                  language === 'vi' && styles.langActive,
+                ]}>
+                <Text
+                  style={[
+                    styles.langText,
+                    language === 'vi' && styles.langTextActive,
+                  ]}>
+                  VI
+                </Text>
+              </View>
+            </TouchableOpacity>
             {props?.filterType && (
               <TouchableOpacity
                 onPress={() => setFilterVisible(true)}
@@ -278,6 +307,29 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     // fontWeight:'bold'
     // fontFamily:FONTS.Bold
+  },
+  langToggle: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    padding: 3,
+    marginRight: 10,
+  },
+  langOption: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 18,
+  },
+  langActive: {
+    backgroundColor: '#F28321',
+  },
+  langText: {
+    fontSize: 13,
+    fontFamily: FONTS.Bold,
+    color: Constants.white,
+  },
+  langTextActive: {
+    color: Constants.white,
   },
   /////////logout model //////
   centeredView: {

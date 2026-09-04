@@ -1,3 +1,7 @@
+# react-native-vision-camera: only the native code scanner is used (no JS frame
+# processors), so skip the FrameProcessors subspec / react-native-worklets-core.
+$VCEnableFrameProcessors = false
+
 # Resolve react_native_pods.rb with node to allow for hoisting
 # require Pod::Executable.execute_command('node', ['-p',
 #   'require.resolve(

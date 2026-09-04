@@ -21,8 +21,10 @@ import {
     Alert,
     Linking,
     AppState,
+    DeviceEventEmitter,
 } from 'react-native';
 import Spinner from './src/Assets/Component/Spinner';
+import PickupAlertModal from './src/Assets/Component/PickupAlertModal';
 import Geolocation from 'react-native-geolocation-service';
 import GetCurrentAddressByLatLong from './src/Assets/Component/GetCurrentAddressByLatLong';
 import { OneSignal } from 'react-native-onesignal';
@@ -506,6 +508,19 @@ const App = () => {
             //     }
             // });
 
+            // Foreground: a push arriving while the app is open. Pop the alert
+            // modal (buzz + sound) instead of only a silent banner.
+            OneSignal.Notifications.addEventListener('foregroundWillDisplay', event => {
+                const data = event?.getNotification?.()?.additionalData
+                    || event?.notification?.additionalData
+                    || {};
+                if (data?.type === 'pickup_alert') {
+                    DeviceEventEmitter.emit('pickupAlert', data);
+                }
+                // Don't preventDefault → OS still shows the banner and plays the
+                // notification sound alongside our modal.
+            });
+
             OneSignal.Notifications.addEventListener('click', event => {
                 const data = event?.notification?.additionalData || {};
                 const actionId = event?.result?.actionId;
@@ -520,6 +535,8 @@ const App = () => {
                         return;
                     }
                     navigate('Employeetab');
+                    // Also pop the alert modal once the app is open.
+                    DeviceEventEmitter.emit('pickupAlert', data);
                     return;
                 }
 
@@ -683,6 +700,7 @@ const App = () => {
                                                             backgroundColor={Constants.greennew}
                                                         />
                                                         {initial !== '' && <Navigation initial={initial} />}
+                                                        <PickupAlertModal />
                                                     </SafeAreaView>
                                                 </StripeProvider>
                                             </AddressContext.Provider>
