@@ -80,6 +80,32 @@ pod 'react-native-maps/Google', :path => rn_maps_path
       patched = content.gsub('typedef NS_ENUM(NSUInteger, STPPaymentStatus);', 'typedef NS_ENUM(NSInteger, STPPaymentStatus);')
       File.write(stripe_interop, patched) if patched != content
     end
+
+    # react_native_post_install only bumps IPHONEOS_DEPLOYMENT_TARGET on each pod's
+    # main library target. It skips the resource-bundle targets Cocoapods generates
+    # (e.g. *-Bundle, *-PrivacyInfo, *-resources), which are left at whatever old
+    # value the pod's podspec hardcodes. Newer Xcode/simulator SDKs no longer support
+    # those old values, so force every target in the Pods project up to the same
+    # minimum React Native itself requires.
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        deployment_target = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+        if deployment_target && deployment_target.to_f < min_ios_version_supported.to_f
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = min_ios_version_supported
+        end
+      end
+
+      # Silence "will be run during every build because it does not specify any
+      # outputs" for Hermes' replace-version script phase — it intentionally has
+      # no declared outputs since it conditionally swaps in Debug/Release binaries.
+      if target.name == 'hermes-engine'
+        target.build_phases.each do |phase|
+          if phase.respond_to?(:name) && phase.name && phase.name.include?('Replace Hermes')
+            phase.always_out_of_date = '1'
+          end
+        end
+      end
+    end
   end
 end
 

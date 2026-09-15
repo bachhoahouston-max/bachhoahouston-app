@@ -30,6 +30,7 @@ import {goBack} from '../../../navigationRef';
 import Barcode from '../../Assets/Component/Barcode';
 import OrderInvoice from './components/OrderInvoice';
 import ShipAddressModal from './components/ShipAddressModal';
+import CustomerPickupModal from './components/CustomerPickupModal';
 import {
   BRAND,
   DELIVERY_OPTIONS,
@@ -79,6 +80,10 @@ const EmployeeOrderDetail = props => {
   const [secret, setSecret] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [verifyResult, setVerifyResult] = useState(null); // { status: 'success' | 'error', message }
+  const [checkingPending, setCheckingPending] = useState(false);
+  const [multiPickupOpen, setMultiPickupOpen] = useState(false);
+  const [pendingOrders, setPendingOrders] = useState([]);
+  const [pendingCustomer, setPendingCustomer] = useState(null);
   const [trackOpen, setTrackOpen] = useState(false);
   const [trackNo, setTrackNo] = useState(order?.trackingNo || '');
   const [trackCompany, setTrackCompany] = useState(order?.trackingLink || '');
@@ -184,6 +189,43 @@ const EmployeeOrderDetail = props => {
     setSecret('');
     setVerifying(false);
     setVerifyResult(null);
+  };
+
+  const openSingleVerify = () => {
+    setSecret('');
+    setVerifyResult(null);
+    setVerifying(false);
+    setSecretOpen(true);
+  };
+
+  // Customers with more than one order pending pickup get the multi-order
+  // "Customer Pickup" checkout screen instead of the single-code modal; a
+  // failed lookup or a lone pending order both fall back to the single flow.
+  const onVerifyOrderPress = () => {
+    if (checkingPending) return;
+    // Multi-order pickup checkout only applies to In Store Pickup — Curbside
+    // orders always go straight to the single-order verify modal.
+    if (!order?.isOrderPickup) {
+      openSingleVerify();
+      return;
+    }
+    setCheckingPending(true);
+    Post('getPendingOrdersForCustomer', {id: order._id})
+      .then(res => {
+        setCheckingPending(false);
+        const list = res?.data?.orders || [];
+        if (list.length > 1) {
+          setPendingCustomer(res?.data?.customer || null);
+          setPendingOrders(list);
+          setMultiPickupOpen(true);
+        } else {
+          openSingleVerify();
+        }
+      })
+      .catch(() => {
+        setCheckingPending(false);
+        openSingleVerify();
+      });
   };
 
   const verifySecret = () => {
@@ -529,14 +571,12 @@ const EmployeeOrderDetail = props => {
           <Section title={t('Actions')}>
             {!!order?.SecretCode && (order?.isDriveUp || order?.isOrderPickup) && (
               <TouchableOpacity
-                style={styles.primaryBtn}
-                onPress={() => {
-                  setSecret('');
-                  setVerifyResult(null);
-                  setVerifying(false);
-                  setSecretOpen(true);
-                }}>
-                <Text style={styles.primaryTxt}>{t('Verify Order')}</Text>
+                style={[styles.primaryBtn, checkingPending && {opacity: 0.6}]}
+                disabled={checkingPending}
+                onPress={onVerifyOrderPress}>
+                <Text style={styles.primaryTxt}>
+                  {checkingPending ? t('Checking…') : t('Verify Order')}
+                </Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity
@@ -873,6 +913,17 @@ const EmployeeOrderDetail = props => {
           </View>
         </View>
       </Modal>
+
+      <CustomerPickupModal
+        open={multiPickupOpen}
+        orders={pendingOrders}
+        customer={pendingCustomer}
+        onCancel={() => setMultiPickupOpen(false)}
+        onVerified={() => {
+          setMultiPickupOpen(false);
+          refresh();
+        }}
+      />
 
       <ShipAddressModal
         open={shipModalOpen}

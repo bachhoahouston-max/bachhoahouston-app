@@ -138,22 +138,16 @@ const Checkout = ({route}) => {
     const isLocalDelivery = checkoutData?.PickupType === 'localDelivery';
     const isOrderPickup = checkoutData?.PickupType === 'orderPickup';
     const isDriveUp = checkoutData?.PickupType === 'driveUp';
-    const dateOfDelivery = checkoutData?.pickupDate
-      ? checkoutData?.pickupDate
-      : null;
     const isShipmentDelivery = checkoutData?.PickupType === 'shipping';
 
-    const dateString = checkoutData?.pickupDate;
-    const formattedDate = moment(dateString, 'DD/MM/YYYY', true);
-
-    // if (!formattedDate.isValid()) {
-    //   setLoading(false);
-    //   setToast({
-    //     type: 'error',
-    //     message: t('Please select a valid date.'),
-    //   });
-    //   return;
-    // }
+    // Send the plain calendar day the customer picked (as shown in the UI)
+    // rather than a Date/moment instant — letting the device's own
+    // timezone handling leak into that instant is what caused delivery
+    // dates on iOS to land on the wrong day; the backend re-anchors this
+    // string to the store's fixed timezone.
+    const formattedDate = checkoutData?.pickupDate
+      ? moment(checkoutData.pickupDate).format('YYYY-MM-DD')
+      : null;
 
     const data = {
       productDetail: newarr,

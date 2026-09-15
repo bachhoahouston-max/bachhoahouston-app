@@ -8,7 +8,7 @@
  *  - required photos (+ optional packing video)
  *  - submit -> saveOrderChecklist
  */
-import React, {useContext, useMemo, useState} from 'react';
+import React, {useContext, useEffect, useMemo, useState} from 'react';
 import {
   Modal,
   View,
@@ -28,7 +28,7 @@ import {Toast} from 'toastify-react-native';
 import {useTranslation} from 'react-i18next';
 import Constants, {FONTS} from '../../../Assets/Helpers/constant';
 import {LoadContext} from '../../../../App';
-import {Post, ApiFormData} from '../../../Assets/Helpers/Service';
+import {Post, ApiFormData, GetApi} from '../../../Assets/Helpers/Service';
 import OrderInvoice from './OrderInvoice';
 import BarcodeScannerModal from './BarcodeScannerModal';
 import {
@@ -91,6 +91,41 @@ const buildRows = order =>
     return [parent, ...freeRows];
   });
 
+// Restores scanned progress from the order's server-side scan history so
+// switching devices (or just reopening the checklist) doesn't lose scans
+// already verified elsewhere — recordScanHistory logs every matched scan by
+// productId, so counts are rebuilt from that log rather than any local
+// state. Mirrors grocerypickup-admin ChecklistModal's applyScanHistory. Only
+// raises a row's scannedQty (never lowers it), so a scan the employee just
+// made locally can't be clobbered by a history fetch that hasn't caught up yet.
+const applyScanHistory = (rows, history) => {
+  const matchedCounts = {};
+  (history || []).forEach(entry => {
+    if (!entry?.matched) return;
+    const pid = String(entry.product || '');
+    if (!pid) return;
+    matchedCounts[pid] = (matchedCounts[pid] || 0) + 1;
+  });
+  if (Object.keys(matchedCounts).length === 0) return rows;
+
+  const remaining = {...matchedCounts};
+  return rows.map(row => {
+    if (!row.barcode) return row;
+    const pid = String(row.productId || '');
+    const available = remaining[pid] || 0;
+    const resumedQty = Math.min(row.orderedQty, available);
+    remaining[pid] = Math.max(0, available - resumedQty);
+    const scannedQty = Math.max(row.scannedQty || 0, resumedQty);
+    if (scannedQty === (row.scannedQty || 0)) return row;
+    const patch = {scannedQty, receivedQty: String(scannedQty)};
+    if (scannedQty >= row.packedQty) {
+      patch.reason = '';
+      patch.note = '';
+    }
+    return {...row, ...patch};
+  });
+};
+
 const requestCamera = async () => {
   if (Platform.OS !== 'android') return true;
   try {
@@ -127,6 +162,20 @@ const OrderChecklistModal = ({type, order, onClose, onComplete}) => {
   const [error, setError] = useState('');
   // Index of the row whose barcode is being scanned with the camera, or null.
   const [scanRowIndex, setScanRowIndex] = useState(null);
+
+  // Resume any scans already recorded for this order (e.g. from another
+  // employee/device) so packing progress carries over instead of starting
+  // back at 0/qty on every reopen.
+  useEffect(() => {
+    if (!order?._id) return;
+    GetApi(`getScanHistory?orderId=${order._id}`)
+      .then(res => {
+        if (!res?.status) return;
+        setRows(prev => applyScanHistory(prev, res.data));
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggleItem = i =>
     setItems(prev =>

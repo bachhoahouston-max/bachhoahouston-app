@@ -682,8 +682,14 @@ const Cart = ({ route }) => {
       const isDriveUp = PickupType === 'driveUp';
       const isShipmentDelivery = PickupType === 'shipping';
 
-      const dateString = pickupDate;
-      const formattedDate = moment(dateString, 'YYYY-MM-DD').format();
+      // Send the plain calendar day the customer picked (as shown in the UI)
+      // rather than a Date/moment instant — letting the device's own
+      // timezone handling leak into that instant is what caused delivery
+      // dates on iOS to land on the wrong day; the backend re-anchors this
+      // string to the store's fixed timezone.
+      const formattedDate = pickupDate
+        ? moment(pickupDate).format('YYYY-MM-DD')
+        : null;
 
       console.log('Formatted Date:', formattedDate);
       const servicefee = parseFloat(serviceFee || 0);
