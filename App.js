@@ -95,6 +95,27 @@ const App = () => {
     const [initial, setInitial] = useState('');
     const [toast, setToast] = useState('');
     const isInitialized = useRef(false);
+    // A notification tap can fire the OneSignal 'click' event mid cold-start,
+    // before the splash screen is gone and the app is actually visible. Hold
+    // the pickup alert until then so the ring only starts once the alert
+    // modal can actually be seen, instead of ringing behind the splash.
+    const appReadyRef = useRef(false);
+    const pendingPickupAlertRef = useRef(null);
+    const emitPickupAlert = data => {
+        if (appReadyRef.current) {
+            DeviceEventEmitter.emit('pickupAlert', data);
+        } else {
+            pendingPickupAlertRef.current = data;
+        }
+    };
+    const markAppReady = () => {
+        appReadyRef.current = true;
+        if (pendingPickupAlertRef.current) {
+            const data = pendingPickupAlertRef.current;
+            pendingPickupAlertRef.current = null;
+            DeviceEventEmitter.emit('pickupAlert', data);
+        }
+    };
     const [loading, setLoading] = useState(false);
     const [cartdetail, setcartdetail] = useState([]);
     const [locationadd, setlocationadd] = useState('');
@@ -357,6 +378,7 @@ const App = () => {
                 setTimeout(async () => {
                     setInitial('Welcome');
                     await BootSplash.hide({ fade: true });
+                    markAppReady();
                     // setInitial('Auth');
                 }, 2000);
             }
@@ -366,6 +388,7 @@ const App = () => {
             setTimeout(async () => {
                 setInitial('Welcome');
                 await BootSplash.hide({ fade: true });
+                markAppReady();
 
                 // setInitial('Auth');
             }, 2000);
@@ -408,15 +431,21 @@ const App = () => {
                     } else {
                         setInitial('App');
                     }
-                    await BootSplash.hide({ fade: true });
-
                     // }, 2000);
                     // triggerDeviceRegistrationAfterSignIn();
                 }
+                // Always hide, even on res.status === false — otherwise the
+                // native splash stays on top of everything (including the
+                // pickup alert modal) forever, and a notification tap looks
+                // like it silently did nothing.
+                await BootSplash.hide({ fade: true });
+                markAppReady();
             },
             err => {
                 setLoading(false);
                 console.log(err);
+                BootSplash.hide({ fade: true });
+                markAppReady();
             },
         );
     };
@@ -496,7 +525,11 @@ const App = () => {
             console.log('Initializing OneSignal...');
             OneSignal.initialize(APP_ID);
 
-            await OneSignal.Notifications.requestPermission(true);
+            // Register click/foreground listeners before awaiting the permission
+            // prompt below — on a cold start (app was killed), OneSignal fires the
+            // click event for the notification that launched the app as soon as a
+            // listener exists, so registering it late can mean missing it and the
+            // alert modal never shows.
 
             // OneSignal.User.pushSubscription.addEventListener('change', event => {
             //     const newId = event?.current?.id;
@@ -515,7 +548,7 @@ const App = () => {
                     || event?.notification?.additionalData
                     || {};
                 if (data?.type === 'pickup_alert') {
-                    DeviceEventEmitter.emit('pickupAlert', data);
+                    emitPickupAlert(data);
                 }
                 // Don't preventDefault → OS still shows the banner and plays the
                 // notification sound alongside our modal.
@@ -528,15 +561,17 @@ const App = () => {
                 // Curbside / in-store "I'm Here" arrival alert for staff.
                 if (data?.type === 'pickup_alert') {
                     if (actionId === 'acknowledge' && data?.alertId) {
-                        Post('acknowledgePickupAlert', { alertId: data.alertId, source: 'notification' }).then(
-                            res => console.log('Pickup acknowledged:', res?.data?.message),
-                            err => console.log('Pickup acknowledge failed:', err),
-                        );
+                        // Post('acknowledgePickupAlert', { alertId: data.alertId, source: 'notification' }).then(
+                        //     res => console.log('Pickup acknowledged:', res?.data?.message),
+                        //     err => console.log('Pickup acknowledge failed:', err),
+                        // );
                         return;
                     }
                     navigate('Employeetab');
-                    // Also pop the alert modal once the app is open.
-                    DeviceEventEmitter.emit('pickupAlert', data);
+                    // Also pop the alert modal — held back until the app is
+                    // actually visible (see emitPickupAlert/markAppReady above)
+                    // so the ring doesn't start while the splash still covers it.
+                    // emitPickupAlert(data);
                     return;
                 }
 
@@ -548,6 +583,8 @@ const App = () => {
                     navigate('Notification')
                 }
             });
+
+            await OneSignal.Notifications.requestPermission(true);
 
             const existingPlayerId = await AsyncStorage.getItem('oneSignalPlayerId');
             console.log('Existing stored player ID:', existingPlayerId);

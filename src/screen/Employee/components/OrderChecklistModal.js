@@ -138,6 +138,27 @@ const requestCamera = async () => {
   }
 };
 
+// Video capture also touches the microphone, so request both permissions
+// up front — missing RECORD_AUDIO here surfaces as the camera app failing to
+// open (or an iOS crash if NSMicrophoneUsageDescription is absent).
+const requestCameraAndMic = async () => {
+  if (Platform.OS !== 'android') return true;
+  try {
+    const results = await PermissionsAndroid.requestMultiple([
+      PermissionsAndroid.PERMISSIONS.CAMERA,
+      PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+    ]);
+    return (
+      results[PermissionsAndroid.PERMISSIONS.CAMERA] ===
+        PermissionsAndroid.RESULTS.GRANTED &&
+      results[PermissionsAndroid.PERMISSIONS.RECORD_AUDIO] ===
+        PermissionsAndroid.RESULTS.GRANTED
+    );
+  } catch (e) {
+    return false;
+  }
+};
+
 const OrderChecklistModal = ({type, order, onClose, onComplete}) => {
   const {t} = useTranslation();
   const [, setLoading] = useContext(LoadContext);
@@ -304,7 +325,7 @@ const OrderChecklistModal = ({type, order, onClose, onComplete}) => {
     });
 
   const pickVideo = () => {
-    requestCamera().then(ok => {
+    requestCameraAndMic().then(ok => {
       if (!ok) return Toast.error(t('Camera permission is required'));
       launchCamera({mediaType: 'video', videoQuality: 'medium'}, async res => {
         if (res.didCancel || !res.assets?.length) return;

@@ -95,7 +95,9 @@ const PickupAlertBanner = () => {
               marginBottom: 10,
             }}>
             <Text style={{fontWeight: '700', color: '#9A3412', fontSize: 14}}>
-              {t('Customer waiting for pickup')}
+              {alert.customerName
+                ? `${alert.customerName} ${t('is waiting for pickup')}`
+                : t('Customer waiting for pickup')}
             </Text>
             <Text style={{color: '#7C2D12', marginTop: 2}}>
               {t('Order')} {alert.orderId} {'·'} {where}

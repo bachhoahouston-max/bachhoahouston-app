@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -38,7 +38,8 @@ const StripeCheckoutButton = ({
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [paymentTimeout, setPaymentTimeout] = useState(null);
+  // Ref, not state: handlers are memoized and would read a stale timer id
+  const paymentTimeout = useRef(null);
   const [linkListner, setLinkLisner] = useState(null)
 
   console.log(orderID)
@@ -112,11 +113,9 @@ const StripeCheckoutButton = ({
 
   useEffect(() => {
     return () => {
-      if (paymentTimeout) {
-        clearTimeout(paymentTimeout);
-      }
+      clearTimeout(paymentTimeout.current);
     };
-  }, [paymentTimeout]);
+  }, []);
 
   const handlePaymentSuccess = useCallback(
     async url => {
@@ -124,10 +123,8 @@ const StripeCheckoutButton = ({
         setLoading(true);
         setIsListening(false);
 
-        if (paymentTimeout) {
-          clearTimeout(paymentTimeout);
-          setPaymentTimeout(null);
-        }
+        clearTimeout(paymentTimeout.current);
+        paymentTimeout.current = null;
         console.log(url)
         let order = url.split('&orderID=');
         const sessionId = order[0].split('session_id=')[1];
@@ -154,6 +151,7 @@ const StripeCheckoutButton = ({
         setWaiting(false)
         setTimeout(() => {
           onPaymentSuccess && onPaymentSuccess();
+          setLoading(false);
         }, 500);
       } catch (error) {
         console.error('Failed to process payment success:', error);
@@ -162,18 +160,15 @@ const StripeCheckoutButton = ({
         onPaymentError && onPaymentError(error);
       }
     },
-    [onPaymentSuccess, onPaymentError, paymentTimeout],
+    [onPaymentSuccess, onPaymentError],
   );
 
   const handlePaymentCancel = useCallback((url) => {
     console.log('User cancelled Stripe Checkout');
-    setLoading(false);
     setIsListening(false);
 
-    if (paymentTimeout) {
-      clearTimeout(paymentTimeout);
-      setPaymentTimeout(null);
-    }
+    clearTimeout(paymentTimeout.current);
+    paymentTimeout.current = null;
     // Alert.alert(url)
     // console.log(url)
     let orderid = '';
@@ -182,10 +177,13 @@ const StripeCheckoutButton = ({
     }
     setWaiting(false)
     setTimeout(() => {
+      // Same tick as the parent's setShowStripePayment(false), so the
+      // triggerCheckout effect doesn't see loading=false and reopen Stripe
       onPaymentCancel && onPaymentCancel(orderid);
+      setLoading(false);
     }, 500);
 
-  }, [onPaymentCancel, paymentTimeout]);
+  }, [onPaymentCancel]);
 
   useEffect(() => {
     if (isListening) {
@@ -519,18 +517,16 @@ const StripeCheckoutButton = ({
       }
 
       console.log('Opening Stripe Checkout URL:', response.url);
-      setIsListening(true);
-
-
 
       const timeout = setTimeout(() => {
         console.log('Payment timeout - auto-cancelling');
+        InAppBrowser.InAppBrowser.closeAuth();
         handlePaymentCancel();
       }, 5 * 60 * 1000);
-      setPaymentTimeout(timeout);
+      paymentTimeout.current = timeout;
 
       // navigate('Payment', { url: response.url })
-      InAppBrowser.InAppBrowser.close()
+      InAppBrowser.InAppBrowser.closeAuth()
       if (await InAppBrowser.InAppBrowser.isAvailable()) {
         // Platform-specific configuration for better iOS compatibility
         const browserOptions = {
@@ -564,31 +560,35 @@ const StripeCheckoutButton = ({
         console.log('Opening InAppBrowser with options:', browserOptions);
 
         try {
-          const result = await InAppBrowser.InAppBrowser.open(response.url, {
-            dismissButtonStyle: 'close',
-            preferredBarTintColor: '#000',
-            preferredControlTintColor: '#fff',
-            forceCloseOnRedirection: false,
-          });
+          // openAuth waits for the redirect to groceryapp:// and hands the URL back,
+          // closing the browser itself (ASWebAuthenticationSession on iOS).
+          const result = await InAppBrowser.InAppBrowser.openAuth(
+            response.url,
+            'groceryapp://',
+            {
+              // Private session: no shared Safari cookies, so iOS skips the
+              // "Wants to Use checkout.stripe.com to Sign In" prompt
+              ephemeralWebSession: true,
+              showTitle: true,
+              enableUrlBarHiding: true,
+              enableDefaultShare: false,
+            },
+          );
           console.log('InAppBrowser result:', result);
 
-          if (result.type === 'cancel') {
-            InAppBrowser.InAppBrowser.close()
-            setTimeout(() => {
-              setLoading(false);
-              onPaymentCancel(orderID)
-            }, 1000);
-            // console.log('InAppBrowser was closed/dismissed');
-            // handlePaymentCancel();
-          } else {
-            // Alert.alert('Please Do not refresh this page. We are processing your order.')
+          if (result.type === 'success' && result.url) {
             setWaiting(true)
+            handleDeepLink(result.url);
+          } else {
+            // User closed the checkout sheet without finishing
+            handlePaymentCancel(`orderID=${orderID}`);
           }
         } catch (browserError) {
           console.log('InAppBrowser failed, falling back to system browser:', browserError);
           //     // Fallback to system browser if InAppBrowser fails
           const supported = await Linking.canOpenURL(response.url);
           if (supported) {
+            setIsListening(true);
             await Linking.openURL(response.url);
           } else {
             throw new Error('Cannot open Stripe Checkout URL');
@@ -600,6 +600,7 @@ const StripeCheckoutButton = ({
         console.log(supported)
         if (supported) {
           // <WebView source={{ uri: response.url }} onNavigationStateChange={onNavStateChange} />
+          setIsListening(true);
           await Linking.openURL(response.url);
         } else {
           throw new Error('Cannot open Stripe Checkout URL');
@@ -610,10 +611,8 @@ const StripeCheckoutButton = ({
       setLoading(false);
       setIsListening(false);
 
-      if (paymentTimeout) {
-        clearTimeout(paymentTimeout);
-        setPaymentTimeout(null);
-      }
+      clearTimeout(paymentTimeout.current);
+      paymentTimeout.current = null;
 
       if (
         error.message.includes('404') ||
@@ -645,7 +644,7 @@ const StripeCheckoutButton = ({
     onPaymentError,
     onPaymentCancel,
     handlePaymentCancel,
-    paymentTimeout,
+    handleDeepLink,
   ]);
 
   return (

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		13791740130EA30101CC6831 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F38C2E6F69F6878E4653E8 /* SceneDelegate.swift */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		310C3D149BFA53A378B6A1F7 /* libPods-BachHoaHouston.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 85DF3E022E93ED065071B3A4 /* libPods-BachHoaHouston.a */; };
 		61302F972E3A1E2D006859CA /* OneSignalNotificationServiceExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 61302F902E3A1E2D006859CA /* OneSignalNotificationServiceExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -64,6 +65,7 @@
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = BachHoaHouston/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		85DF3E022E93ED065071B3A4 /* libPods-BachHoaHouston.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BachHoaHouston.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A657638EB2C3567E4D958BB8 /* Pods-OneSignalNotificationServiceExtension.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-OneSignalNotificationServiceExtension.debug.xcconfig"; path = "Target Support Files/Pods-OneSignalNotificationServiceExtension/Pods-OneSignalNotificationServiceExtension.debug.xcconfig"; sourceTree = "<group>"; };
+		A7F38C2E6F69F6878E4653E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SceneDelegate.swift; path = BachHoaHouston/SceneDelegate.swift; sourceTree = "<group>"; };
 		C678222B2D934C7899C91C36 /* Roboto-Black.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Black.ttf"; path = "../src/Assets/fonts/Roboto-Black.ttf"; sourceTree = "<group>"; };
 		DA8CDDD52D74D87C0B241D6E /* Pods-BachHoaHouston.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BachHoaHouston.release.xcconfig"; path = "Target Support Files/Pods-BachHoaHouston/Pods-BachHoaHouston.release.xcconfig"; sourceTree = "<group>"; };
 		DD66CE35EBFE4A4CA69FD2BF /* Roboto-Bold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Roboto-Bold.ttf"; path = "../src/Assets/fonts/Roboto-Bold.ttf"; sourceTree = "<group>"; };
@@ -133,6 +135,7 @@
 				61302F8B2E3A1D7F006859CA /* BachHoaHouston.entitlements */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
+				A7F38C2E6F69F6878E4653E8 /* SceneDelegate.swift */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */,
 				13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */,
@@ -407,6 +410,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				13791740130EA30101CC6831 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

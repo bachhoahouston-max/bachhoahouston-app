@@ -141,7 +141,9 @@ const PickupAlertModal = () => {
               color: '#9A3412',
               textAlign: 'center',
             }}>
-            {t('Customer waiting for pickup')}
+            {alert.customerName
+              ? `${alert.customerName} ${t('is waiting for pickup')}`
+              : t('Customer waiting for pickup')}
           </Text>
           <Text
             style={{

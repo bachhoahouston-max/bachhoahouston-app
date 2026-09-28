@@ -18,6 +18,7 @@ import moment from 'moment';
 import DriverHeader from '../../Assets/Component/DriverHeader';
 import { useTranslation } from 'react-i18next';
 import LabelWithColon from '../../Assets/Helpers/LabelWithColon';
+import { computeOrderTotal } from '../../Assets/Helpers/orderUtils';
 
 const History = () => {
   const { t } = useTranslation();
@@ -99,7 +100,7 @@ const History = () => {
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.amount}>{Currency}{item?.total}</Text>
+                <Text style={styles.amount}>{Currency}{computeOrderTotal(item)}</Text>
               </View>
             </TouchableOpacity>
           )}

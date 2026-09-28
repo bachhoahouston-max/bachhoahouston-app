@@ -23,6 +23,7 @@ import moment from 'moment';
 import DriverHeader from '../../Assets/Component/DriverHeader';
 import {useTranslation} from 'react-i18next';
 import LabelWithColon from '../../Assets/Helpers/LabelWithColon';
+import {computeOrderTotal} from '../../Assets/Helpers/orderUtils';
 
 const DriverOrder = props => {
   const data = props?.route?.params;
@@ -128,7 +129,7 @@ const DriverOrder = props => {
                 )}
                 <Text style={styles.amount}>
                   {Currency}
-                  {orderdata?.total}
+                  {computeOrderTotal(orderdata)}
                 </Text>
               </View>
             </View>
@@ -173,7 +174,7 @@ const DriverOrder = props => {
               <View style={{alignItems: 'flex-end', width: '100%'}}>
                 <Text style={styles.amount}>
                   {Currency}
-                  {orderdata?.total}
+                  {computeOrderTotal(orderdata)}
                 </Text>
               </View>
             </View>

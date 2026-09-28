@@ -14,6 +14,8 @@ class AppDelegate: RCTAppDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     self.moduleName = "BachHoaHouston"
+    // The window is created by SceneDelegate once UIKit connects a scene.
+    self.automaticallyLoadReactNativeWindow = false
     GMSServices.provideAPIKey("AIzaSyCPpmAHIqh2WVs3nN9c3op0J2vq9qgRaJs")
     self.dependencyProvider = RCTAppDependencyProvider()
 
@@ -22,6 +24,17 @@ class AppDelegate: RCTAppDelegate {
     self.initialProps = [:]
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  override func application(
+    _ application: UIApplication,
+    configurationForConnecting connectingSceneSession: UISceneSession,
+    options: UIScene.ConnectionOptions
+  ) -> UISceneConfiguration {
+    let configuration = UISceneConfiguration(
+      name: "Default Configuration", sessionRole: connectingSceneSession.role)
+    configuration.delegateClass = SceneDelegate.self
+    return configuration
   }
 
   override func application(
