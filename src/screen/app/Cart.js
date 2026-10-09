@@ -47,6 +47,13 @@ import ComboOfferCard from '../../Assets/Component/ComboOfferCard';
 import DriverHeader from '../../Assets/Component/DriverHeader';
 import i18n from 'i18next';
 import PaymentWaitingModal from '../../Assets/Component/PaymentWaitingModal'
+import {
+  cartLineProductId,
+  cartQtyForProduct,
+  getRewardSummary,
+  isRewardItem,
+  rewardLimitError,
+} from '../../Assets/Helpers/rewardCart';
 
 const pickupOptionss = [
   {
@@ -653,8 +660,11 @@ const Cart = ({ route }) => {
     console.log('Cart Details for Order Submission:', carDetails);
     try {
       let newarr = carDetails.map(item => {
+        // Reward lines carry a reward_<id> cart id; the order needs the real product
+        const isReward = isRewardItem(item);
         return {
-          product: item.productid,
+          product: isReward ? item.product_id : item.productid,
+          point_id: isReward ? item.point_id : undefined,
           image: item.image,
           productname: item.productname,
           price: item.offer,
@@ -846,6 +856,8 @@ const Cart = ({ route }) => {
 console.log(cartData)
     cartData.forEach((item) => {
       const source = item?.productSource || "NORMAL";
+      // Reward prices are always $0 and are validated server-side at order time
+      if (source === "REWARD") return;
 
       const mainId = item?.product?._id || item?._id || item?.productid;
 
@@ -874,6 +886,7 @@ console.log(result)
     //  let cData = cartdetail;
     //  console.log()
     const updatedCart = cartData.map((item,i) => {
+      if (isRewardItem(item)) return item;
       const match = latestData.find(
         (p) => String(p.productId) === String(item?._id || item?.product?._id || item?.productid),
       );
@@ -1015,10 +1028,31 @@ console.log(result)
                                 alignItems: 'left',
                                 gap: 5,
                               }}>
-                              <Text style={styles.maintxt}>
-                                {' '}
-                                {Currency} {item?.offer}
-                              </Text>
+                              {isRewardItem(item) ? (
+                                <View style={{ gap: 4 }}>
+                                  <View style={styles.rewardBadge}>
+                                    <Text style={styles.rewardBadgeTxt}>
+                                      🏆 {t('Reward')} · {Number(item?.points || 0).toLocaleString()} {t('points')}
+                                    </Text>
+                                  </View>
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                                    {!!item?.price_slot?.other_price && (
+                                      <Text style={styles.rewardStrike}>
+                                        {Currency}{item.price_slot.other_price}
+                                      </Text>
+                                    )}
+                                    <Text style={styles.rewardFree}>{t('FREE')}</Text>
+                                    <Text style={styles.rewardPts}>
+                                      −{(Number(item?.points || 0) * Number(item?.qty || 1)).toLocaleString()} {t('pts')}
+                                    </Text>
+                                  </View>
+                                </View>
+                              ) : (
+                                <Text style={styles.maintxt}>
+                                  {' '}
+                                  {Currency} {item?.offer}
+                                </Text>
+                              )}
                               {/* <Text style={styles.disctxt}> {Currency} {item?.price}</Text> */}
                               <Text style={styles.qty}>
                                 {item?.price_slot?.value} {item?.price_slot?.unit}
@@ -1066,7 +1100,31 @@ console.log(result)
                                 onPress={async () => {
 
 
-                                  const quantityResult = await checkQuantity(item)
+                                  // Reward lines carry a reward_<id> cart id; stock is checked on the real product
+                                  const productId = cartLineProductId(item);
+                                  if (isRewardItem(item)) {
+                                    try {
+                                      setLoading(true);
+                                      const summary = await getRewardSummary();
+                                      const limitError = rewardLimitError(
+                                        { ...item, qtyInCart: item.qty },
+                                        summary,
+                                        cartdetail,
+                                        t,
+                                      );
+                                      if (limitError) {
+                                        Toast.show({ type: 'error', text1: limitError });
+                                        return;
+                                      }
+                                    } catch (err) {
+                                      Toast.show({ type: 'error', text1: err?.message });
+                                      return;
+                                    } finally {
+                                      setLoading(false);
+                                    }
+                                  }
+
+                                  const quantityResult = await checkQuantity({ productid: productId })
                                   console.log('Available quantity:', quantityResult);
                                   console.log('Current quantity in cart:', item, quantityResult);
 
@@ -1080,7 +1138,8 @@ console.log(result)
                                     return
                                   }
 
-                                  if (item.qty + 1 > (quantityResult.qty ?? 0)) {
+                                  // Count every line of this product (e.g. bought + redeemed as a reward)
+                                  if (cartQtyForProduct(cartdetail, productId) + 1 > (quantityResult.qty ?? 0)) {
                                     Toast.show({
                                       type: 'error',
                                       text1: t('Item is not available in this quantity in stock. Please choose a different item.'),
@@ -2053,6 +2112,14 @@ console.log(result)
                       // //     }
                       // console.log('Price change status:', isPriceChanged);
 
+                      if (cartdetail.every(isRewardItem)) {
+                        Toast.show({
+                          type: 'error',
+                          text1: t('Please add at least one paid item to your cart to redeem rewards.'),
+                        });
+                        return;
+                      }
+
                       if (isPriceChanged) {
                         initiatePurchase();
                         return;
@@ -2325,7 +2392,8 @@ console.log(result)
             },
           }}
           pickupType={PickupType}
-          cartData={cartdetail.map(item => ({
+          // Reward items are $0 and paid with points, so they're not sent to Stripe
+          cartData={cartdetail.filter(item => !isRewardItem(item)).map(item => ({
             productid: item.productid,
             productname: item.productname,
             offer: item.offer,
@@ -2428,6 +2496,33 @@ const disabledDates = (date) => {
 export default Cart;
 
 const styles = StyleSheet.create({
+  rewardBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#14532D',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  rewardBadgeTxt: {
+    color: Constants.white,
+    fontSize: 11,
+    fontFamily: FONTS.SemiBold,
+  },
+  rewardStrike: {
+    color: Constants.customgrey2,
+    fontSize: 12,
+    textDecorationLine: 'line-through',
+  },
+  rewardFree: {
+    color: '#15803D',
+    fontSize: 13,
+    fontFamily: FONTS.Bold,
+  },
+  rewardPts: {
+    color: '#14532D',
+    fontSize: 13,
+    fontFamily: FONTS.SemiBold,
+  },
   container: {
     flex: 1,
     backgroundColor: Constants.lightgreen,

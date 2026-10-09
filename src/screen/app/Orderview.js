@@ -193,9 +193,16 @@ const Orderview = props => {
                           {''} :- {item?.qty}
                         </Text>
                       </View>
-                      <Text style={styles.boxtxt3}>
-                        {Currency} {(Number(item?.price) || 0).toFixed(2)}{' '}
-                      </Text>
+                      {item?.productSource === 'REWARD' ? (
+                        // Redeemed with points, always $0
+                        <Text style={[styles.boxtxt3, { color: '#14532D' }]}>
+                          🏆 {t('Reward')} · {(Number(item?.points || 0) * Number(item?.qty || 1)).toLocaleString()} {t('pts')}
+                        </Text>
+                      ) : (
+                        <Text style={styles.boxtxt3}>
+                          {Currency} {(Number(item?.price) || 0).toFixed(2)}{' '}
+                        </Text>
+                      )}
                     </View>
                   </View>
                 </View>

@@ -540,9 +540,16 @@ const Myorder = () => {
                                   borderRadius: '50%',
                                 }}
                               />
-                              <Text style={styles.boxtxt3}>
-                                {Currency} {Number(prod?.price ?? 0).toFixed(2)}{' '}
-                              </Text>
+                              {prod?.productSource === 'REWARD' ? (
+                                // Redeemed with points, always $0
+                                <Text style={[styles.boxtxt3, { color: '#14532D' }]}>
+                                  🏆 {t('Reward')} · {(Number(prod?.points || 0) * Number(prod?.qty || 1)).toLocaleString()} {t('pts')}
+                                </Text>
+                              ) : (
+                                <Text style={styles.boxtxt3}>
+                                  {Currency} {Number(prod?.price ?? 0).toFixed(2)}{' '}
+                                </Text>
+                              )}
                             </View>
                             {item?.status === 'Completed' && (
                               <Pressable

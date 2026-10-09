@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigationState, useIsFocused } from '@react-navigation/native';
-import { Home, LayoutDashboard, BringToFront, ShoppingCart } from 'lucide-react-native';
+import { Home, LayoutDashboard, BringToFront, ShoppingCart, Trophy } from 'lucide-react-native';
 import Constants, { FONTS } from '../Assets/Helpers/constant';
 import HomeScreen from '../screen/app/Home';
 import Categories from '../screen/app/Categories';
@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import Myorder from '../screen/app/Myorder';
 import Products from '../screen/app/Products';
 import Payment from '../screen/app/Payment';
+import Rewards from '../screen/app/Rewards';
 import { createStackNavigator } from '@react-navigation/stack';
 import { CartContext } from '../../App';
 
@@ -38,6 +39,12 @@ const CategoriesStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="CategoriesTab" component={Categories} />
     <Stack.Screen name="Products" component={Products} />
+  </Stack.Navigator>
+);
+
+const RewardsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="RewardsTab" component={Rewards} />
   </Stack.Navigator>
 );
 
@@ -70,6 +77,12 @@ export const TabNav = () => {
       component: CategoriesStack,
       routeName: 'Categories',
       name: 'Categories',
+    },
+    {
+      icon: Trophy,
+      component: RewardsStack,
+      routeName: 'Rewards',
+      name: 'Rewards',
     },
     {
       icon: BringToFront,

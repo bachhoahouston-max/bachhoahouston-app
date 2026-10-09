@@ -104,7 +104,7 @@ android {
         versionCode 13
         versionName "1.0"
         ndk {
-            abiFilters "arm64-v8a"
+            abiFilters "arm64-v8a", "x86_64"
         }
           manifestPlaceholders = [
             GOOGLE_MAPS_API_KEY: localProperties.getProperty("GOOGLE_MAPS_API_KEY", "")
