@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigationState, useIsFocused } from '@react-navigation/native';
-import { Home, LayoutDashboard, BringToFront, ShoppingCart, Trophy } from 'lucide-react-native';
+import { Home, LayoutDashboard, BringToFront, ShoppingCart, Gift } from 'lucide-react-native';
 import Constants, { FONTS } from '../Assets/Helpers/constant';
 import HomeScreen from '../screen/app/Home';
 import Categories from '../screen/app/Categories';
@@ -79,7 +79,7 @@ export const TabNav = () => {
       name: 'Categories',
     },
     {
-      icon: Trophy,
+      icon: Gift,
       component: RewardsStack,
       routeName: 'Rewards',
       name: 'Rewards',

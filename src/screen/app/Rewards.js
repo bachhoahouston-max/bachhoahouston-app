@@ -3,7 +3,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Image,
-  ImageBackground,
   Linking,
   Modal,
   Pressable,
@@ -21,13 +20,17 @@ import moment from 'moment';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DatePickerModal } from 'react-native-paper-dates';
-import { Trophy, ImagePlus, Upload, X, Calendar } from 'lucide-react-native';
+import { ImagePlus, Upload, X, Calendar, ChevronRight } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import Svg, { Path } from 'react-native-svg';
 import { CartContext, LoadContext, UserContext } from '../../../App';
 import { ApiFormData, GetApi, Post } from '../../Assets/Helpers/Service';
 import { FONTS } from '../../Assets/Helpers/constant';
 import { navigate } from '../../../navigationRef';
 import DriverHeader from '../../Assets/Component/DriverHeader';
 import CameraGalleryPeacker from '../../Assets/Component/CameraGalleryPeacker';
+import TierBadge, { tierColor } from '../../Assets/Component/TierBadge';
+import TierTrophy from '../../Assets/Component/TierTrophy';
 import {
   buildRewardCartItem,
   cartQtyForProduct,
@@ -59,6 +62,25 @@ const C = {
 };
 
 const fmt = n => Number(n || 0).toLocaleString();
+
+// Four-point sparkle used to decorate the points header.
+const Sparkle = ({ size = 16, style }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" style={[{ position: 'absolute' }, style]}>
+    <Path d="M12 0 Q13.2 10.8 24 12 Q13.2 13.2 12 24 Q10.8 13.2 0 12 Q10.8 10.8 12 0Z" fill="#F5B82E" />
+  </Svg>
+);
+
+const Leaf = ({ size = 72, style }) => (
+  <Svg
+    width={size}
+    height={size * 1.6}
+    viewBox="0 0 100 160"
+    pointerEvents="none"
+    style={[{ position: 'absolute' }, style]}>
+    <Path d="M50 0 C95 40 95 120 50 160 C5 120 5 40 50 0Z" fill="#2E7D32" />
+    <Path d="M50 10 V150" stroke="#fff" strokeOpacity={0.5} strokeWidth={2} />
+  </Svg>
+);
 
 const Rewards = () => {
   const { t } = useTranslation();
@@ -202,27 +224,41 @@ const Rewards = () => {
         </View>
 
         {/* Points header */}
-        <View style={styles.header}>
-          <Trophy color={C.gold} size={44} strokeWidth={1.6} />
+        <LinearGradient colors={['#E6F3E8', '#F4F8FC']} style={styles.header}>
+          <Leaf size={72} style={{ left: -22, top: 22, opacity: 0.08, transform: [{ rotate: '-30deg' }] }} />
+          <Leaf size={52} style={{ left: -8, bottom: 0, opacity: 0.06, transform: [{ rotate: '20deg' }] }} />
+          <Leaf size={72} style={{ right: -22, top: 6, opacity: 0.08, transform: [{ rotate: '35deg' }] }} />
+          <Leaf size={58} style={{ right: -8, bottom: 8, opacity: 0.06, transform: [{ rotate: '-15deg' }] }} />
+          <TierTrophy tier={summary?.tier} size={96} />
           <Text style={styles.storeName}>Bách Hoá Houston</Text>
-          <Text style={styles.tier}>
-            {summary?.tier ? t(`${summary.tier.name.toUpperCase()} MEMBER`) : t('REWARDS MEMBER')}
-          </Text>
+          <View style={styles.tierWrap}>
+            <Sparkle size={18} style={{ right: -4, top: -4 }} />
+            <Sparkle size={12} style={{ left: 0, top: 20 }} />
+            <Text style={styles.tier}>
+              {summary?.tier ? t(`${summary.tier.name.toUpperCase()} MEMBER`) : t('REWARDS MEMBER')}
+            </Text>
+          </View>
           {isLoggedIn ? (
             <>
               <Text style={styles.points}>{summary ? fmt(summary.available) : '—'}</Text>
               <Text style={styles.pointsLabel}>{t('Available Points')}</Text>
               {(summary?.pending > 0 || pointsInCart > 0) && (
-                <Text style={styles.note}>
-                  {pointsInCart > 0 && `${fmt(pointsInCart)} ${t('pts in your cart')}`}
-                  {pointsInCart > 0 && summary?.pending > 0 && ' · '}
-                  {summary?.pending > 0 && `${fmt(summary.pending)} ${t('pts on hold for an unpaid checkout')}`}
-                </Text>
-              )}
-              {summary?.awaitingPoints > 0 && (
-                <Text style={[styles.note, { color: C.earn }]}>
-                  +{fmt(summary.awaitingPoints)} {t('pts coming when your orders are completed or delivered')}
-                </Text>
+                <View style={styles.pillRow}>
+                  {pointsInCart > 0 && (
+                    <View style={styles.pill}>
+                      <Text style={styles.pillTxt}>
+                        {fmt(pointsInCart)} {t('pts in your cart')}
+                      </Text>
+                    </View>
+                  )}
+                  {summary?.pending > 0 && (
+                    <View style={styles.pill}>
+                      <Text style={styles.pillTxt}>
+                        {fmt(summary.pending)} {t('pts on hold for an unpaid checkout')}
+                      </Text>
+                    </View>
+                  )}
+                </View>
               )}
             </>
           ) : (
@@ -235,7 +271,7 @@ const Rewards = () => {
               </TouchableOpacity>
             </View>
           )}
-        </View>
+        </LinearGradient>
 
         {tab === 'redeem' && (
           <RedeemTab
@@ -298,6 +334,8 @@ const Rewards = () => {
 };
 
 const RedeemTab = ({ t, groups, banner, catalogLoaded, rewardName, rewardState, onRedeemClick }) => {
+  const [bannerRatio, setBannerRatio] = useState(3);
+
   const shopNow = () => {
     const link = banner?.link;
     if (link && /^https?:\/\//.test(link)) Linking.openURL(link);
@@ -306,23 +344,20 @@ const RedeemTab = ({ t, groups, banner, catalogLoaded, rewardName, rewardState, 
 
   return (
     <View style={{ paddingHorizontal: 14 }}>
-      {/* Store banner */}
-      <View style={styles.banner}>
-        <View style={styles.bannerLeft}>
-          <Text style={styles.bannerTxt}>{t('Visit')}</Text>
-          <Text style={styles.bannerTxt}>Bách Hoá</Text>
-          <Text style={[styles.bannerTxt, { color: C.orange }]}>Houston</Text>
-          <TouchableOpacity style={styles.shopBtn} onPress={shopNow}>
-            <Text style={styles.shopTxt}>{t('Shop now')} →</Text>
-          </TouchableOpacity>
-        </View>
-        <ImageBackground
+      {/* Store banner — the whole banner is the admin-set image and links to the admin-set page */}
+      <TouchableOpacity activeOpacity={0.85} style={styles.banner} onPress={shopNow}>
+        <Image
           // Admin-uploaded banner (Admin → Points → Banner), else the bundled store photo
           source={banner?.image ? { uri: banner.image } : require('../../Assets/Images/store.jpg')}
-          style={{ flex: 3 }}
+          style={{ width: '100%', aspectRatio: banner?.image ? bannerRatio : 3 }}
           resizeMode="cover"
+          onLoad={e => {
+            // Show the admin image at its natural proportions, like the web's h-auto
+            const { width, height } = e?.nativeEvent?.source || {};
+            if (banner?.image && width && height) setBannerRatio(width / height);
+          }}
         />
-      </View>
+      </TouchableOpacity>
 
       {catalogLoaded && groups.length === 0 && (
         <View style={{ alignItems: 'center', paddingVertical: 50 }}>
@@ -426,67 +461,75 @@ const StatusTab = ({ t, isVi, isLoggedIn, summary }) => {
     ? Math.max(Math.min(((tier.qualifyingPoints - currentMin) / (nextMin - currentMin)) * 100, 100), 0)
     : 100;
   const formatTierDate = ymd => (ymd ? moment(ymd, 'YYYY-MM-DD').format('MMM D, YYYY') : '');
+  const tierStyle = tierColor(tier) || { base: '#2E7D32', dark: '#1B5E20' };
+  const nextTiers = (summary?.tiers || []).filter(x => x.minPoints > currentMin);
 
   return (
     <View style={{ paddingHorizontal: 14, gap: 16, marginTop: 8 }}>
       {tier && (
-        <View style={styles.panel}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-            <View>
-              <Text style={styles.smallGrey}>{t('Your tier')}</Text>
+        <View style={[styles.panel, styles.shadow]}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.smallGrey, { fontSize: 13 }]}>{t('Your membership')}</Text>
               <Text style={styles.tierName}>{t(tier.name)}</Text>
               {!!tier.validThrough && (
-                <Text style={styles.smallGrey}>
+                <Text style={[styles.smallGrey, { fontSize: 13, marginTop: 2 }]}>
                   {t('Valid through')} {formatTierDate(tier.validThrough)}
                 </Text>
               )}
             </View>
-            <View style={styles.rateChip}>
-              <Text style={styles.rateChipTxt}>
-                $1 = {tier.pointsPerDollar} {t('points')}
-              </Text>
+            <View style={[styles.rateChip, { backgroundColor: `${tierStyle.base}22` }]}>
+              <Text style={[styles.rateChipTxt, { color: tierStyle.dark }]}>{t(tier.name)}</Text>
             </View>
           </View>
 
-          <View style={{ marginTop: 14 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-              <Text style={styles.smallGrey}>
+          <View style={styles.tierProgress}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+              <Text style={[styles.smallGrey, { color: '#4B5563', flexShrink: 1 }]}>
                 {tier.year} {t('tier points')}: <Text style={{ color: '#111', fontFamily: FONTS.SemiBold }}>{fmt(tier.qualifyingPoints)}</Text>
               </Text>
               {tier.nextTier && (
-                <Text style={styles.smallGrey}>
-                  {fmt(nextMin)} → {t(tier.nextTier.name)}
+                <Text style={[styles.smallGrey, { color: '#4B5563', flexShrink: 1, textAlign: 'right' }]}>
+                  {fmt(nextMin)} {t('points to')} {t(tier.nextTier.name)}
                 </Text>
               )}
             </View>
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${progress}%` }]} />
             </View>
-            <Text style={[styles.body, { marginTop: 8 }]}>
-              {tier.nextTier
-                ? `${fmt(tier.pointsToNextTier)} ${t('more tier points to reach')} ${t(tier.nextTier.name)} ($1 = ${tier.nextTier.pointsPerDollar} ${t('points')})`
-                : t("You've reached our highest tier!")}
+            <Text style={[styles.body, { color: '#1F2937', fontSize: 14, marginTop: 12 }]}>
+              {tier.nextTier ? (
+                <>
+                  <Text style={{ fontFamily: FONTS.Bold }}>{fmt(tier.pointsToNextTier)}</Text> {t('points to reach')}{' '}
+                  {t(tier.nextTier.name)}
+                </>
+              ) : (
+                t("You've reached our highest tier!")
+              )}
             </Text>
             {tier.source === 'carried' && tier.pointsToKeepTier > 0 && (
               <Text style={[styles.body, { color: C.green, marginTop: 4 }]}>
                 {`${t('You earned')} ${t(tier.name)} ${t('in')} ${tier.carriedFromYear}. ${t('Earn')} ${fmt(tier.pointsToKeepTier)} ${t('more tier points in')} ${tier.year} ${t('to keep it through')} ${tier.year + 1}.`}
               </Text>
             )}
-            <Text style={[styles.smallGrey, { fontSize: 11, marginTop: 4 }]}>
-              {t('A tier you reach is kept through the end of the next calendar year. Tier points restart every January 1.')}
-            </Text>
           </View>
+        </View>
+      )}
 
-          <View style={[styles.grid, { marginTop: 14 }]}>
-            {(summary.tiers || []).map((x, idx, all) => (
-              <View
-                key={x.key}
-                style={[styles.tierBox, x.key === tier.key && { borderColor: C.green, backgroundColor: '#EEF6F0' }]}>
-                <Text style={[styles.cardName, { marginTop: 0 }]}>{t(x.name)}</Text>
-                <Text style={styles.smallGrey}>
-                  {all[idx + 1] ? `${fmt(x.minPoints)} – ${fmt(all[idx + 1].minPoints - 1)}` : `${fmt(x.minPoints)}+`}
-                </Text>
-                <Text style={[styles.body, { fontFamily: FONTS.SemiBold }]}>$1 = {x.pointsPerDollar}</Text>
+      {nextTiers.length > 0 && (
+        <View style={[styles.panel, styles.shadow]}>
+          <Text style={[styles.body, { fontSize: 14, marginBottom: 10 }]}>{t('Next tier benefits')}</Text>
+          <View style={{ gap: 8 }}>
+            {nextTiers.map(x => (
+              <View key={x.key} style={styles.nextTierRow}>
+                <TierBadge tier={x} size={40} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.nextTierName}>{t(x.name)}</Text>
+                  <Text style={[styles.smallGrey, { fontSize: 13 }]}>
+                    {fmt(x.minPoints)} {t('points')} · $1 = {x.pointsPerDollar} {t('points')}
+                  </Text>
+                </View>
+                <ChevronRight color={C.lightGrey} size={20} />
               </View>
             ))}
           </View>
@@ -507,15 +550,18 @@ const StatusTab = ({ t, isVi, isLoggedIn, summary }) => {
       <View style={styles.panel}>
         <Text style={styles.panelTitle}>{t('How it works')}</Text>
         <Text style={styles.body}>
-          {t('Earn points on completed or delivered orders and approved in-store receipts: Loyal $1 = 10, Silver $1 = 11, Gold $1 = 12, Diamond $1 = 13 points.')}
+          {t('Earn points on completed or delivered orders and approved in-store receipts. For every $1 you spend, you earn points based on your membership tier: Loyal earns 10 points, Silver earns 11 points, Gold earns 12 points, and Diamond earns 13 points.')}
         </Text>
-        <Text style={[styles.body, { marginTop: 4 }]}>
-          {t('Reward points never expire. Tier points are the points you earn each calendar year — they restart on January 1, and a tier you reach is kept through the end of the next year.')}
+        <Text style={[styles.body, { marginTop: 8 }]}>
+          {t('Reward points never expire. Tier points reset on January 1 each year. Once you reach a tier, you keep it through the end of the following year.')}{' '}
+          {t('Refunded amounts and canceled orders do not earn points.')}
         </Text>
-        <Text style={[styles.body, { marginTop: 4 }]}>{t("Refunded amounts and cancelled orders don't earn points.")}</Text>
+        <Text style={[styles.body, { marginTop: 8 }]}>
+          {t('Bách Hoá Houston reserves the right to modify, suspend, or cancel the Rewards Program at any time, with or without notice.')}
+        </Text>
       </View>
 
-      <View style={[styles.panel, { paddingHorizontal: 0 }]}>
+      {/* <View style={[styles.panel, { paddingHorizontal: 0 }]}>
         <Text style={[styles.panelTitle, { paddingHorizontal: 14 }]}>{t('Points history')}</Text>
         {loaded && history.length === 0 && (
           <Text style={[styles.smallGrey, { textAlign: 'center', paddingVertical: 30 }]}>{t('No points activity yet.')}</Text>
@@ -536,7 +582,7 @@ const StatusTab = ({ t, isVi, isLoggedIn, summary }) => {
             </Text>
           </View>
         ))}
-      </View>
+      </View> */}
     </View>
   );
 };
@@ -743,17 +789,28 @@ const styles = StyleSheet.create({
   tabTxt: { fontFamily: FONTS.Medium, fontSize: 15, color: C.grey },
   tabTxtActive: { fontFamily: FONTS.SemiBold, color: C.green },
   tabLine: { marginTop: 6, height: 3, width: 80, borderRadius: 2, backgroundColor: 'transparent' },
-  header: { alignItems: 'center', marginTop: 16, marginBottom: 16, paddingHorizontal: 16 },
-  storeName: { fontFamily: FONTS.Medium, fontSize: 15, color: C.green, marginTop: 6 },
-  tier: { fontFamily: FONTS.SemiBold, fontSize: 13, color: C.gold, letterSpacing: 3, marginTop: 2 },
-  points: { fontFamily: FONTS.Bold, fontSize: 56, color: C.green, lineHeight: 68, marginTop: 4 },
-  pointsLabel: { fontFamily: FONTS.Medium, fontSize: 15, color: '#374151' },
+  header: {
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 16,
+    marginHorizontal: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 28,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  storeName: { fontFamily: FONTS.SemiBold, fontSize: 15, color: '#0B4F3C' },
+  tierWrap: { marginTop: 8, paddingHorizontal: 32 },
+  tier: { fontFamily: FONTS.SemiBold, fontSize: 13, color: '#0B2F5E', letterSpacing: 3.5 },
+  points: { fontFamily: FONTS.Bold, fontSize: 56, color: '#0B2F5E', lineHeight: 68, marginTop: 4 },
+  pointsLabel: { fontFamily: FONTS.Medium, fontSize: 15, color: '#0B4F8A' },
+  pillRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 12 },
+  pill: { backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
+  pillTxt: { fontFamily: FONTS.Regular, fontSize: 12, color: '#4B5563' },
   note: { fontFamily: FONTS.Regular, fontSize: 12, color: C.grey, marginTop: 4, textAlign: 'center' },
   signInBtn: { backgroundColor: C.button, borderRadius: 30, paddingHorizontal: 32, paddingVertical: 10, marginTop: 12 },
   signInTxt: { color: '#fff', fontFamily: FONTS.SemiBold, fontSize: 15 },
   banner: {
-    flexDirection: 'row',
-    height: 170,
     borderRadius: 18,
     overflow: 'hidden',
     backgroundColor: '#fff',
@@ -763,10 +820,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
-  bannerLeft: { flex: 2, justifyContent: 'center', paddingHorizontal: 14, backgroundColor: '#F2F9F1' },
-  bannerTxt: { fontFamily: FONTS.Bold, fontSize: 20, lineHeight: 25, color: C.green },
-  shopBtn: { alignSelf: 'flex-start', backgroundColor: C.red, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, marginTop: 10 },
-  shopTxt: { color: '#fff', fontFamily: FONTS.SemiBold, fontSize: 13 },
   groupTitle: { fontFamily: FONTS.Bold, fontSize: 19, color: C.green, marginBottom: 10 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
   card: {
@@ -794,12 +847,31 @@ const styles = StyleSheet.create({
   panel: { backgroundColor: '#fff', borderRadius: 16, borderWidth: 1, borderColor: C.border, padding: 14 },
   panelTitle: { fontFamily: FONTS.SemiBold, fontSize: 15, color: C.green, marginBottom: 6 },
   body: { fontFamily: FONTS.Regular, fontSize: 13, color: '#4B5563' },
-  tierName: { fontFamily: FONTS.Bold, fontSize: 24, color: C.green },
-  rateChip: { backgroundColor: C.green, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
-  rateChipTxt: { color: '#fff', fontFamily: FONTS.SemiBold, fontSize: 13 },
+  shadow: {
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 1 },
+  },
+  tierName: { fontFamily: FONTS.Bold, fontSize: 28, lineHeight: 34, color: '#0B2F5E' },
+  rateChip: { borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
+  rateChipTxt: { fontFamily: FONTS.SemiBold, fontSize: 13 },
+  tierProgress: { borderTopWidth: 1, borderTopColor: '#F3F4F6', marginTop: 14, paddingTop: 14 },
   progressTrack: { height: 10, borderRadius: 5, backgroundColor: C.chip, overflow: 'hidden' },
-  progressFill: { height: '100%', borderRadius: 5, backgroundColor: C.green },
-  tierBox: { width: '48.5%', borderWidth: 1, borderColor: C.border, borderRadius: 12, padding: 10, alignItems: 'center' },
+  progressFill: { height: '100%', minWidth: '8%', borderRadius: 5, backgroundColor: '#2E7D32' },
+  nextTierRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+    borderRadius: 12,
+    backgroundColor: '#FAFBFC',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  nextTierName: { fontFamily: FONTS.Bold, fontSize: 17, color: '#0B2F5E' },
   statBox: { width: '48.5%', alignItems: 'center' },
   statValue: { fontFamily: FONTS.Bold, fontSize: 22, color: C.green },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10 },
