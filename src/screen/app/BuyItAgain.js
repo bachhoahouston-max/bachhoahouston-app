@@ -12,7 +12,10 @@ import {useTranslation} from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {CartContext, LoadContext, UserContext} from '../../../App';
-import {getBuyItAgainProducts} from '../../Assets/Helpers/buyItAgain';
+import {
+  // getBuyItAgainProducts,
+  getPurchasedProducts,
+} from '../../Assets/Helpers/buyItAgain';
 import {navigate} from '../../../navigationRef';
 import Constants, {FONTS} from '../../Assets/Helpers/constant';
 import DriverHeader from '../../Assets/Component/DriverHeader';
@@ -33,7 +36,9 @@ const BuyItAgain = () => {
 
     setLoading(true);
     try {
-      setProducts(await getBuyItAgainProducts());
+      // Previous process: only show products that were short during a completed order.
+      // setProducts(await getBuyItAgainProducts());
+      setProducts(await getPurchasedProducts());
     } catch (error) {
       Toast.show({
         type: 'error',
@@ -103,7 +108,7 @@ const BuyItAgain = () => {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>
-              {t('No buy it again products available')}
+              {t('No previously purchased products available')}
             </Text>
           </View>
         }
@@ -124,6 +129,7 @@ const BuyItAgain = () => {
           );
         }}
       />
+      {/* Previous shortage-only UI used the same product-card list above. */}
     </SafeAreaView>
   );
 };
