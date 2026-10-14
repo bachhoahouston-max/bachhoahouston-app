@@ -486,7 +486,7 @@ const RewardsCard = ({ summary, t, onPress }) => {
   return (
     <TouchableOpacity
       onPress={onPress}
-      style={[styles.rewardCard, { backgroundColor: `${c.base}14`, borderColor: `${c.base}55` }]}>
+      style={[styles.rewardCard, { backgroundColor: c.bg, borderColor: c.bg }]}>
       <View style={[styles.rewardIcon, { backgroundColor: `${c.base}26` }]}>
         <TierCrown tier={tier} size={44} />
       </View>

@@ -60,21 +60,25 @@ const pickupOptionss = [
     label: 'In Store Pickup',
     value: 'orderPickup',
     description: 'Pick it up inside the store',
+    image: require('../../Assets/Images/delivery-instore.png'),
   },
   {
     label: 'Curbside Pickup',
     value: 'driveUp',
     description: 'We bring it out to your car',
+    image: require('../../Assets/Images/delivery-curbside.png'),
   },
   {
     label: 'Next Day Local Delivery',
     value: 'localDelivery',
     description: 'Cut off time 11.59 pm',
+    image: require('../../Assets/Images/delivery-sameday.png'),
   },
   {
     label: 'Shipping',
     value: 'shipping',
     description: 'Delivery in 3 to 5 business days',
+    image: require('../../Assets/Images/delivery-shipping.png'),
   },
 ];
 
@@ -1346,26 +1350,33 @@ console.log(result)
                         color={Constants.pink}
                         uncheckedColor={Constants.black}
                       />
-                      <View style={{ flex: 1, marginRight: 10 }}>
-                        <Text
-                          style={{
-                            color:
-                              PickupType === option.value
-                                ? Constants.saffron
-                                : Constants.black,
-                            fontSize: 16,
-                            fontWeight: '700',
-                          }}>
-                          {t(option.label)}
-                        </Text>
-                        <Text
-                          style={{
-                            color: Constants.customgrey2,
-                            fontSize: 14,
-                            marginTop: 2,
-                          }}>
-                          {t(option.description)}
-                        </Text>
+                      <View style={{ flex: 1, marginRight: 10, flexDirection: 'row', alignItems: 'center' }}>
+                        <Image
+                          source={option.image}
+                          style={{ width: 64, height: 48, marginRight: 10 }}
+                          resizeMode="contain"
+                        />
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            style={{
+                              color:
+                                PickupType === option.value
+                                  ? Constants.saffron
+                                  : Constants.black,
+                              fontSize: 16,
+                              fontWeight: '700',
+                            }}>
+                            {t(option.label)}
+                          </Text>
+                          <Text
+                            style={{
+                              color: Constants.customgrey2,
+                              fontSize: 14,
+                              marginTop: 2,
+                            }}>
+                            {t(option.description)}
+                          </Text>
+                        </View>
                       </View>
                     </TouchableOpacity>
 

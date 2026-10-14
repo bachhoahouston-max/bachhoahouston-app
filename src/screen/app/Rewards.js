@@ -229,10 +229,10 @@ const Rewards = () => {
           <Leaf size={52} style={{ left: -8, bottom: 0, opacity: 0.06, transform: [{ rotate: '20deg' }] }} />
           <Leaf size={72} style={{ right: -22, top: 6, opacity: 0.08, transform: [{ rotate: '35deg' }] }} />
           <Leaf size={58} style={{ right: -8, bottom: 8, opacity: 0.06, transform: [{ rotate: '-15deg' }] }} />
-          <TierCrown tier={summary?.tier} size={96} />
+          <TierCrown tier={summary?.tier} size={72} />
           <View style={styles.tierWrap}>
-            <Sparkle size={18} style={{ right: -4, top: -4 }} />
-            <Sparkle size={12} style={{ left: 0, top: 20 }} />
+            <Sparkle size={18} style={{ right: -8, top: -8 }} />
+            <Sparkle size={12} style={{ left: -4, top: 20 }} />
             <Text style={styles.tier}>
               {summary?.tier ? t(`${summary.tier.name.toUpperCase()} MEMBER`) : t('REWARDS MEMBER')}
             </Text>
@@ -788,12 +788,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 16,
     marginHorizontal: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 28,
+    padding: 24,
     borderRadius: 24,
     overflow: 'hidden',
   },
-  tierWrap: { marginTop: 8, paddingHorizontal: 32 },
+  tierWrap: { paddingHorizontal: 32 },
   tier: { fontFamily: FONTS.SemiBold, fontSize: 13, color: '#0B2F5E', letterSpacing: 3.5 },
   points: { fontFamily: FONTS.Bold, fontSize: 56, color: '#0B2F5E', lineHeight: 68, marginTop: 4 },
   pointsLabel: { fontFamily: FONTS.Medium, fontSize: 15, color: '#0B4F8A' },

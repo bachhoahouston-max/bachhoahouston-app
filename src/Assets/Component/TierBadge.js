@@ -3,10 +3,10 @@ import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg'
 
 // Tier colors from the brand spec; light/dark are derived shades for the metallic gradient.
 const TIER_COLORS = {
-  loyal: { base: '#0B4F3C', light: '#3A9C7D', dark: '#05291F' },
-  silver: { base: '#A7B0B7', light: '#EEF1F3', dark: '#6B747B' },
-  gold: { base: '#D8A62E', light: '#F8DE8A', dark: '#94690F' },
-  diamond: { base: '#55B8E8', light: '#D4F1FF', dark: '#22709E' },
+  loyal: { base: '#0a4', light: '#3A9C7D', dark: '#0a4', bg: '#FFFDF4' },
+  silver: { base: '#A7B0B7', light: '#EEF1F3', dark: '#6B747B', bg: '#A7B0B714' },
+  gold: { base: '#D8A62E', light: '#F8DE8A', dark: '#94690F', bg: '#D8A62E14' },
+  diamond: { base: '#55B8E8', light: '#D4F1FF', dark: '#22709E', bg: '#55B8E814' },
 };
 
 export const tierColor = tier => {
