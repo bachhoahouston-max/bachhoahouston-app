@@ -759,7 +759,14 @@ const Cart = ({ route }) => {
         console.log('Order created successfully:', response);
 
         setLoading(false);
-        setOrderID(response?.data?.orders?.orderId)
+        const newOrderId = response?.data?.orders?.orderId;
+        setOrderID(newOrderId)
+        // Rewards only and nothing to pay: no Stripe, the order is placed directly
+        const rewardOnly = carDetails.every(isRewardItem);
+        if (rewardOnly && Number(totalFinal) <= 0) {
+          await placeFreeOrder(newOrderId);
+          return;
+        }
         setTimeout(() => {
           setShowStripePayment(true);
         }, 500);
@@ -780,6 +787,25 @@ const Cart = ({ route }) => {
         type: 'error',
         text1: t('Failed to complete order. Please try again.'),
       });
+    }
+  };
+
+  const placeFreeOrder = async ID => {
+    try {
+      setLoading(true);
+      const res = await Post('place-free-order', { orderID: ID }, {});
+      if (res?.status) {
+        setModalView(true);
+        setTimeout(() => {
+          resetData();
+        }, 1000);
+      } else {
+        Toast.show({ type: 'error', text1: res?.message || t('Failed to create order. Please try again.') });
+      }
+    } catch (err) {
+      Toast.show({ type: 'error', text1: err?.message || t('Failed to create order. Please try again.') });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -2111,14 +2137,6 @@ console.log(result)
                       // //       return;
                       // //     }
                       // console.log('Price change status:', isPriceChanged);
-
-                      if (cartdetail.every(isRewardItem)) {
-                        Toast.show({
-                          type: 'error',
-                          text1: t('Please add at least one paid item to your cart to redeem rewards.'),
-                        });
-                        return;
-                      }
 
                       if (isPriceChanged) {
                         initiatePurchase();

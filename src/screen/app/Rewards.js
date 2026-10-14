@@ -30,7 +30,7 @@ import { navigate } from '../../../navigationRef';
 import DriverHeader from '../../Assets/Component/DriverHeader';
 import CameraGalleryPeacker from '../../Assets/Component/CameraGalleryPeacker';
 import TierBadge, { tierColor } from '../../Assets/Component/TierBadge';
-import TierTrophy from '../../Assets/Component/TierTrophy';
+import TierCrown from '../../Assets/Component/TierCrown';
 import {
   buildRewardCartItem,
   cartQtyForProduct,
@@ -229,8 +229,7 @@ const Rewards = () => {
           <Leaf size={52} style={{ left: -8, bottom: 0, opacity: 0.06, transform: [{ rotate: '20deg' }] }} />
           <Leaf size={72} style={{ right: -22, top: 6, opacity: 0.08, transform: [{ rotate: '35deg' }] }} />
           <Leaf size={58} style={{ right: -8, bottom: 8, opacity: 0.06, transform: [{ rotate: '-15deg' }] }} />
-          <TierTrophy tier={summary?.tier} size={96} />
-          <Text style={styles.storeName}>Bách Hoá Houston</Text>
+          <TierCrown tier={summary?.tier} size={96} />
           <View style={styles.tierWrap}>
             <Sparkle size={18} style={{ right: -4, top: -4 }} />
             <Sparkle size={12} style={{ left: 0, top: 20 }} />
@@ -371,14 +370,14 @@ const RedeemTab = ({ t, groups, banner, catalogLoaded, rewardName, rewardState, 
           <Text style={styles.groupTitle}>
             {fmt(lower)} - {fmt(lower + 99)} {t('Points')}
           </Text>
-          <View style={styles.grid}>
-            {rewards.map(reward => {
+          <View style={styles.grid3}>
+            {rewards.map((reward, idx) => {
               const state = rewardState(reward);
               return (
-                <View key={reward._id} style={styles.card}>
+                <View key={reward._id} style={[styles.card, idx % 3 !== 2 && { marginRight: '2%' }]}>
                   <Image
                     source={{ uri: rewardProductImage(reward.product) }}
-                    style={{ width: '100%', height: 90 }}
+                    style={{ width: '100%', height: 72 }}
                     resizeMode="contain"
                   />
                   <Text style={styles.cardName} numberOfLines={2}>
@@ -393,6 +392,7 @@ const RedeemTab = ({ t, groups, banner, catalogLoaded, rewardName, rewardState, 
                     style={[styles.redeemBtn, state.disabled && { backgroundColor: '#E5E7EB' }]}>
                     <Text
                       numberOfLines={1}
+                      adjustsFontSizeToFit
                       style={[styles.redeemTxt, state.disabled && { color: C.grey, fontSize: 12 }]}>
                       {state.label}
                     </Text>
@@ -424,7 +424,6 @@ const StatusTab = ({ t, isVi, isLoggedIn, summary }) => {
   const stats = [
     { label: t('Total earned'), value: summary?.earned },
     { label: t('Redeemed'), value: summary?.redeemed },
-    { label: t('On hold'), value: summary?.pending },
     {
       label: t('Total spent'),
       value: summary
@@ -460,7 +459,6 @@ const StatusTab = ({ t, isVi, isLoggedIn, summary }) => {
   const progress = nextMin
     ? Math.max(Math.min(((tier.qualifyingPoints - currentMin) / (nextMin - currentMin)) * 100, 100), 0)
     : 100;
-  const formatTierDate = ymd => (ymd ? moment(ymd, 'YYYY-MM-DD').format('MMM D, YYYY') : '');
   const tierStyle = tierColor(tier) || { base: '#2E7D32', dark: '#1B5E20' };
   const nextTiers = (summary?.tiers || []).filter(x => x.minPoints > currentMin);
 
@@ -472,13 +470,9 @@ const StatusTab = ({ t, isVi, isLoggedIn, summary }) => {
             <View style={{ flex: 1 }}>
               <Text style={[styles.smallGrey, { fontSize: 13 }]}>{t('Your membership')}</Text>
               <Text style={styles.tierName}>{t(tier.name)}</Text>
-              {!!tier.validThrough && (
-                <Text style={[styles.smallGrey, { fontSize: 13, marginTop: 2 }]}>
-                  {t('Valid through')} {formatTierDate(tier.validThrough)}
-                </Text>
-              )}
             </View>
             <View style={[styles.rateChip, { backgroundColor: `${tierStyle.base}22` }]}>
+              <TierCrown tier={tier} size={16} />
               <Text style={[styles.rateChipTxt, { color: tierStyle.dark }]}>{t(tier.name)}</Text>
             </View>
           </View>
@@ -539,7 +533,7 @@ const StatusTab = ({ t, isVi, isLoggedIn, summary }) => {
       <View style={styles.grid}>
         {stats.map(s => (
           <View key={s.label} style={[styles.panel, styles.statBox]}>
-            <Text style={styles.statValue}>
+            <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>
               {s.value === undefined || s.value === null ? '—' : typeof s.value === 'number' ? fmt(s.value) : s.value}
             </Text>
             <Text style={styles.smallGrey}>{s.label}</Text>
@@ -799,7 +793,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
   },
-  storeName: { fontFamily: FONTS.SemiBold, fontSize: 15, color: '#0B4F3C' },
   tierWrap: { marginTop: 8, paddingHorizontal: 32 },
   tier: { fontFamily: FONTS.SemiBold, fontSize: 13, color: '#0B2F5E', letterSpacing: 3.5 },
   points: { fontFamily: FONTS.Bold, fontSize: 56, color: '#0B2F5E', lineHeight: 68, marginTop: 4 },
@@ -822,19 +815,20 @@ const styles = StyleSheet.create({
   },
   groupTitle: { fontFamily: FONTS.Bold, fontSize: 19, color: C.green, marginBottom: 10 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
+  grid3: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 10 },
   card: {
-    width: '48.5%',
+    width: '32%',
     backgroundColor: '#fff',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: C.border,
-    padding: 10,
+    padding: 8,
     alignItems: 'center',
   },
-  cardName: { fontFamily: FONTS.SemiBold, fontSize: 14, color: C.green, textAlign: 'center', marginTop: 6, minHeight: 20 },
+  cardName: { fontFamily: FONTS.SemiBold, fontSize: 13, color: C.green, textAlign: 'center', marginTop: 6, minHeight: 20 },
   cardPoints: { fontFamily: FONTS.Regular, fontSize: 13, color: C.grey },
-  redeemBtn: { marginTop: 8, width: '100%', backgroundColor: C.button, borderRadius: 20, paddingVertical: 8, alignItems: 'center' },
-  redeemTxt: { color: '#fff', fontFamily: FONTS.SemiBold, fontSize: 14 },
+  redeemBtn: { marginTop: 8, width: '100%', backgroundColor: C.button, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 4, alignItems: 'center' },
+  redeemTxt: { color: '#fff', fontFamily: FONTS.SemiBold, fontSize: 13 },
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 34 },
   sheetHandle: { alignSelf: 'center', width: 48, height: 5, borderRadius: 3, backgroundColor: '#D1D5DB', marginBottom: 14 },
@@ -855,7 +849,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
   },
   tierName: { fontFamily: FONTS.Bold, fontSize: 28, lineHeight: 34, color: '#0B2F5E' },
-  rateChip: { borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
+  rateChip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6 },
   rateChipTxt: { fontFamily: FONTS.SemiBold, fontSize: 13 },
   tierProgress: { borderTopWidth: 1, borderTopColor: '#F3F4F6', marginTop: 14, paddingTop: 14 },
   progressTrack: { height: 10, borderRadius: 5, backgroundColor: C.chip, overflow: 'hidden' },
@@ -872,7 +866,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   nextTierName: { fontFamily: FONTS.Bold, fontSize: 17, color: '#0B2F5E' },
-  statBox: { width: '48.5%', alignItems: 'center' },
+  statBox: { width: '32%', alignItems: 'center' },
   statValue: { fontFamily: FONTS.Bold, fontSize: 22, color: C.green },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10 },
   rowDivider: { borderTopWidth: 1, borderTopColor: '#F3F4F6' },

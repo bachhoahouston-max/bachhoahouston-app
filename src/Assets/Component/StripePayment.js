@@ -302,6 +302,21 @@ const StripeCheckoutButton = ({
       const isPickupOrder =
         currentPickupType === 'orderPickup' || currentPickupType === 'driveUp';
 
+      const shippingAmount = Number(orderData?.deliveryFee || 0) + Number(extraFees || 0);
+      const feeAsLineItem =
+        !isPickupOrder && !lineItems.length && !(deliveryTip > 0) && !(servicefee > 0) && shippingAmount > 0;
+      if (feeAsLineItem) {
+        lineItems.push({
+          quantity: 1,
+          price_data: {
+            currency: 'usd',
+            unit_amount: Math.round(shippingAmount * 100),
+            tax_behavior: 'exclusive',
+            product_data: { name: 'Delivery Fee', tax_code: 'txcd_92010001' },
+          },
+        });
+      }
+
       const storeLocation = {
         line1: '11360 Bellaire Blvd Suite 700',
         city: 'Houston',
@@ -355,9 +370,7 @@ const StripeCheckoutButton = ({
                 shipping_rate_data: {
                   type: 'fixed_amount',
                   fixed_amount: {
-                    amount: Math.round(
-                      parseFloat(Number(orderData?.deliveryFee) + Number(extraFees) || 0) * 100,
-                    ),
+                    amount: feeAsLineItem ? 0 : Math.round(shippingAmount * 100),
                     currency: 'usd',
                   },
                   display_name: 'Delivery',

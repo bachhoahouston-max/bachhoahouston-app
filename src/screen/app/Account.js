@@ -31,6 +31,8 @@ import { useTranslation } from 'react-i18next';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
 import Language from './Language';
 import { ScrollView } from 'react-native';
+import TierCrown from '../../Assets/Component/TierCrown';
+import { tierColor } from '../../Assets/Component/TierBadge';
 
 const Account = props => {
   const { t } = useTranslation();
@@ -47,6 +49,15 @@ const Account = props => {
     avatar: '',
   });
   const [open, setOpen] = useState(false);
+  const [rewards, setRewards] = useState(null);
+
+  useEffect(() => {
+    if (!user?.token) return;
+    // Card is optional; just hide it if the summary can't be loaded
+    GetApi('rewards/summary', {})
+      .then(res => setRewards(res?.data || null))
+      .catch(() => setRewards(null));
+  }, [user?.token]);
 
   // useEffect(() => {
   //   const willFocusSubscription = props.navigation.addListener(
@@ -183,6 +194,13 @@ const Account = props => {
             marginTop: 10,
             height: Dimensions.get('window').height - 200,
           }}>
+          {rewards?.tier && (
+            <RewardsCard
+              summary={rewards}
+              t={t}
+              onPress={() => navigate('App', { screen: 'Rewards' })}
+            />
+          )}
           <TouchableOpacity
             style={[styles.box, styles.shadowProp]}
             onPress={() => navigate('Myorder')}>
@@ -456,6 +474,46 @@ const Account = props => {
 
 export default Account;
 
+const RewardsCard = ({ summary, t, onPress }) => {
+  const tier = summary.tier;
+  const c = tierColor(tier) || tierColor('gold');
+  const currentMin = summary.tiers?.find(x => x.key === tier.key)?.minPoints || 0;
+  const nextMin = tier.nextTier?.minPoints;
+  const progress = nextMin
+    ? Math.max(Math.min(((tier.qualifyingPoints - currentMin) / (nextMin - currentMin)) * 100, 100), 0)
+    : 100;
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      style={[styles.rewardCard, { backgroundColor: `${c.base}14`, borderColor: `${c.base}55` }]}>
+      <View style={[styles.rewardIcon, { backgroundColor: `${c.base}26` }]}>
+        <TierCrown tier={tier} size={44} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.rewardTier, { color: c.dark }]}>
+          {t(`${tier.name.toUpperCase()} MEMBER`)}
+        </Text>
+        <Text style={styles.rewardPoints}>
+          {Number(summary.available || 0).toLocaleString()} {t('Available Points').toLowerCase()}
+        </Text>
+        <Text style={styles.rewardNext} numberOfLines={1}>
+          {tier.nextTier
+            ? `${Number(tier.pointsToNextTier || 0).toLocaleString()} ${t('points to reach')} ${t(tier.nextTier.name)}`
+            : t("You've reached our highest tier!")}
+        </Text>
+        <View style={styles.rewardTrack}>
+          <View style={[styles.rewardFill, { width: `${progress}%`, backgroundColor: c.base }]} />
+        </View>
+        <Text style={[styles.rewardRate, { color: c.dark }]}>
+          $1 = {tier.pointsPerDollar} {t('points')}
+        </Text>
+      </View>
+      <RightarrowIcon color={'#9CA3AF'} height={15} width={15} style={styles.aliself} />
+    </TouchableOpacity>
+  );
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -631,4 +689,29 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   btmboxfirpart: { flexDirection: 'row', alignItems: 'center', gap: 15 },
+  rewardCard: {
+    width: '93%',
+    alignSelf: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  rewardIcon: {
+    height: 56,
+    width: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  rewardTier: { fontFamily: FONTS.Bold, fontSize: 14, letterSpacing: 0.5 },
+  rewardPoints: { fontFamily: FONTS.Bold, fontSize: 14, color: '#1F2937' },
+  rewardNext: { fontFamily: FONTS.Regular, fontSize: 12, color: '#6B7280' },
+  rewardTrack: { height: 8, borderRadius: 4, backgroundColor: '#E5E7EB', overflow: 'hidden', marginTop: 8 },
+  rewardFill: { height: '100%', minWidth: '6%', borderRadius: 4 },
+  rewardRate: { fontFamily: FONTS.Medium, fontSize: 12, marginTop: 6 },
 });
