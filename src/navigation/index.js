@@ -42,6 +42,7 @@ import TestMap from '../screen/driver/TestMap';
 import CategoryFilter from '../screen/app/CategoryFilter';
 import OrderSuccessScreen from '../screen/app/OrderSuccessScreen';
 import Welcome from '../screen/app/Welcome';
+import BuyItAgain from '../screen/app/BuyItAgain';
 
 const Stack = createNativeStackNavigator();
 const AuthStack = createNativeStackNavigator();
@@ -74,6 +75,7 @@ export default function Navigation(props) {
         <Stack.Screen name="Preview" component={Preview} />
         <Stack.Screen name="Products" component={Products} />
         <Stack.Screen name="CategoryFilter" component={CategoryFilter} />
+        <Stack.Screen name="BuyItAgain" component={BuyItAgain} />
         <Stack.Screen name="Account" component={Account} />
         <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="Shipping" component={Shipping} />

@@ -44,6 +44,7 @@ import ComboCard from '../../Assets/Component/ComboCard';
 import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator } from 'react-native-paper';
 import i18n from '../../../i18n';
+import {ShoppingBag} from 'lucide-react-native';
 
 const { width: windowWidth } = Dimensions.get('window');
 
@@ -460,6 +461,12 @@ const Home = () => {
                 </TouchableOpacity>
               )}
             />
+            <TouchableOpacity
+              style={styles.buyAgain}
+              onPress={() => navigate('BuyItAgain')}>
+              <ShoppingBag size={22} color={Constants.greennew} />
+              <Text style={styles.buyAgainText}>{t('Buy it again')}</Text>
+            </TouchableOpacity>
             <View style={{ height: 10, backgroundColor: 'transparent', marginVertical: 5 }} />
 
             {combolist.length > 0 && (
@@ -563,6 +570,24 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Constants.saffron,
+  },
+  buyAgain: {
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: Constants.white,
+    borderColor: Constants.greennew,
+    borderRadius: 20,
+    borderWidth: 1,
+    flexDirection: 'row',
+    marginHorizontal: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  buyAgainText: {
+    color: Constants.greennew,
+    fontFamily: FONTS.Bold,
+    fontSize: 14,
+    marginLeft: 6,
   },
   inpcov: {
     // borderWidth: 1,

@@ -33,6 +33,7 @@ import { LoadContext, ToastContext } from '../../../App';
 import Header from '../../Assets/Component/Header';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
+import { ShoppingBag } from 'lucide-react-native';
 
 const Categories = () => {
   const { t } = useTranslation();
@@ -75,6 +76,12 @@ const Categories = () => {
             placeholderTextColor={Constants.light_black}></TextInput>
         </TouchableOpacity> */}
       <ScrollView style={{ marginBottom: 70, }}>
+        <TouchableOpacity
+          style={styles.buyAgain}
+          onPress={() => navigate('BuyItAgain')}>
+          <ShoppingBag size={28} color={Constants.greennew} />
+          <Text style={styles.buyAgainText}>{t('Buy it again')}</Text>
+        </TouchableOpacity>
         {/* <LinearGradient
           start={{x: 0, y: 0}}
           end={{x: 1, y: 0}}
@@ -146,6 +153,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Constants.lightgrbeen,
+  },
+  buyAgain: {
+    alignItems: 'center',
+    backgroundColor: Constants.white,
+    borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginHorizontal: 10,
+    marginTop: 10,
+    padding: 14,
+  },
+  buyAgainText: {
+    color: Constants.greennew,
+    fontFamily: FONTS.Bold,
+    fontSize: 16,
+    marginLeft: 8,
   },
   inpcov: {
     // borderWidth: 1,
