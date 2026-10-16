@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable react-native/no-inline-styles */
+
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Image,
@@ -62,6 +61,10 @@ const C = {
 };
 
 const fmt = n => Number(n || 0).toLocaleString();
+const rewardImageSource = product => {
+  const image = rewardProductImage(product);
+  return image ? { uri: image } : require('../../Assets/Images/store.jpg');
+};
 
 // Four-point sparkle used to decorate the points header.
 const Sparkle = ({ size = 16, style }) => (
@@ -116,7 +119,7 @@ const Rewards = () => {
     // Banner is optional (admin-set); keep the default store photo on any failure
     GetApi('rewards/banner', {})
       .then(res => setBanner({ image: res?.data?.image || null, link: res?.data?.link || null }))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Points and stock change after every order, so refresh whenever the tab is shown
@@ -292,13 +295,13 @@ const Rewards = () => {
       {/* Redeem bottom sheet */}
       <Modal visible={!!selected} transparent animationType="slide" onRequestClose={() => setSelected(null)}>
         <Pressable style={styles.sheetBackdrop} onPress={() => setSelected(null)}>
-          <Pressable style={styles.sheet} onPress={() => {}}>
+          <Pressable style={styles.sheet} onPress={() => { }}>
             <View style={styles.sheetHandle} />
             {selected && (
               <>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                   <Image
-                    source={{ uri: rewardProductImage(selected.product) }}
+                    source={rewardImageSource(selected.product)}
                     style={{ width: 72, height: 72 }}
                     resizeMode="contain"
                   />
@@ -367,16 +370,13 @@ const RedeemTab = ({ t, groups, banner, catalogLoaded, rewardName, rewardState, 
 
       {groups.map(([lower, rewards]) => (
         <View key={lower} style={{ marginTop: 20 }}>
-          <Text style={styles.groupTitle}>
-            {fmt(lower)} - {fmt(lower + 99)} {t('Points')}
-          </Text>
-          <View style={styles.grid3}>
+          <View style={styles.grid2}>
             {rewards.map((reward, idx) => {
               const state = rewardState(reward);
               return (
-                <View key={reward._id} style={[styles.card, idx % 3 !== 2 && { marginRight: '2%' }]}>
+                <View key={reward._id} style={[styles.card, idx % 2 === 0 && { marginRight: '2%' }]}>
                   <Image
-                    source={{ uri: rewardProductImage(reward.product) }}
+                    source={rewardImageSource(reward.product)}
                     style={{ width: '100%', height: 72 }}
                     resizeMode="contain"
                   />
@@ -592,7 +592,7 @@ const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
   const loadReceipts = () => {
     GetApi('rewards/my-receipts', {}).then(
       res => setReceipts(Array.isArray(res?.data) ? res.data : []),
-      () => {},
+      () => { },
     );
   };
 
@@ -814,9 +814,10 @@ const styles = StyleSheet.create({
   },
   groupTitle: { fontFamily: FONTS.Bold, fontSize: 19, color: C.green, marginBottom: 10 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
+  grid2: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 10 },
   grid3: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 10 },
   card: {
-    width: '32%',
+    width: '49%',
     backgroundColor: '#fff',
     borderRadius: 16,
     borderWidth: 1,
@@ -827,7 +828,7 @@ const styles = StyleSheet.create({
   cardName: { fontFamily: FONTS.SemiBold, fontSize: 13, color: C.green, textAlign: 'center', marginTop: 6, minHeight: 20 },
   cardPoints: { fontFamily: FONTS.Regular, fontSize: 13, color: C.grey },
   redeemBtn: { marginTop: 8, width: '100%', backgroundColor: C.button, borderRadius: 20, paddingVertical: 8, paddingHorizontal: 4, alignItems: 'center' },
-  redeemTxt: { color: '#fff', fontFamily: FONTS.SemiBold, fontSize: 13 },
+  redeemTxt: { color: '#fff', fontFamily: FONTS.Medium, fontSize: 13 },
   sheetBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-end' },
   sheet: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 34 },
   sheetHandle: { alignSelf: 'center', width: 48, height: 5, borderRadius: 3, backgroundColor: '#D1D5DB', marginBottom: 14 },

@@ -25,7 +25,7 @@ export const cartRewardPoints = cart =>
     );
 
 export const rewardProductImage = product =>
-  product?.varients?.[0]?.image?.[0] || '';
+  product?.varients?.[0]?.image?.[0] || product?.image?.[0] || product?.image || '';
 
 // Live stock for a product (same endpoint the normal add-to-cart buttons use)
 export const getAvailableStock = async productId => {

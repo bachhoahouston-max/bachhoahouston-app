@@ -50,7 +50,9 @@ import PaymentWaitingModal from '../../Assets/Component/PaymentWaitingModal'
 import {
   cartLineProductId,
   cartQtyForProduct,
+  buildRewardCartItem,
   getRewardSummary,
+  getAvailableStock,
   isRewardItem,
   rewardLimitError,
 } from '../../Assets/Helpers/rewardCart';
@@ -133,6 +135,21 @@ const Cart = ({ route }) => {
   const [ExtraFeesObj, setExtraFeesObj] = useState({})
   const [waiting, setWaiting] = useState(false);
   const [isPriceChanged, setIsPriceChanged] = useState(false);
+  const [rewardCatalog, setRewardCatalog] = useState([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!user?._id || !user?.token) {
+        setRewardCatalog([]);
+        return undefined;
+      }
+      GetApi('rewards/catalog', {}).then(
+        res => setRewardCatalog(Array.isArray(res?.data) ? res.data : []),
+        err => Toast.show({ type: 'error', text1: err?.message }),
+      );
+      return undefined;
+    }, [user?._id, user?.token]),
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -962,6 +979,67 @@ console.log(result)
   //  }, 500);
   };
 
+  const redeemReward = async (item, index) => {
+    const productId = item?.productid || item?.id || item?._id;
+    const reward = rewardCatalog.find(
+      candidate => String(candidate?.product?._id) === String(productId),
+    );
+    if (!reward) return;
+
+    Alert.alert(
+      t('Redeem item'),
+      `${t('Redeem this item for')} ${Number(reward.points).toLocaleString()} ${t('points')}?`,
+      [
+        { text: t('Cancel'), style: 'cancel' },
+        {
+          text: t('Redeem'),
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const [summary, stock] = await Promise.all([
+                getRewardSummary(),
+                getAvailableStock(productId),
+              ]);
+              const limitError = rewardLimitError(
+                { ...reward, qtyInCart: 0 },
+                summary,
+                cartdetail,
+                t,
+              );
+              if (stock < 1) {
+                Toast.show({ type: 'error', text1: t('This item is currently out of stock.') });
+                return;
+              }
+              if (limitError) {
+                Toast.show({ type: 'error', text1: limitError });
+                return;
+              }
+
+              const next = [...cartdetail];
+              if (Number(next[index]?.qty || 1) > 1) {
+                next[index] = {
+                  ...next[index],
+                  qty: next[index].qty - 1,
+                  total: (Number(next[index].price) || 0) * (next[index].qty - 1),
+                };
+                next.push(buildRewardCartItem(reward));
+              } else {
+                next[index] = buildRewardCartItem(reward);
+              }
+              setcartdetail(next);
+              await AsyncStorage.setItem('cartdata', JSON.stringify(next));
+              Toast.show({ type: 'success', text1: t('Reward added to cart') });
+            } catch (err) {
+              Toast.show({ type: 'error', text1: err?.message || t('Unable to redeem this reward.') });
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const checkPRiceOFPRoduct = async (cartData) => {
     try {
       setLoading(true);
@@ -1062,7 +1140,7 @@ console.log(result)
                                 <View style={{ gap: 4 }}>
                                   <View style={styles.rewardBadge}>
                                     <Text style={styles.rewardBadgeTxt}>
-                                      🏆 {t('Reward')} · {Number(item?.points || 0).toLocaleString()} {t('points')}
+                                      🏆 {t('Reward')} · {(Number(item?.points || 0) * Number(item?.qty || 1)).toLocaleString()} {t('points')}
                                     </Text>
                                   </View>
                                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -1083,6 +1161,27 @@ console.log(result)
                                   {Currency} {item?.offer}
                                 </Text>
                               )}
+                              {!isRewardItem(item) &&
+                                item?.productSource !== 'COMBO' &&
+                                rewardCatalog.some(
+                                  reward => String(reward?.product?._id) === String(item?.productid),
+                                ) && (
+                                  <TouchableOpacity
+                                    style={styles.redeemRewardBtn}
+                                    onPress={() => redeemReward(item, i)}>
+                                    <Text style={styles.redeemRewardTxt}>
+                                      🎁{' '}
+                                      {(
+                                        Number(
+                                          rewardCatalog.find(
+                                            reward => String(reward?.product?._id) === String(item?.productid),
+                                          )?.points || 0,
+                                        ) * Number(item?.qty || 1)
+                                      ).toLocaleString()}{' '}
+                                      {t('points')} · {t('Redeem with points')}
+                                    </Text>
+                                  </TouchableOpacity>
+                                )}
                               {/* <Text style={styles.disctxt}> {Currency} {item?.price}</Text> */}
                               <Text style={styles.qty}>
                                 {item?.price_slot?.value} {item?.price_slot?.unit}
@@ -2551,6 +2650,19 @@ const styles = StyleSheet.create({
     color: '#14532D',
     fontSize: 13,
     fontFamily: FONTS.SemiBold,
+  },
+  redeemRewardBtn: {
+    marginTop: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: '#2E7D32',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  redeemRewardTxt: {
+    color: Constants.white,
+    fontSize: 11,
+    fontFamily: FONTS.Medium,
   },
   container: {
     flex: 1,
