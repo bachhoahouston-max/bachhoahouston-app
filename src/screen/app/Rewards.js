@@ -374,7 +374,7 @@ const RedeemTab = ({ t, groups, banner, catalogLoaded, rewardName, rewardState, 
             {rewards.map((reward, idx) => {
               const state = rewardState(reward);
               return (
-                <View key={reward._id} style={[styles.card, idx % 2 === 0 && { marginRight: '2%' }]}>
+                <View key={reward._id} style={styles.card}>
                   <Image
                     source={rewardImageSource(reward.product)}
                     style={{ width: '100%', height: 72 }}
@@ -814,10 +814,15 @@ const styles = StyleSheet.create({
   },
   groupTitle: { fontFamily: FONTS.Bold, fontSize: 19, color: C.green, marginBottom: 10 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
-  grid2: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 10 },
+  grid2: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 10,
+  },
   grid3: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 10 },
   card: {
-    width: '49%',
+    width: '48%',
     backgroundColor: '#fff',
     borderRadius: 16,
     borderWidth: 1,

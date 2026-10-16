@@ -1118,7 +1118,7 @@ console.log(result)
                         <Pressable onPress={() => navigate('Preview', item.slug)}>
                           <Image source={{ uri: item?.image }} style={styles.cardimg} />
                         </Pressable>
-                        <View>
+                        <View style={styles.productInfo}>
                           <Text style={styles.productname}>
                             {i18n.language === 'vi' ? (item?.vietnamiesName || item?.productname) : item?.productname}
                             {/* {item?.productname} */}
@@ -1169,7 +1169,7 @@ console.log(result)
                                   <TouchableOpacity
                                     style={styles.redeemRewardBtn}
                                     onPress={() => redeemReward(item, i)}>
-                                    <Text style={styles.redeemRewardTxt}>
+                                    <Text style={styles.redeemRewardTxt} numberOfLines={1} adjustsFontSizeToFit>
                                       🎁{' '}
                                       {(
                                         Number(
@@ -2654,6 +2654,7 @@ const styles = StyleSheet.create({
   redeemRewardBtn: {
     marginTop: 8,
     alignSelf: 'flex-start',
+    maxWidth: '100%',
     backgroundColor: '#2E7D32',
     borderRadius: 20,
     paddingHorizontal: 10,
@@ -2729,13 +2730,18 @@ const styles = StyleSheet.create({
   },
   firstpart: {
     flexDirection: 'row',
-    // alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
   },
   firstleftpart: {
     flexDirection: 'row',
-    // alignItems: 'center',
     gap: 10,
+    flex: 1,
+    minWidth: 0,
+  },
+  productInfo: {
+    flex: 1,
+    minWidth: 0,
   },
   carttxt: {
     color: Constants.white,
@@ -2759,7 +2765,7 @@ const styles = StyleSheet.create({
     color: Constants.black,
     fontFamily: FONTS.Medium,
     marginBottom: 5,
-    width: Dimensions.get('window').width - 150,
+    flexShrink: 1,
   },
   qty: {
     fontSize: 14,
@@ -2774,7 +2780,7 @@ const styles = StyleSheet.create({
   },
   addcov: {
     flexDirection: 'row',
-    width: 120,
+    width: 108,
     height: 40,
     alignSelf: 'flex-end',
     // borderRadius:10
