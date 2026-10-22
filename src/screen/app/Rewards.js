@@ -586,6 +586,7 @@ const emptyForm = { image: '', amount: '', purchaseDate: '', note: '' };
 const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
   const [form, setForm] = useState(emptyForm);
   const [receipts, setReceipts] = useState([]);
+  const [scan, setScan] = useState(null);
   const [dateOpen, setDateOpen] = useState(false);
   const cameraRef = useRef(null);
 
@@ -609,7 +610,32 @@ const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
     ApiFormData(asset)
       .then(
         res => {
-          if (res?.status && res?.data?.file) setForm(f => ({ ...f, image: res.data.file }));
+          if (res?.status && res?.data?.file) {
+            const image = res.data.file;
+            setForm(f => ({ ...f, image }));
+            setScan({ status: 'scanning' });
+            Post('rewards/receipt/scan', { image }, {}).then(
+              scanRes => {
+                const detected = scanRes?.data || scanRes;
+                setScan({status: 'scanned', ...detected});
+                setForm(f => ({
+                  ...f,
+                  amount:
+                    detected?.amount !== undefined && detected?.amount !== null
+                      ? String(detected.amount)
+                      : f.amount,
+                  purchaseDate: detected?.purchaseDate || f.purchaseDate,
+                  note: detected?.note || f.note,
+                  storeName: detected?.storeName || f.storeName,
+                  receiptNumber: detected?.receiptNumber || f.receiptNumber,
+                }));
+              },
+              err => {
+                setScan({status: 'failed'});
+                Toast.show({type: 'error', text1: err?.message || t('Receipt scan failed')});
+              },
+            );
+          }
           else Toast.show({ type: 'error', text1: t('Upload failed') });
         },
         err => Toast.show({ type: 'error', text1: err?.message || t('Upload failed') }),
@@ -623,7 +649,7 @@ const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
       return;
     }
     setLoading(true);
-    Post('rewards/receipt', form, {}).then(
+    Post('rewards/receipt', {...form, scanToken: scan?.scanToken}, {}).then(
       res => {
         setLoading(false);
         if (res?.status === false) {
@@ -632,6 +658,7 @@ const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
         }
         Toast.show({ type: 'success', text1: res?.data?.message || t('Receipt uploaded') });
         setForm(emptyForm);
+        setScan(null);
         loadReceipts();
         onUploaded?.();
       },
@@ -660,7 +687,12 @@ const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
         {form.image ? (
           <View style={{ marginTop: 14 }}>
             <Image source={{ uri: form.image }} style={styles.receiptPreview} resizeMode="contain" />
-            <TouchableOpacity style={styles.removeImg} onPress={() => setForm({ ...form, image: '' })}>
+            <TouchableOpacity
+              style={styles.removeImg}
+              onPress={() => {
+                setForm({...form, image: ''});
+                setScan(null);
+              }}>
               <X size={16} color="#374151" />
             </TouchableOpacity>
           </View>
@@ -669,6 +701,22 @@ const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
             <ImagePlus color={C.green} size={36} />
             <Text style={[styles.body, { fontFamily: FONTS.Medium }]}>{t('Tap to choose a receipt photo')}</Text>
           </TouchableOpacity>
+        )}
+        {scan?.status === 'scanning' && (
+          <Text style={[styles.smallGrey, { marginTop: 10 }]}>{t('Reading your receipt...')}</Text>
+        )}
+        {scan?.alreadySubmitted && (
+          <Text style={styles.receiptWarning}>{t('This receipt has already been submitted for points.')}</Text>
+        )}
+        {scan?.paymentStatus === 'declined' && (
+          <Text style={styles.receiptWarning}>
+            {t('This receipt shows the payment was declined. Points are only given for completed purchases.')}
+          </Text>
+        )}
+        {scan?.isStoreReceipt === false && (
+          <Text style={styles.receiptWarning}>
+            {t("This doesn't look like a Bách Hoá Houston receipt. Only Bách Hoá Houston purchases earn points.")}
+          </Text>
         )}
 
         <Text style={styles.label}>{t('Receipt total ($)')}</Text>
@@ -889,6 +937,16 @@ const styles = StyleSheet.create({
   },
   receiptPreview: { width: '100%', height: 240, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: '#F9FAFB' },
   removeImg: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 14, padding: 4 },
+  receiptWarning: {
+    marginTop: 10,
+    padding: 10,
+    borderRadius: 8,
+    color: '#B91C1C',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    fontFamily: FONTS.Regular,
+  },
   label: { fontFamily: FONTS.Medium, fontSize: 13, color: '#374151', marginTop: 14, marginBottom: 4 },
   input: {
     backgroundColor: '#F9FAFB',

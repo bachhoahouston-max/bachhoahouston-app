@@ -1,5 +1,13 @@
 import {GetApi} from './Service';
 
+export const getBuyItAgainCategoryProducts = async (page = 1, limit = 24) => {
+  const response = await GetApi('getBuyItAgainProducts', {}, {page, limit});
+  return {
+    products: Array.isArray(response?.data) ? response.data : [],
+    totalPages: Number(response?.pagination?.totalPages || 0),
+  };
+};
+
 export const getBuyItAgainProducts = async () => {
   const response = await GetApi('getStatusCompletedProducts', {});
   const products = new Map();

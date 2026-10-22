@@ -28,6 +28,12 @@ import Toast from 'react-native-toast-message';
 import i18n from '../../../i18n';
 
 const SignUp = props => {
+  const requestedRedirect = props?.route?.params?.redirect;
+  const redirectTo = ['Home', 'Categories', 'Rewards', 'Orders', 'Cart'].includes(
+    requestedRedirect,
+  )
+    ? requestedRedirect
+    : null;
   const { t } = useTranslation();
   const [showPass, setShowPass] = useState(true);
   const [submitted, setSubmitted] = useState(false);
@@ -97,7 +103,7 @@ const SignUp = props => {
             username: '',
           });
           setToast(res.message);
-          navigate('SignIn')
+          navigate('SignIn', redirectTo ? {redirect: redirectTo} : undefined)
 
         } else {
           setLoading(false);
@@ -387,7 +393,10 @@ const SignUp = props => {
               <Text style={newStyles.backToLoginText}>
                 {t('Already have any account ?')}
               </Text>
-              <TouchableOpacity onPress={() => navigate('SignIn')}>
+              <TouchableOpacity
+                onPress={() =>
+                  navigate('SignIn', redirectTo ? {redirect: redirectTo} : undefined)
+                }>
                 <Text style={newStyles.backToLoginLink}> {t('Sign in')}</Text>
               </TouchableOpacity>
             </View>

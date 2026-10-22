@@ -21,9 +21,10 @@ const GetApi = async (url, props, data) => {
               headers: {
                 Authorization: `jwt ${userDetail?.token}`,
               },
-              params: {
-                id: data
-              }
+              params:
+                data && typeof data === 'object'
+                  ? data
+                  : {id: data},
             })
             .then(res => {
               // console.log(res.data);

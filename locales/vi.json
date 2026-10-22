@@ -710,5 +710,18 @@
     "Loyal": "Thân thiết",
     "Silver": "Bạc",
     "Gold": "Vàng",
-    "Diamond": "Kim cương"
+    "Diamond": "Kim cương",
+    "Load more": "Tải thêm",
+    "Loading...": "Đang tải...",
+    "Receipt scan failed": "Không thể quét hóa đơn",
+    "Reading your receipt...": "Đang đọc hóa đơn...",
+    "This receipt has already been submitted for points.": "Hóa đơn này đã được gửi để tích điểm.",
+    "This receipt shows the payment was declined. Points are only given for completed purchases.": "Hóa đơn này cho thấy thanh toán bị từ chối. Chỉ các giao dịch hoàn tất mới được tích điểm.",
+    "This doesn't look like a Bách Hoá Houston receipt. Only Bách Hoá Houston purchases earn points.": "Hóa đơn này không giống hóa đơn của Bách Hoá Houston. Chỉ hóa đơn mua hàng tại Bách Hoá Houston mới được tích điểm.",
+    "Out of Stock": "Hết hàng",
+    "These items are unavailable. Remove them to continue.": "Các mặt hàng này hiện không có sẵn. Vui lòng xóa để tiếp tục.",
+    "Available quantity": "Số lượng có sẵn",
+    "Set quantity to": "Đặt số lượng thành",
+    "Remove": "Xóa",
+    "Remove all": "Xóa tất cả"
 }

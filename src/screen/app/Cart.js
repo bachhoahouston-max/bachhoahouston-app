@@ -16,7 +16,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import Constants, { Currency, FONTS } from '../../Assets/Helpers/constant';
 import {
   Calendar,
@@ -150,6 +150,97 @@ const Cart = ({ route }) => {
       return undefined;
     }, [user?._id, user?.token]),
   );
+
+  const validateCart = useCallback(async snapshot => {
+    if (!snapshot.length) return snapshot;
+    const res = await Post(
+      'validateCart',
+      {
+        items: snapshot.map(item => ({
+          productId: cartLineProductId(item),
+          productSource: item?.productSource || 'NORMAL',
+          priceSlotIndex: item?.priceSlotIndex,
+          qty: item?.qty,
+        })),
+      },
+      {},
+    );
+    if (res?.status === false) {
+      throw new Error(res?.message || t('Unable to validate cart.'));
+    }
+
+    const results = Array.isArray(res?.data) ? res.data : [];
+    return snapshot.map((item, index) => {
+      const result = results[index];
+      if (!result) return item;
+
+      const next = {
+        ...item,
+        stockStatus: result.stockStatus,
+        availableQty: result.availableQty,
+      };
+      if (result.price !== null && result.price !== undefined && !isRewardItem(item)) {
+        next.offer = result.price;
+        next.price = result.price;
+        next.total = Number(result.price) * Number(item.qty || 1);
+      }
+      return next;
+    });
+  }, [t]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      const snapshot = Array.isArray(cartdetail) ? cartdetail : [];
+      validateCart(snapshot)
+        .then(next => {
+          if (!active || JSON.stringify(next) === JSON.stringify(snapshot)) return;
+          setcartdetail(next);
+          return AsyncStorage.setItem('cartdata', JSON.stringify(next));
+        })
+        .catch(err => {
+          if (active) Toast.show({ type: 'error', text1: err?.message || t('Unable to validate cart.') });
+        });
+      return () => {
+        active = false;
+      };
+    }, [cartdetail, setcartdetail, t, validateCart]),
+  );
+
+  const stockIssues = useMemo(
+    () =>
+      (cartdetail || []).filter(
+        item => item?.stockStatus === 'OUT_OF_STOCK' || item?.stockStatus === 'LIMITED',
+      ),
+    [cartdetail],
+  );
+
+  const removeOutOfStock = async () => {
+    const next = (cartdetail || []).filter(
+      item => item?.stockStatus !== 'OUT_OF_STOCK' && item?.stockStatus !== 'LIMITED',
+    );
+    setcartdetail(next);
+    await AsyncStorage.setItem('cartdata', JSON.stringify(next));
+  };
+
+  const setStockIssueQuantity = async (item, quantity) => {
+    const productId = cartLineProductId(item);
+    const otherLinesQty = cartQtyForProduct(cartdetail, productId) - Number(item?.qty || 0);
+    const keepableQty = Number(item?.availableQty || 0) - otherLinesQty;
+    if (keepableQty < 1) return;
+    const next = cartdetail.map(line =>
+      line === item
+        ? {
+            ...line,
+            qty: Math.min(Number(quantity), keepableQty),
+            total: Number(line?.price || line?.offer || 0) * Math.min(Number(quantity), keepableQty),
+            stockStatus: 'AVAILABLE',
+          }
+        : line,
+    );
+    setcartdetail(next);
+    await AsyncStorage.setItem('cartdata', JSON.stringify(next));
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -1090,6 +1181,57 @@ console.log(result)
         {cartdetail && cartdetail.length > 0 ? (
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={{ backgroundColor: Constants.lightgreen }}>
+              {stockIssues.length > 0 && (
+                <View style={styles.stockIssuePanel}>
+                  <Text style={styles.stockIssueTitle}>
+                    {t('Out of Stock')} ({stockIssues.length})
+                  </Text>
+                  <Text style={styles.stockIssueDescription}>
+                    {t('These items are unavailable. Remove them to continue.')}
+                  </Text>
+                  {stockIssues.map((item, index) => {
+                    const otherLinesQty =
+                      cartQtyForProduct(cartdetail, cartLineProductId(item)) -
+                      Number(item?.qty || 0);
+                    const keepableQty = Number(item?.availableQty || 0) - otherLinesQty;
+                    const isLimited = item?.stockStatus === 'LIMITED';
+                    return (
+                      <View style={styles.stockIssueRow} key={`${cartLineProductId(item)}-${index}`}>
+                        <View style={styles.stockIssueInfo}>
+                          <Text style={styles.stockIssueName} numberOfLines={2}>
+                            {i18n.language === 'vi'
+                              ? item?.vietnamiesName || item?.productname
+                              : item?.productname}
+                          </Text>
+                          <Text style={styles.stockIssueStatus}>
+                            {isLimited
+                              ? `${t('Available quantity')}: ${item?.availableQty}`
+                              : t('Out of stock')}
+                          </Text>
+                          {isLimited && keepableQty > 0 && (
+                            <TouchableOpacity onPress={() => setStockIssueQuantity(item, keepableQty)}>
+                              <Text style={styles.stockIssueAction}>
+                                {t('Set quantity to')} {keepableQty}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                        <TouchableOpacity
+                          onPress={async () => {
+                            const next = cartdetail.filter(line => line !== item);
+                            setcartdetail(next);
+                            await AsyncStorage.setItem('cartdata', JSON.stringify(next));
+                          }}>
+                          <Text style={styles.stockIssueRemove}>{t('Remove')}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+                  <TouchableOpacity style={styles.removeAllStockButton} onPress={removeOutOfStock}>
+                    <Text style={styles.removeAllStockText}>{t('Remove all')}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
               {cartdetail.map((item, i) => (
                 item?.productSource === "COMBO" ? (
                   <ComboOfferCard key={i} cartItem={item} isCartMode />
@@ -2238,6 +2380,14 @@ console.log(result)
                         return;
                       }
 
+                      if (stockIssues.length > 0) {
+                        Toast.show({
+                          type: 'error',
+                          text1: t('Remove out-of-stock items and review updated prices before continuing.'),
+                        });
+                        return;
+                      }
+
 
 
                       // const isIncludesComboORsales = cartdetail.find(item => item.productSource === 'COMBO' || item.productSource === 'SALE');
@@ -2715,6 +2865,74 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 1,
+  },
+  stockIssuePanel: {
+    marginHorizontal: 10,
+    marginTop: 10,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    backgroundColor: '#FEF2F2',
+  },
+  stockIssueTitle: {
+    color: '#DC2626',
+    fontSize: 18,
+    fontFamily: FONTS.Bold,
+  },
+  stockIssueDescription: {
+    color: '#374151',
+    fontSize: 13,
+    fontFamily: FONTS.Regular,
+    marginTop: 4,
+  },
+  stockIssueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FECACA',
+  },
+  stockIssueInfo: {
+    flex: 1,
+  },
+  stockIssueName: {
+    color: Constants.black,
+    fontSize: 14,
+    fontFamily: FONTS.Medium,
+  },
+  stockIssueStatus: {
+    color: '#DC2626',
+    fontSize: 12,
+    fontFamily: FONTS.Medium,
+    marginTop: 3,
+  },
+  stockIssueAction: {
+    color: Constants.greennew,
+    fontSize: 12,
+    fontFamily: FONTS.Bold,
+    marginTop: 5,
+  },
+  stockIssueRemove: {
+    color: '#DC2626',
+    fontSize: 13,
+    fontFamily: FONTS.Bold,
+  },
+  removeAllStockButton: {
+    alignSelf: 'flex-end',
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    backgroundColor: Constants.white,
+  },
+  removeAllStockText: {
+    color: '#DC2626',
+    fontSize: 13,
+    fontFamily: FONTS.Bold,
   },
   removeIconBtn: {
     position: 'absolute',

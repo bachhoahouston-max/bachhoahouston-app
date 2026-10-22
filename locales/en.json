@@ -554,5 +554,18 @@
   "Loyal": "Loyal",
   "Silver": "Silver",
   "Gold": "Gold",
-  "Diamond": "Diamond"
+  "Diamond": "Diamond",
+  "Load more": "Load more",
+  "Loading...": "Loading...",
+  "Receipt scan failed": "Receipt scan failed",
+  "Reading your receipt...": "Reading your receipt...",
+  "This receipt has already been submitted for points.": "This receipt has already been submitted for points.",
+  "This receipt shows the payment was declined. Points are only given for completed purchases.": "This receipt shows the payment was declined. Points are only given for completed purchases.",
+  "This doesn't look like a Bách Hoá Houston receipt. Only Bách Hoá Houston purchases earn points.": "This doesn't look like a Bách Hoá Houston receipt. Only Bách Hoá Houston purchases earn points.",
+  "Out of Stock": "Out of Stock",
+  "These items are unavailable. Remove them to continue.": "These items are unavailable. Remove them to continue.",
+  "Available quantity": "Available quantity",
+  "Set quantity to": "Set quantity to",
+  "Remove": "Remove",
+  "Remove all": "Remove all"
 }
