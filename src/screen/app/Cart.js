@@ -275,11 +275,11 @@ const Cart = ({ route }) => {
       const currentHour = now.getHours();
       const minDate = new Date();
 
-      if (currentHour >= 14) {
-        // After 2 PM, set min date to tomorrow
+      if (currentHour >= 17) {
+        // After 5 PM, set min date to tomorrow
         minDate.setDate(now.getDate() + 1);
       } else {
-        // Before 2 PM, min date is today
+        // Before 5 PM, min date is today
         minDate.setDate(now.getDate());
       }
 
@@ -1547,7 +1547,7 @@ console.log(result)
                             },
                           ]}>
                           {t(
-                            '*Note: Orders placed before 2 PM are eligible for same-day pickup. Orders placed after 2 PM will be available for pickup the next day.',
+                            '*Note: Orders placed before 5 PM can be picked up the same day. Orders placed after 5 PM will be ready for pickup the next day.',
                           )}
                         </Text>
 
@@ -1620,7 +1620,7 @@ console.log(result)
                             },
                           ]}>
                           {t(
-                            '*Note: Orders placed before 2 PM are eligible for same-day pickup. Orders placed after 2 PM will be available for pickup the next day.',
+                            '*Note: Orders placed before 5 PM can be picked up the same day. Orders placed after 5 PM will be ready for pickup the next day.',
                           )}
                         </Text>
 
