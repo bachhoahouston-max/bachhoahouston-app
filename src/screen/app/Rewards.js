@@ -368,10 +368,10 @@ const RedeemTab = ({ t, groups, banner, catalogLoaded, rewardName, rewardState, 
         </View>
       )}
 
-      {groups.map(([lower, rewards]) => (
-        <View key={lower} style={{ marginTop: 20 }}>
+      {groups.length > 0 && (
+        <View style={{ marginTop: 20 }}>
           <View style={styles.grid2}>
-            {rewards.map((reward, idx) => {
+            {groups.flatMap(([, rewards]) => rewards).map(reward => {
               const state = rewardState(reward);
               return (
                 <View key={reward._id} style={styles.card}>
@@ -402,7 +402,7 @@ const RedeemTab = ({ t, groups, banner, catalogLoaded, rewardName, rewardState, 
             })}
           </View>
         </View>
-      ))}
+      )}
     </View>
   );
 };
