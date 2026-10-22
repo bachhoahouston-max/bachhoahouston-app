@@ -113,7 +113,7 @@ const AnimatedTabBar = ({state, navigation, tabs, cartCount, translate}) => {
     <View style={styles.animatedWrapper} pointerEvents="box-none">
       <View style={styles.animatedBar}>
         <Svg width={BAR_WIDTH} height={BAR_HEIGHT}>
-          <AnimatedPath d={animatedPath} fill={Constants.greennew} />
+          <AnimatedPath d={animatedPath} fill={Constants.white} />
         </Svg>
       </View>
       <View style={styles.animatedButtonsRow}>
@@ -142,7 +142,7 @@ const AnimatedTabBar = ({state, navigation, tabs, cartCount, translate}) => {
               style={[styles.animatedTabButton, {width: tabWidth}]}>
               {!isFocused && (
                 <>
-                  <IconComponent color={Constants.white} size={20} />
+                  <IconComponent color={Constants.black} size={20} />
                   <Text style={styles.animatedTabText}>{translate(item.name)}</Text>
                   {item.routeName === 'Cart' && cartCount > 0 && (
                     <View style={styles.animatedBadge}>
@@ -311,7 +311,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   animatedTabText: {
-    color: Constants.white,
+    color: Constants.black,
     fontFamily: FONTS.Medium,
     fontSize: 11,
     opacity: 0.7,
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     width: CIRCLE_SIZE,
     height: CIRCLE_SIZE,
     borderRadius: CIRCLE_RADIUS,
-    backgroundColor: Constants.white,
+    backgroundColor: Constants.customgrey4,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 4,
