@@ -33,6 +33,7 @@ import Language from './Language';
 import { ScrollView } from 'react-native';
 import TierCrown from '../../Assets/Component/TierCrown';
 import { tierColor } from '../../Assets/Component/TierBadge';
+import { HandCoins } from 'lucide-react-native';
 
 const Account = props => {
   const { t } = useTranslation();
@@ -201,6 +202,25 @@ const Account = props => {
               onPress={() => navigate('App', { screen: 'Rewards' })}
             />
           )}
+          <TouchableOpacity
+            style={[styles.box, styles.shadowProp]}
+            onPress={() => navigate('Affiliation')}>
+            <View style={styles.btmboxfirpart}>
+              <View style={styles.iconcov}>
+                <HandCoins size={20} color={Constants.white} />
+              </View>
+              <View>
+                <Text style={styles.protxt}>{t('Affiliate program')}</Text>
+                <Text style={styles.protxt2}>{t('Share and earn commission')}</Text>
+              </View>
+            </View>
+            <RightarrowIcon
+              color={'#2E7D32'}
+              height={15}
+              width={15}
+              style={styles.aliself}
+            />
+          </TouchableOpacity>
           <TouchableOpacity
             style={[styles.box, styles.shadowProp]}
             onPress={() => navigate('Myorder')}>

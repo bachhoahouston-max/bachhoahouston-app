@@ -123,6 +123,7 @@ const Cart = ({ route }) => {
   const [availableZipCodes, setAvailableZipCodes] = useState([]);
   const [showStripePayment, setShowStripePayment] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
+  const [affiliateCode, setAffiliateCode] = useState('');
   const [isOnce, setIsOnce] = useState(false);
   const [orderID, setOrderID] = useState('')
   const [cancelModel, setCancelModel] = useState(false)
@@ -136,6 +137,10 @@ const Cart = ({ route }) => {
   const [waiting, setWaiting] = useState(false);
   const [isPriceChanged, setIsPriceChanged] = useState(false);
   const [rewardCatalog, setRewardCatalog] = useState([]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('affiliateReferralCode').then(code => setAffiliateCode(code || ''));
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -815,6 +820,7 @@ const Cart = ({ route }) => {
 
       console.log('Formatted Date:', formattedDate);
       const servicefee = parseFloat(serviceFee || 0);
+      const referralCode = affiliateCode || await AsyncStorage.getItem('affiliateReferralCode');
       const data = {
         productDetail: newarr,
         shipping_address: shipAdd.address,
@@ -826,6 +832,7 @@ const Cart = ({ route }) => {
         deliveryfee: deliveryFees || 0,
         discount: couponvalue || couponDiscount,
         discountCode: couponCode || '',
+        referralCode: referralCode || '',
         user: shipAdd._id,
         Email: shipAdd.email,
         paymentmode: 'online',
@@ -1981,7 +1988,7 @@ console.log(result)
                   <TextInput
                     value={couponCode}
                     onChangeText={text => setCouponCode(text)}
-                    placeholder={t('Enter Promo Code')}
+                    placeholder={t('Coupon or referral code')}
                     placeholderTextColor={Constants.customgrey}
                     style={{
                       flex: 1,
@@ -2034,6 +2041,21 @@ console.log(result)
 
 
                       try {
+                        const referralResponse = await GetApi(
+                          `affiliation/referral/${encodeURIComponent(couponCode.trim())}`,
+                          {},
+                        );
+                        if (referralResponse?.status) {
+                          const normalizedCode = couponCode.trim().toUpperCase();
+                          setAffiliateCode(normalizedCode);
+                          await AsyncStorage.setItem('affiliateReferralCode', normalizedCode);
+                          Toast.show({
+                            type: 'success',
+                            text1: t('Referral code applied successfully'),
+                          });
+                          return;
+                        }
+
                         const response = await Post(
                           `ValidateCouponforUser`,
                           {

@@ -128,6 +128,22 @@ const App = () => {
     });
     const [language, setLanguage] = useState('vi');
 
+    useEffect(() => {
+        const saveReferralFromUrl = async url => {
+            if (!url) return;
+            const match = url.match(/[?&](?:ref|referralCode)=([^&#]+)/i);
+            if (match?.[1]) {
+                await AsyncStorage.setItem(
+                    'affiliateReferralCode',
+                    decodeURIComponent(match[1]).trim().toUpperCase(),
+                );
+            }
+        };
+        Linking.getInitialURL().then(saveReferralFromUrl);
+        const subscription = Linking.addEventListener('url', event => saveReferralFromUrl(event.url));
+        return () => subscription.remove();
+    }, []);
+
     // ── Cross-platform cart sync (separate from the local-cart logic above) ──
     // Tracks which account this device has already merged its local cart
     // into. Persisted in AsyncStorage (not just a ref) so an app restart

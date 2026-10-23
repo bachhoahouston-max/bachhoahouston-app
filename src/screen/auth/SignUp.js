@@ -90,7 +90,12 @@ const SignUp = props => {
     userDetail.email = userDetail.email.trim().toLowerCase();
     console.log('data==========>', userDetail);
     setLoading(true);
-    Post('signUp', userDetail, { ...props }).then(
+    const signupPayload = {
+      ...userDetail,
+      // Affiliates use a normal customer account plus an affiliation application.
+      type: 'USER',
+    };
+    Post('signUp', signupPayload, { ...props }).then(
       async res => {
         setLoading(false);
         console.log(res);
@@ -103,7 +108,14 @@ const SignUp = props => {
             username: '',
           });
           setToast(res.message);
-          navigate('SignIn', redirectTo ? {redirect: redirectTo} : undefined)
+          navigate(
+            'SignIn',
+            user === 1
+              ? { affiliateSignup: true }
+              : redirectTo
+                ? { redirect: redirectTo }
+                : undefined,
+          );
 
         } else {
           setLoading(false);
@@ -245,7 +257,7 @@ const SignUp = props => {
                 ]}
                 onPress={() => {
                   setuser(0);
-                  userDetail.type = 'USER';
+                  setUserDetail(previous => ({ ...previous, type: 'USER' }));
                 }}>
                 <Text style={[
                   newStyles.userTypeText,
@@ -262,13 +274,30 @@ const SignUp = props => {
                 ]}
                 onPress={() => {
                   setuser(2);
-                  userDetail.type = 'DRIVER';
+                  setUserDetail(previous => ({ ...previous, type: 'DRIVER' }));
                 }}>
                 <Text style={[
                   newStyles.userTypeText,
                   user === 2 && newStyles.userTypeTextActive
                 ]}>
                   {t('Driver')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  newStyles.userTypeButton,
+                  user === 1 && newStyles.userTypeButtonActive
+                ]}
+                onPress={() => {
+                  setuser(1);
+                  setUserDetail(previous => ({ ...previous, type: 'USER' }));
+                }}>
+                <Text style={[
+                  newStyles.userTypeText,
+                  user === 1 && newStyles.userTypeTextActive
+                ]}>
+                  {t('Affiliate')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -395,7 +424,7 @@ const SignUp = props => {
               </Text>
               <TouchableOpacity
                 onPress={() =>
-                  navigate('SignIn', redirectTo ? {redirect: redirectTo} : undefined)
+                  navigate('SignIn', redirectTo ? { redirect: redirectTo } : undefined)
                 }>
                 <Text style={newStyles.backToLoginLink}> {t('Sign in')}</Text>
               </TouchableOpacity>

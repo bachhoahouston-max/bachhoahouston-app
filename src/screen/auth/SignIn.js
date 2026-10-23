@@ -34,6 +34,7 @@ const SignIn = props => {
   )
     ? requestedRedirect
     : null;
+  const affiliateSignup = props?.route?.params?.affiliateSignup === true;
   const [showPass, setShowPass] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [toast, setToast] = useContext(ToastContext);
@@ -50,20 +51,17 @@ const SignIn = props => {
 
   useEffect(() => {
     checkLng();
-    checkAuthDetails();
+    AsyncStorage.getItem('authDetails').then(authDetails => {
+      if (authDetails != null) {
+        const details = JSON.parse(authDetails);
+        setUserDetail(previous => ({
+          ...previous,
+          username: details.username,
+          password: details.password,
+        }));
+      }
+    });
   }, []);
-
-  const checkAuthDetails = async () => {
-    const authDetails = await AsyncStorage.getItem('authDetails');
-    if (authDetails != null) {
-      let details = JSON.parse(authDetails);
-      setUserDetail({
-        ...userDetail,
-        username: details.username,
-        password: details.password,
-      });
-    }
-  }
   const checkLng = async () => {
     const x = await AsyncStorage.getItem('LANG');
     if (x != null) {
@@ -142,7 +140,16 @@ const SignIn = props => {
             reset('Employeetab');
           } else {
             setLoading(false);
-            reset('App', redirectTo ? {screen: redirectTo} : undefined);
+            reset(
+              affiliateSignup
+                ? 'Affiliation'
+                : 'App',
+              affiliateSignup
+                ? undefined
+                : redirectTo
+                  ? {screen: redirectTo}
+                  : undefined,
+            );
           }
         } else {
           setLoading(false);

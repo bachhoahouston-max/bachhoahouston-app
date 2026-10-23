@@ -68,9 +68,11 @@ const Checkout = ({route}) => {
   const [selectedTime, setSelectedTime] = useState(times[0]);
   const [data, setData] = useState([]);
   const [deliveryTip, setDeliveryTip] = useState(0);
+  const [referralCode, setReferralCode] = useState('');
 
   useEffect(() => {
     getProfile();
+    AsyncStorage.getItem('affiliateReferralCode').then(code => setReferralCode(code || ''));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -174,6 +176,7 @@ const Checkout = ({route}) => {
         pointtype === 'REDEEM'
           ? (Math.floor(pointamount / 1000) * 1000) / 1000
           : checkoutData?.couponDiscount || 0,
+      referralCode,
     };
     if (user?._id) {
       data.user = user._id;

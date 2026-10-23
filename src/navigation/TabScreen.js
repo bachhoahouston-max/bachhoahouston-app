@@ -66,7 +66,7 @@ const buildBarPath = rawNotchX => {
   ].join(' ');
 };
 
-const AnimatedTabBar = ({state, navigation, tabs, cartCount, translate}) => {
+const AnimatedTabBar = ({ state, navigation, tabs, cartCount, translate }) => {
   const tabWidth = BAR_WIDTH / tabs.length;
   const activeAnim = useRef(new Animated.Value(state.index)).current;
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -113,7 +113,7 @@ const AnimatedTabBar = ({state, navigation, tabs, cartCount, translate}) => {
     <View style={styles.animatedWrapper} pointerEvents="box-none">
       <View style={styles.animatedBar}>
         <Svg width={BAR_WIDTH} height={BAR_HEIGHT}>
-          <AnimatedPath d={animatedPath} fill={Constants.white} />
+          <AnimatedPath d={animatedPath} fill={Constants.pink} />
         </Svg>
       </View>
       <View style={styles.animatedButtonsRow}>
@@ -136,10 +136,10 @@ const AnimatedTabBar = ({state, navigation, tabs, cartCount, translate}) => {
             <TouchableOpacity
               key={route.key}
               accessibilityRole="button"
-              accessibilityState={isFocused ? {selected: true} : {}}
+              accessibilityState={isFocused ? { selected: true } : {}}
               onPress={onPress}
               activeOpacity={0.8}
-              style={[styles.animatedTabButton, {width: tabWidth}]}>
+              style={[styles.animatedTabButton, { width: tabWidth }]}>
               {!isFocused && (
                 <>
                   <IconComponent color={Constants.black} size={20} />
@@ -161,7 +161,7 @@ const AnimatedTabBar = ({state, navigation, tabs, cartCount, translate}) => {
         pointerEvents="none"
         style={[
           styles.animatedActiveGroup,
-          {width: tabWidth, transform: [{translateX: activeTranslateX}]},
+          { width: tabWidth, transform: [{ translateX: activeTranslateX }] },
         ]}>
         <View style={styles.animatedActiveCircle}>
           <ActiveIcon color={Constants.greennew} size={22} />
@@ -273,7 +273,7 @@ export const TabNav = () => {
             key={index}
             name={item.routeName}
             component={item.component}
-            options={{tabBarShowLabel: false}}
+            options={{ tabBarShowLabel: false }}
           />
         );
       })}
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
