@@ -1335,14 +1335,17 @@ console.log(result)
                                     onPress={() => redeemReward(item, i)}>
                                     <Text style={styles.redeemRewardTxt} numberOfLines={1} adjustsFontSizeToFit>
                                       🎁{' '}
-                                      {(
-                                        Number(
-                                          rewardCatalog.find(
-                                            reward => String(reward?.product?._id) === String(item?.productid),
-                                          )?.points || 0,
-                                        ) * Number(item?.qty || 1)
-                                      ).toLocaleString()}{' '}
-                                      {t('points')} · {t('Redeem with points')}
+                                      <Text style={styles.redeemRewardPts}>
+                                        {(
+                                          Number(
+                                            rewardCatalog.find(
+                                              reward => String(reward?.product?._id) === String(item?.productid),
+                                            )?.points || 0,
+                                          ) * Number(item?.qty || 1)
+                                        ).toLocaleString()}{' '}
+                                        {t('points')}
+                                      </Text>{' '}
+                                      · {t('Redeem with points')}
                                     </Text>
                                   </TouchableOpacity>
                                 )}
@@ -2876,15 +2879,21 @@ const styles = StyleSheet.create({
     marginTop: 8,
     alignSelf: 'flex-start',
     maxWidth: '100%',
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#FFF1C2',
+    borderWidth: 1,
+    borderColor: '#F5B82E',
     borderRadius: 20,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 5,
   },
   redeemRewardTxt: {
-    color: Constants.white,
+    color: '#6B4300',
     fontSize: 11,
-    fontFamily: FONTS.Medium,
+    fontFamily: FONTS.SemiBold,
+  },
+  redeemRewardPts: {
+    color: '#E87500',
+    fontFamily: FONTS.Bold,
   },
   container: {
     flex: 1,

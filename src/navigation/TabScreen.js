@@ -113,7 +113,7 @@ const AnimatedTabBar = ({ state, navigation, tabs, cartCount, translate }) => {
     <View style={styles.animatedWrapper} pointerEvents="box-none">
       <View style={styles.animatedBar}>
         <Svg width={BAR_WIDTH} height={BAR_HEIGHT}>
-          <AnimatedPath d={animatedPath} fill={Constants.pink} />
+          <AnimatedPath d={animatedPath} fill={Constants.greennew} />
         </Svg>
       </View>
       <View style={styles.animatedButtonsRow}>
@@ -142,11 +142,11 @@ const AnimatedTabBar = ({ state, navigation, tabs, cartCount, translate }) => {
               style={[styles.animatedTabButton, { width: tabWidth }]}>
               {!isFocused && (
                 <>
-                  <IconComponent color={Constants.black} size={20} />
-                  <Text style={styles.animatedTabText}>{translate(item.name)}</Text>
-                  {item.routeName === 'Cart' && cartCount > 0 && (
+                  <IconComponent color={Constants.white} size={20} />
+                  <Text style={styles.animatedTabText} numberOfLines={1}>{translate(item.name)}</Text>
+          {item.routeName === 'Cart' && cartCount > 0 && (
                     <View style={styles.animatedBadge}>
-                      <Text style={styles.animatedBadgeText}>
+                      <Text style={[styles.animatedBadgeText, styles.animatedBadgeTextOnBar]}>
                         {cartCount > 99 ? '99+' : cartCount}
                       </Text>
                     </View>
@@ -166,7 +166,7 @@ const AnimatedTabBar = ({ state, navigation, tabs, cartCount, translate }) => {
         <View style={styles.animatedActiveCircle}>
           <ActiveIcon color={Constants.greennew} size={22} />
         </View>
-        <Text style={styles.animatedActiveText}>{translate(activeTab.name)}</Text>
+        <Text style={styles.animatedActiveText} numberOfLines={1}>{translate(activeTab.name)}</Text>
         {activeTab.routeName === 'Cart' && cartCount > 0 && (
           <View style={styles.animatedActiveBadge}>
             <Text style={styles.animatedBadgeText}>
@@ -311,10 +311,10 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   animatedTabText: {
-    color: Constants.black,
+    color: Constants.white,
     fontFamily: FONTS.Medium,
     fontSize: 11,
-    opacity: 0.7,
+    opacity: 0.92,
   },
   animatedActiveGroup: {
     position: 'absolute',
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     width: CIRCLE_SIZE,
     height: CIRCLE_SIZE,
     borderRadius: CIRCLE_RADIUS,
-    backgroundColor: Constants.customgrey4,
+    backgroundColor: Constants.white,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 4,
@@ -336,8 +336,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   animatedActiveText: {
-    color: Constants.greennew,
-    fontFamily: FONTS.SemiBold,
+    color: Constants.white,
+    fontFamily: FONTS.Bold,
     fontSize: 11,
     marginTop: 12,
   },
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -2,
     right: -2,
-    backgroundColor: Constants.green,
+    backgroundColor: Constants.white,
     borderRadius: 9,
     minWidth: 17,
     height: 17,
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 12,
-    backgroundColor: Constants.green,
+    backgroundColor: Constants.greennew,
     borderRadius: 9,
     minWidth: 17,
     height: 17,
@@ -368,5 +368,8 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  animatedBadgeTextOnBar: {
+    color: Constants.greennew,
   },
 });
