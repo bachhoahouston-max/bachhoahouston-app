@@ -835,7 +835,7 @@ const Cart = ({ route }) => {
         Deliverytip: deliveryTip || 0,
         deliveryfee: deliveryFees || 0,
         discount: couponvalue || couponDiscount,
-        discountCode: couponCode || '',
+        discountCode: discountCode || '',
         referralCode: referralCode || '',
         user: shipAdd._id,
         Email: shipAdd.email,
@@ -941,6 +941,8 @@ const Cart = ({ route }) => {
     AsyncStorage.removeItem('pickupType');
     AsyncStorage.removeItem('pickupDate');
     AsyncStorage.removeItem('couponDiscount')
+    AsyncStorage.removeItem('affiliateReferralCode');
+    setAffiliateCode('');
     setcartdetail([]);
     // Clear the synced cart immediately rather than waiting on the generic
     // debounced sync — if the app gets backgrounded/killed right after
@@ -2033,6 +2035,31 @@ console.log(result)
                         return;
                       }
 
+                      // The same field accepts an affiliate referral code.
+                      try {
+                        const referralResponse = await GetApi(
+                          `affiliation/referral/${encodeURIComponent(couponCode.trim())}`,
+                          {},
+                        );
+                        if (referralResponse?.status) {
+                          const normalizedCode = referralResponse?.data?.referralCode || couponCode.trim().toUpperCase();
+                          setAffiliateCode(normalizedCode);
+                          setCouponCode('');
+                          await AsyncStorage.setItem('affiliateReferralCode', normalizedCode);
+                          Toast.show({
+                            type: 'success',
+                            text1: t('Referral code applied successfully'),
+                          });
+                          return;
+                        }
+                        if (referralResponse?.message && referralResponse?.message !== 'Referral code not found.') {
+                          Toast.show({ type: 'error', text1: referralResponse.message });
+                          return;
+                        }
+                      } catch (error) {
+                        console.warn(error);
+                      }
+
                       const notAvailablecoupan = cartdetail.some(
                         (item) => item?.combo_id && item?.accept_coupon === false,
                       );
@@ -2054,21 +2081,6 @@ console.log(result)
 
 
                       try {
-                        const referralResponse = await GetApi(
-                          `affiliation/referral/${encodeURIComponent(couponCode.trim())}`,
-                          {},
-                        );
-                        if (referralResponse?.status) {
-                          const normalizedCode = couponCode.trim().toUpperCase();
-                          setAffiliateCode(normalizedCode);
-                          await AsyncStorage.setItem('affiliateReferralCode', normalizedCode);
-                          Toast.show({
-                            type: 'success',
-                            text1: t('Referral code applied successfully'),
-                          });
-                          return;
-                        }
-
                         const response = await Post(
                           `ValidateCouponforUser`,
                           {
@@ -2116,6 +2128,22 @@ console.log(result)
                     </Text>
                   </TouchableOpacity>
                 </View>
+                {!!affiliateCode && (
+                  <View style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={[styles.boxtxt, { color: Constants.green }]}>
+                      {t('Referral code applied')}: {affiliateCode}
+                    </Text>
+                    <Pressable
+                      onPress={async () => {
+                        setAffiliateCode('');
+                        await AsyncStorage.removeItem('affiliateReferralCode');
+                      }}>
+                      <Text style={[styles.boxtxt, { color: Constants.red }]}>
+                        {t('Remove')}
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
                 {coupon && couponDiscount > 0 && (
                   <View style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Text style={[styles.boxtxt, { color: Constants.green }]}>
