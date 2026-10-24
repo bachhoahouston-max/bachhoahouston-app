@@ -87,11 +87,13 @@ const AffiliateGate = () => {
   const application = dashboard?.application;
   const hasPanel = ['Approved', 'Suspended'].includes(application?.status);
   const needsForm = !!user?.token && !application;
+  const initialRoute = hasPanel ? 'AffiliateTabs' : needsForm ? 'AffiliateApply' : 'AffiliateStatus';
 
   return (
     <Stack.Navigator
+      key={hasPanel ? 'panel' : 'application'}
       screenOptions={{headerShown: false}}
-      initialRouteName={needsForm ? 'AffiliateApply' : 'AffiliateStatus'}>
+      initialRouteName={initialRoute}>
       {hasPanel ? (
         <Stack.Screen name="AffiliateTabs" component={AffiliateTabs} />
       ) : (
