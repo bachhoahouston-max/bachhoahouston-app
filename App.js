@@ -444,6 +444,8 @@ const App = () => {
                         } else {
                             setInitial('Driverform');
                         }
+                    } else if (userDetail.isAffiliate === true) {
+                        setInitial('Affiliation');
                     } else {
                         setInitial('App');
                     }

@@ -140,11 +140,12 @@ const SignIn = props => {
             reset('Employeetab');
           } else {
             setLoading(false);
+            const isAffiliate = affiliateSignup || res.data.isAffiliate === true;
             reset(
-              affiliateSignup
+              isAffiliate
                 ? 'Affiliation'
                 : 'App',
-              affiliateSignup
+              isAffiliate
                 ? undefined
                 : redirectTo
                   ? {screen: redirectTo}

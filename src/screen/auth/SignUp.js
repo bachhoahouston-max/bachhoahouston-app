@@ -93,7 +93,10 @@ const SignUp = props => {
     const signupPayload = {
       ...userDetail,
       // Affiliates use a normal customer account plus an affiliation application.
-      type: 'USER',
+      // isAffiliate is stored on the account so every later login lands on the
+      // affiliate screen.
+      type: user === 2 ? 'DRIVER' : 'USER',
+      isAffiliate: user === 1,
     };
     Post('signUp', signupPayload, { ...props }).then(
       async res => {
