@@ -43,7 +43,7 @@ import CategoryFilter from '../screen/app/CategoryFilter';
 import OrderSuccessScreen from '../screen/app/OrderSuccessScreen';
 import Welcome from '../screen/app/Welcome';
 import BuyItAgain from '../screen/app/BuyItAgain';
-import Affiliation from '../screen/app/Affiliation';
+import { Affiliatetab } from './AffiliateTab';
 
 const Stack = createNativeStackNavigator();
 const AuthStack = createNativeStackNavigator();
@@ -78,7 +78,7 @@ export default function Navigation(props) {
         <Stack.Screen name="CategoryFilter" component={CategoryFilter} />
         <Stack.Screen name="BuyItAgain" component={BuyItAgain} />
         <Stack.Screen name="Account" component={Account} />
-        <Stack.Screen name="Affiliation" component={Affiliation} />
+        <Stack.Screen name="Affiliation" component={Affiliatetab} />
         <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="Shipping" component={Shipping} />
         <Stack.Screen name="VendorForm" component={VendorForm} />
