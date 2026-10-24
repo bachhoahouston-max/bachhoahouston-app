@@ -13,11 +13,30 @@ import {
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
-import {ArrowLeft, CheckCircle2, Copy, Link2, WalletCards} from 'lucide-react-native';
+import {ArrowLeft, CheckCircle2, Copy, Link2, Plus, WalletCards, X} from 'lucide-react-native';
+import {Dropdown} from 'react-native-element-dropdown';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {UserContext} from '../../../App';
 import {navigate} from '../../../navigationRef';
 import {GetApi, Post} from '../../Assets/Helpers/Service';
 import Constants, {FONTS} from '../../Assets/Helpers/constant';
+
+const SOCIAL_PLATFORMS = [
+  {label: 'Instagram', value: 'instagram', icon: 'logo-instagram', color: '#E1306C', placeholder: 'e.g. https://instagram.com/yourname'},
+  {label: 'TikTok', value: 'tiktok', icon: 'logo-tiktok', color: '#000000', placeholder: 'e.g. https://tiktok.com/@yourname'},
+  {label: 'Facebook', value: 'facebook', icon: 'logo-facebook', color: '#1877F2', placeholder: 'e.g. https://facebook.com/yourpage'},
+  {label: 'YouTube', value: 'youtube', icon: 'logo-youtube', color: '#FF0000', placeholder: 'e.g. https://youtube.com/@yourchannel'},
+  {label: 'X / Twitter', value: 'twitter', icon: 'logo-twitter', color: '#1DA1F2', placeholder: 'e.g. https://x.com/yourname'},
+  {label: 'Pinterest', value: 'pinterest', icon: 'logo-pinterest', color: '#E60023', placeholder: 'e.g. https://pinterest.com/yourname'},
+  {label: 'Website', value: 'website', icon: 'globe-outline', color: Constants.greennew, placeholder: 'e.g. https://yourwebsite.com'},
+];
+
+const getPlatform = value => SOCIAL_PLATFORMS.find(p => p.value === value) || SOCIAL_PLATFORMS[0];
+
+const PlatformIcon = ({value, size = 20}) => {
+  const platform = getPlatform(value);
+  return <Ionicons name={platform.icon} size={size} color={platform.color} />;
+};
 
 const Affiliation = () => {
   const [user] = useContext(UserContext);
@@ -25,6 +44,24 @@ const Affiliation = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({bio: '', audience: '', zelleEmail: '', zellePhone: ''});
+  const [socialLinks, setSocialLinks] = useState([
+    {platform: 'instagram', url: ''},
+    {platform: 'tiktok', url: ''},
+  ]);
+
+  const updateSocialLink = (index, changes) => {
+    setSocialLinks(links => links.map((link, i) => (i === index ? {...link, ...changes} : link)));
+  };
+
+  const addSocialLink = () => {
+    const used = socialLinks.map(link => link.platform);
+    const next = SOCIAL_PLATFORMS.find(p => !used.includes(p.value)) || SOCIAL_PLATFORMS[SOCIAL_PLATFORMS.length - 1];
+    setSocialLinks(links => [...links, {platform: next.value, url: ''}]);
+  };
+
+  const removeSocialLink = index => {
+    setSocialLinks(links => links.filter((_, i) => i !== index));
+  };
 
   const loadDashboard = useCallback(() => {
     if (!user?.token) {
@@ -43,13 +80,20 @@ const Affiliation = () => {
   }, [loadDashboard]));
 
   const submitApplication = async () => {
+    const filledLinks = socialLinks
+      .map(link => ({platform: link.platform, url: link.url.trim()}))
+      .filter(link => link.url);
+    if (!filledLinks.length) {
+      Alert.alert('Social link needed', 'Add at least one social media or website link.');
+      return;
+    }
     if (!form.zelleEmail && !form.zellePhone) {
       Alert.alert('Payment details needed', 'Add a Zelle email or phone number for future payouts.');
       return;
     }
     setSaving(true);
     try {
-      const res = await Post('affiliation/applications', form, {});
+      const res = await Post('affiliation/applications', {...form, socialLinks: filledLinks}, {});
       if (!res?.status) {
         Alert.alert('Unable to apply', res?.message || 'Please try again.');
         return;
@@ -144,6 +188,52 @@ const Affiliation = () => {
             placeholder="A short introduction"
             placeholderTextColor="#9AA5A0"
           />
+          <Text style={styles.label}>Social media / website links</Text>
+          <Text style={styles.hint}>Add at least one link. You can add more.</Text>
+          {socialLinks.map((link, index) => (
+            <View style={styles.socialRow} key={index}>
+              <Dropdown
+                style={styles.platformDropdown}
+                containerStyle={styles.platformMenu}
+                data={SOCIAL_PLATFORMS}
+                value={link.platform}
+                labelField="label"
+                valueField="value"
+                maxHeight={280}
+                onChange={item => updateSocialLink(index, {platform: item.value})}
+                selectedTextStyle={styles.platformText}
+                selectedTextProps={{numberOfLines: 1}}
+                renderLeftIcon={() => (
+                  <View style={styles.platformIcon}><PlatformIcon value={link.platform} /></View>
+                )}
+                renderItem={item => (
+                  <View style={styles.platformItem}>
+                    <PlatformIcon value={item.value} />
+                    <Text style={styles.platformItemText}>{item.label}</Text>
+                  </View>
+                )}
+              />
+              <TextInput
+                style={styles.socialInput}
+                value={link.url}
+                onChangeText={url => updateSocialLink(index, {url})}
+                placeholder={getPlatform(link.platform).placeholder}
+                placeholderTextColor="#9AA5A0"
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+              />
+              {socialLinks.length > 1 && (
+                <TouchableOpacity style={styles.removeLink} onPress={() => removeSocialLink(index)} hitSlop={8}>
+                  <X size={18} color="#68756D" />
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
+          <TouchableOpacity style={styles.addLink} onPress={addSocialLink}>
+            <View style={styles.addLinkIcon}><Plus size={16} color={Constants.white} /></View>
+            <Text style={styles.addLinkText}>Add another link</Text>
+          </TouchableOpacity>
           <Text style={styles.label}>Zelle email or phone</Text>
           <TextInput style={styles.input} value={form.zelleEmail} onChangeText={zelleEmail => setForm({...form, zelleEmail})} placeholder="Zelle email" placeholderTextColor="#9AA5A0" keyboardType="email-address" />
           <TextInput style={styles.input} value={form.zellePhone} onChangeText={zellePhone => setForm({...form, zellePhone})} placeholder="Zelle phone (optional)" placeholderTextColor="#9AA5A0" keyboardType="phone-pad" />
@@ -220,6 +310,19 @@ const styles = StyleSheet.create({
   label: {fontFamily: FONTS.Medium, color: '#4B5B52', fontSize: 13, marginBottom: 6, marginTop: 10},
   input: {backgroundColor: Constants.white, borderWidth: 1, borderColor: '#DCE8DE', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, color: Constants.black, fontFamily: FONTS.Regular, marginBottom: 8},
   multiline: {minHeight: 82, textAlignVertical: 'top'},
+  hint: {fontFamily: FONTS.Regular, color: '#68756D', fontSize: 12, marginBottom: 10},
+  socialRow: {flexDirection: 'row', alignItems: 'center', marginBottom: 10, gap: 8},
+  platformDropdown: {width: 138, height: 48, backgroundColor: Constants.white, borderWidth: 1, borderColor: '#DCE8DE', borderRadius: 24, paddingHorizontal: 12},
+  platformMenu: {borderRadius: 12, overflow: 'hidden'},
+  platformIcon: {marginRight: 8},
+  platformText: {fontFamily: FONTS.Medium, color: Constants.black, fontSize: 14},
+  platformItem: {flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 12, gap: 10},
+  platformItemText: {fontFamily: FONTS.Regular, color: Constants.black, fontSize: 14},
+  socialInput: {flex: 1, height: 48, backgroundColor: Constants.white, borderWidth: 1, borderColor: '#DCE8DE', borderRadius: 24, paddingHorizontal: 16, color: Constants.black, fontFamily: FONTS.Regular, fontSize: 13},
+  removeLink: {padding: 2},
+  addLink: {flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', paddingVertical: 6, marginBottom: 6},
+  addLinkIcon: {width: 22, height: 22, borderRadius: 11, backgroundColor: Constants.greennew, alignItems: 'center', justifyContent: 'center', marginRight: 8},
+  addLinkText: {fontFamily: FONTS.SemiBold, color: Constants.greennew, fontSize: 14},
   primaryButton: {backgroundColor: Constants.greennew, minHeight: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 18, paddingHorizontal: 20},
   primaryText: {fontFamily: FONTS.SemiBold, color: Constants.white, fontSize: 16},
   secondaryButton: {borderWidth: 1, borderColor: Constants.greennew, minHeight: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 10},
