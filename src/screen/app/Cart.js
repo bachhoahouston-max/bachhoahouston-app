@@ -183,6 +183,7 @@ const Cart = ({ route }) => {
         ...item,
         stockStatus: result.stockStatus,
         availableQty: result.availableQty,
+        productUnavailable: result.productUnavailable,
       };
       if (result.price !== null && result.price !== undefined && !isRewardItem(item)) {
         next.offer = result.price;
@@ -212,18 +213,21 @@ const Cart = ({ route }) => {
     }, [cartdetail, setcartdetail, t, validateCart]),
   );
 
+  // Deleted (or hidden) from the admin panel — can only be removed, never ordered
+  const isProductUnavailable = item =>
+    item?.productUnavailable === true || item?.stockStatus === 'UNAVAILABLE';
+  const hasStockIssue = item =>
+    isProductUnavailable(item) ||
+    item?.stockStatus === 'OUT_OF_STOCK' ||
+    item?.stockStatus === 'LIMITED';
+
   const stockIssues = useMemo(
-    () =>
-      (cartdetail || []).filter(
-        item => item?.stockStatus === 'OUT_OF_STOCK' || item?.stockStatus === 'LIMITED',
-      ),
+    () => (cartdetail || []).filter(hasStockIssue),
     [cartdetail],
   );
 
   const removeOutOfStock = async () => {
-    const next = (cartdetail || []).filter(
-      item => item?.stockStatus !== 'OUT_OF_STOCK' && item?.stockStatus !== 'LIMITED',
-    );
+    const next = (cartdetail || []).filter(item => !hasStockIssue(item));
     setcartdetail(next);
     await AsyncStorage.setItem('cartdata', JSON.stringify(next));
   };
@@ -1191,7 +1195,10 @@ console.log(result)
               {stockIssues.length > 0 && (
                 <View style={styles.stockIssuePanel}>
                   <Text style={styles.stockIssueTitle}>
-                    {t('Out of Stock')} ({stockIssues.length})
+                    {stockIssues.some(isProductUnavailable)
+                      ? t('Product Unavailable')
+                      : t('Out of Stock')}{' '}
+                    ({stockIssues.length})
                   </Text>
                   <Text style={styles.stockIssueDescription}>
                     {t('These items are unavailable. Remove them to continue.')}
@@ -1201,7 +1208,8 @@ console.log(result)
                       cartQtyForProduct(cartdetail, cartLineProductId(item)) -
                       Number(item?.qty || 0);
                     const keepableQty = Number(item?.availableQty || 0) - otherLinesQty;
-                    const isLimited = item?.stockStatus === 'LIMITED';
+                    const isUnavailable = isProductUnavailable(item);
+                    const isLimited = !isUnavailable && item?.stockStatus === 'LIMITED';
                     return (
                       <View style={styles.stockIssueRow} key={`${cartLineProductId(item)}-${index}`}>
                         <View style={styles.stockIssueInfo}>
@@ -1211,7 +1219,9 @@ console.log(result)
                               : item?.productname}
                           </Text>
                           <Text style={styles.stockIssueStatus}>
-                            {isLimited
+                            {isUnavailable
+                              ? t('Product Unavailable')
+                              : isLimited
                               ? `${t('Available quantity')}: ${item?.availableQty}`
                               : t('Out of stock')}
                           </Text>
@@ -1272,6 +1282,9 @@ console.log(result)
                             {i18n.language === 'vi' ? (item?.vietnamiesName || item?.productname) : item?.productname}
                             {/* {item?.productname} */}
                           </Text>
+                          {isProductUnavailable(item) && (
+                            <Text style={styles.stockIssueStatus}>{t('Product Unavailable')}</Text>
+                          )}
                           <View
                             style={{
                               flexDirection: 'row',
@@ -2399,6 +2412,14 @@ console.log(result)
                           text1: t('Please login to continue'),
                         });
                         navigate('Auth');
+                        return;
+                      }
+
+                      if (stockIssues.some(isProductUnavailable)) {
+                        Toast.show({
+                          type: 'error',
+                          text1: t('Product Unavailable. Remove it from your cart to continue.'),
+                        });
                         return;
                       }
 
