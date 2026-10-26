@@ -1,15 +1,14 @@
 import React from 'react';
 import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useTranslation} from 'react-i18next';
-import {Copy, ExternalLink, Link2, Share2} from 'lucide-react-native';
+import {Copy, Share2} from 'lucide-react-native';
 import {COLORS, FONTS, RADIUS} from '../theme';
-import {copyText, displayLink, openUrl, shareReferral} from '../utils';
+import {copyText, shareReferral} from '../utils';
 import {Button, Card} from './ui';
 
 const ReferralCard = ({application, suspended, rateBadge, style}) => {
   const {t} = useTranslation();
   const code = application?.referralCode;
-  const link = application?.referralLink;
 
   return (
     <Card style={style}>
@@ -38,19 +37,6 @@ const ReferralCard = ({application, suspended, rateBadge, style}) => {
         />
       </View>
 
-      {!!link && (
-        <TouchableOpacity
-          style={styles.linkBox}
-          activeOpacity={0.8}
-          onPress={() => copyText(link, t('Referral link copied'))}>
-          <Link2 size={16} color={COLORS.muted} />
-          <Text style={styles.linkText} numberOfLines={1}>{displayLink(link)}</Text>
-          <TouchableOpacity onPress={() => openUrl(link)} hitSlop={10} accessibilityLabel={t('Open link')}>
-            <ExternalLink size={16} color={COLORS.muted} />
-          </TouchableOpacity>
-        </TouchableOpacity>
-      )}
-
       <Text style={[styles.cardTitle, styles.rateTitle]}>{t('Commission Rate')}</Text>
       <View style={styles.rateBox}>
         <Text style={styles.rateText}>{Number(application?.commissionRate || 0)}%</Text>
@@ -78,18 +64,6 @@ const styles = StyleSheet.create({
   },
   codeText: {flex: 1, fontFamily: FONTS.SemiBold, fontSize: 18, color: COLORS.text, letterSpacing: 1},
   actions: {flexDirection: 'row', gap: 10, marginTop: 12},
-  linkBox: {
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.sm,
-    height: 44,
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  linkText: {flex: 1, fontFamily: FONTS.Regular, fontSize: 13, color: COLORS.textSecondary, textDecorationLine: 'underline'},
   rateTitle: {marginTop: 18},
   rateBox: {
     marginTop: 10,
