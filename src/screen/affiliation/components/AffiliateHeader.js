@@ -7,8 +7,9 @@ import {COLORS, FONTS, RADIUS} from '../theme';
 /**
  * Green, rounded panel header. Shows the store logo (or a back button) with a
  * notification bell on top, then a title/subtitle and an optional status chip.
+ * `inline` puts the title next to the back button in a single row.
  */
-const AffiliateHeader = ({title, subtitle, chip, onBack, right, compact = false}) => {
+const AffiliateHeader = ({title, subtitle, chip, onBack, right, compact = false, inline = false}) => {
   const navigation = useNavigation();
 
   return (
@@ -23,6 +24,9 @@ const AffiliateHeader = ({title, subtitle, chip, onBack, right, compact = false}
             <Image source={require('../../../Assets/Images/newlogo.png')} style={styles.logo} resizeMode="contain" />
           </View>
         )}
+        {inline && (
+          <Text style={[styles.title, styles.inlineTitle]} numberOfLines={1}>{title}</Text>
+        )}
         {right !== undefined ? (
           right
         ) : (
@@ -35,18 +39,20 @@ const AffiliateHeader = ({title, subtitle, chip, onBack, right, compact = false}
         )}
       </View>
 
-      <View style={styles.titleRow}>
-        <View style={styles.titleBlock}>
-          <Text style={styles.title} numberOfLines={1}>{title}</Text>
-          {!!subtitle && <Text style={styles.subtitle} numberOfLines={2}>{subtitle}</Text>}
-        </View>
-        {!!chip && (
-          <View style={[styles.chip, {backgroundColor: chip.bg || COLORS.white}]}>
-            {chip.icon !== false && <CheckCircle2 size={14} color={chip.color} />}
-            <Text style={[styles.chipText, {color: chip.color}]}>{chip.label}</Text>
+      {!inline && (
+        <View style={styles.titleRow}>
+          <View style={styles.titleBlock}>
+            <Text style={styles.title} numberOfLines={1}>{title}</Text>
+            {!!subtitle && <Text style={styles.subtitle} numberOfLines={2}>{subtitle}</Text>}
           </View>
-        )}
-      </View>
+          {!!chip && (
+            <View style={[styles.chip, {backgroundColor: chip.bg || COLORS.white}]}>
+              {chip.icon !== false && <CheckCircle2 size={14} color={chip.color} />}
+              <Text style={[styles.chipText, {color: chip.color}]}>{chip.label}</Text>
+            </View>
+          )}
+        </View>
+      )}
     </View>
   );
 };
@@ -61,6 +67,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 28,
   },
   compact: {paddingBottom: 20},
+  inlineTitle: {flex: 1, marginLeft: 12, fontSize: 20},
   topRow: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'},
   logoBox: {
     backgroundColor: COLORS.white,

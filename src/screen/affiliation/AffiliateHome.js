@@ -1,15 +1,16 @@
 import React, {useContext, useMemo, useState} from 'react';
-import {RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {RefreshControl, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {useTranslation} from 'react-i18next';
-import {Ban, Copy, ExternalLink, Link2, PieChart, ReceiptText, Share2, ShoppingBag, WalletCards} from 'lucide-react-native';
+import {Ban, PieChart, ReceiptText, ShoppingBag, WalletCards} from 'lucide-react-native';
 import {UserContext} from '../../../App';
 import {useAffiliate} from './AffiliateContext';
 import AffiliateHeader from './components/AffiliateHeader';
 import AttributedOrderRow from './components/AttributedOrderRow';
+import ReferralCard from './components/ReferralCard';
 import {TAB_BAR_SPACE} from './components/AffiliateTabBar';
-import {Button, Card, EmptyState, SectionHeader, StatCard} from './components/ui';
+import {Card, EmptyState, SectionHeader, StatCard} from './components/ui';
 import {COLORS, FONTS, RADIUS} from './theme';
-import {APPLICATION_STATUS, buildAttributedOrders, copyText, displayLink, money, openUrl, shareReferral} from './utils';
+import {APPLICATION_STATUS, buildAttributedOrders, money} from './utils';
 
 const RECENT_LIMIT = 4;
 
@@ -62,50 +63,7 @@ const AffiliateHome = ({navigation}) => {
             <StatCard icon={ReceiptText} label={t('Paid lifetime')} value={money(totals.paid)} />
           </View>
 
-          <Card style={styles.referralCard}>
-            <Text style={styles.cardTitle}>{t('Your Referral Code')}</Text>
-            <TouchableOpacity
-              style={styles.codeBox}
-              activeOpacity={0.8}
-              onPress={() => copyText(application.referralCode, t('Referral code copied'))}>
-              <Text style={styles.codeText} numberOfLines={1}>{application.referralCode || '—'}</Text>
-              <Copy size={18} color={COLORS.primary} />
-            </TouchableOpacity>
-
-            <View style={styles.actions}>
-              <Button
-                label={t('Copy Code')}
-                icon={Copy}
-                onPress={() => copyText(application.referralCode, t('Referral code copied'))}
-                disabled={suspended || !application.referralCode}
-              />
-              <Button
-                label={t('Share Link')}
-                icon={Share2}
-                variant="outline"
-                onPress={() => shareReferral(t, application)}
-                disabled={suspended || !application.referralCode}
-              />
-            </View>
-
-            {!!application.referralLink && (
-              <TouchableOpacity
-                style={styles.linkBox}
-                activeOpacity={0.8}
-                onPress={() => copyText(application.referralLink, t('Referral link copied'))}>
-                <Link2 size={16} color={COLORS.muted} />
-                <Text style={styles.linkText} numberOfLines={1}>{displayLink(application.referralLink)}</Text>
-                <TouchableOpacity onPress={() => openUrl(application.referralLink)} hitSlop={10}>
-                  <ExternalLink size={16} color={COLORS.muted} />
-                </TouchableOpacity>
-              </TouchableOpacity>
-            )}
-
-            <Text style={[styles.cardTitle, styles.rateTitle]}>{t('Commission Rate')}</Text>
-            <View style={styles.rateBox}>
-              <Text style={styles.rateText}>{Number(application.commissionRate || 0)}%</Text>
-            </View>
-          </Card>
+          <ReferralCard application={application} suspended={suspended} style={styles.referralCard} />
 
           <SectionHeader
             title={t('Recent Attributed Orders')}
@@ -150,41 +108,6 @@ const styles = StyleSheet.create({
   alertText: {flex: 1, fontFamily: FONTS.Medium, fontSize: 12.5, color: COLORS.danger, lineHeight: 18},
   stats: {flexDirection: 'row', gap: 8},
   referralCard: {marginTop: 14},
-  cardTitle: {fontFamily: FONTS.SemiBold, fontSize: 15, color: COLORS.text},
-  codeBox: {
-    marginTop: 12,
-    backgroundColor: COLORS.primaryMuted,
-    borderRadius: RADIUS.md,
-    paddingHorizontal: 14,
-    height: 52,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  codeText: {flex: 1, fontFamily: FONTS.SemiBold, fontSize: 18, color: COLORS.text, letterSpacing: 1},
-  actions: {flexDirection: 'row', gap: 10, marginTop: 12},
-  linkBox: {
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: RADIUS.sm,
-    height: 44,
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  linkText: {flex: 1, fontFamily: FONTS.Regular, fontSize: 13, color: COLORS.textSecondary, textDecorationLine: 'underline'},
-  rateTitle: {marginTop: 18},
-  rateBox: {
-    marginTop: 10,
-    backgroundColor: COLORS.primaryMuted,
-    borderRadius: RADIUS.md,
-    height: 48,
-    justifyContent: 'center',
-    paddingHorizontal: 14,
-  },
-  rateText: {fontFamily: FONTS.Medium, fontSize: 16, color: COLORS.text},
   sectionGap: {marginTop: 22},
   ordersCard: {paddingVertical: 2},
 });

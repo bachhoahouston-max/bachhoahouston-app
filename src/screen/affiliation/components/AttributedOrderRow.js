@@ -6,7 +6,8 @@ import {COMMISSION_STATUS, money, orderPill, shortDate} from '../utils';
 import {StatusPill} from './ui';
 
 /**
- * One attributed order: number + date | eligible amount | commission | status.
+ * One attributed order: number + date (+ product link it came through) |
+ * eligible amount | commission | status.
  * `showCommissionStatus` swaps the order-status pill for the commission state
  * (ready / in payout / paid / reversed), used on the Commissions page.
  */
@@ -27,6 +28,9 @@ const AttributedOrderRow = ({item, last, showCommissionStatus = false}) => {
       <View style={styles.orderCol}>
         <Text style={styles.orderNo} numberOfLines={1}>#{item.orderNumber}</Text>
         <Text style={styles.date}>{shortDate(item.date)}</Text>
+        {!!item.linkProduct && (
+          <Text style={styles.source} numberOfLines={1}>{t('via {{name}} link', {name: item.linkProduct})}</Text>
+        )}
       </View>
       <View style={styles.col}>
         <Text style={styles.label} numberOfLines={1}>{t('Eligible Amount')}</Text>
@@ -51,6 +55,7 @@ const styles = StyleSheet.create({
   orderCol: {flex: 1.25, paddingRight: 6},
   orderNo: {fontFamily: FONTS.SemiBold, fontSize: 13, color: COLORS.text},
   date: {fontFamily: FONTS.Regular, fontSize: 11, color: COLORS.muted, marginTop: 2},
+  source: {fontFamily: FONTS.Medium, fontSize: 10.5, color: COLORS.primary, marginTop: 2},
   col: {
     flex: 1,
     borderLeftWidth: 1,

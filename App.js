@@ -40,7 +40,7 @@ import { PERMISSIONS, request } from 'react-native-permissions';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import Toast from 'react-native-toast-message';
 import Constants from './src/Assets/Helpers/constant';
-import { navigate } from './navigationRef';
+import { navigate, navigationRef } from './navigationRef';
 import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { PaperProvider } from 'react-native-paper';
@@ -129,15 +129,31 @@ const App = () => {
     const [language, setLanguage] = useState('vi');
 
     useEffect(() => {
+        const param = (url, name) => {
+            const match = url.match(new RegExp(`[?&]${name}=([^&#]+)`, 'i'));
+            return match?.[1] ? decodeURIComponent(match[1]).trim() : '';
+        };
+        const openProduct = (slug, attempt = 0) => {
+            if (navigationRef.isReady()) {
+                navigate('Preview', slug);
+            } else if (attempt < 40) {
+                setTimeout(() => openProduct(slug, attempt + 1), 500);
+            }
+        };
         const saveReferralFromUrl = async url => {
             if (!url) return;
-            const match = url.match(/[?&](?:ref|referralCode)=([^&#]+)/i);
-            if (match?.[1]) {
-                await AsyncStorage.setItem(
-                    'affiliateReferralCode',
-                    decodeURIComponent(match[1]).trim().toUpperCase(),
-                );
+            const code = param(url, 'ref') || param(url, 'referralCode');
+            if (code) {
+                await AsyncStorage.setItem('affiliateReferralCode', code.toUpperCase());
+                const link = param(url, 'link');
+                if (link) {
+                    await AsyncStorage.setItem('affiliateLinkId', link);
+                } else {
+                    await AsyncStorage.removeItem('affiliateLinkId');
+                }
             }
+            const slug = param(url, 'slug');
+            if (slug) openProduct(slug);
         };
         Linking.getInitialURL().then(saveReferralFromUrl);
         const subscription = Linking.addEventListener('url', event => saveReferralFromUrl(event.url));

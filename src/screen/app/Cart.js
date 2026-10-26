@@ -825,6 +825,7 @@ const Cart = ({ route }) => {
       console.log('Formatted Date:', formattedDate);
       const servicefee = parseFloat(serviceFee || 0);
       const referralCode = affiliateCode || await AsyncStorage.getItem('affiliateReferralCode');
+      const affiliateLink = await AsyncStorage.getItem('affiliateLinkId');
       const data = {
         productDetail: newarr,
         shipping_address: shipAdd.address,
@@ -837,6 +838,7 @@ const Cart = ({ route }) => {
         discount: couponvalue || couponDiscount,
         discountCode: discountCode || '',
         referralCode: referralCode || '',
+        affiliateLink: affiliateLink || '',
         user: shipAdd._id,
         Email: shipAdd.email,
         paymentmode: 'online',
@@ -942,6 +944,7 @@ const Cart = ({ route }) => {
     AsyncStorage.removeItem('pickupDate');
     AsyncStorage.removeItem('couponDiscount')
     AsyncStorage.removeItem('affiliateReferralCode');
+    AsyncStorage.removeItem('affiliateLinkId');
     setAffiliateCode('');
     setcartdetail([]);
     // Clear the synced cart immediately rather than waiting on the generic
@@ -2139,7 +2142,7 @@ console.log(result)
                     <Pressable
                       onPress={async () => {
                         setAffiliateCode('');
-                        await AsyncStorage.removeItem('affiliateReferralCode');
+                        await AsyncStorage.multiRemove(['affiliateReferralCode', 'affiliateLinkId']);
                       }}>
                       <Text style={[styles.boxtxt, { color: Constants.red }]}>
                         {t('Remove')}

@@ -1,14 +1,18 @@
 import React, {useContext, useState} from 'react';
-import {Alert, Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Alert, Image, Linking, Platform, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useTranslation} from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {
   Bell,
   CalendarCheck,
   ChevronRight,
+  ExternalLink,
   Hash,
   LogOut,
   Mail,
+  MessageSquareText,
+  MoreHorizontal,
   Package,
   Pencil,
   Percent,
@@ -23,7 +27,7 @@ import AffiliateHeader from './components/AffiliateHeader';
 import {TAB_BAR_SPACE} from './components/AffiliateTabBar';
 import {Card, SectionHeader, StatusPill} from './components/ui';
 import {COLORS, FONTS, RADIUS} from './theme';
-import {APPLICATION_STATUS, copyText, shortDate} from './utils';
+import {APPLICATION_STATUS, copyText, displayLink, getPlatform, openUrl, shareReferral, shortDate} from './utils';
 
 const InfoRow = ({icon: Icon, label, value, onPress, last}) => (
   <TouchableOpacity
@@ -58,6 +62,52 @@ const AffiliateProfile = ({navigation}) => {
   const application = dashboard?.application || {};
   const profile = {...(user || {}), ...(application.user || {})};
   const status = APPLICATION_STATUS[application.status] || APPLICATION_STATUS.Approved;
+  const code = application.referralCode || '';
+  const link = application.referralLink || '';
+  const suspended = application.status === 'Suspended';
+  const encoded = encodeURIComponent(t('Shop at Bach Hoa Houston with my referral code {{code}}: {{link}}', {code, link}));
+
+  // "Share to" targets for the referral code and link.
+  const channels = [
+    {
+      key: 'whatsapp',
+      label: 'WhatsApp',
+      render: <Ionicons name="logo-whatsapp" size={22} color="#25D366" />,
+      open: () => Linking.openURL(`whatsapp://send?text=${encoded}`).catch(() => openUrl(`https://wa.me/?text=${encoded}`)),
+    },
+    {
+      key: 'facebook',
+      label: 'Facebook',
+      render: <Ionicons name="logo-facebook" size={22} color="#1877F2" />,
+      open: () => openUrl(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`),
+    },
+    {
+      key: 'x',
+      label: 'X',
+      render: <Ionicons name="logo-twitter" size={22} color="#111111" />,
+      open: () => openUrl(`https://twitter.com/intent/tweet?text=${encoded}`),
+    },
+    {
+      key: 'sms',
+      label: t('Message'),
+      render: <MessageSquareText size={22} color={COLORS.primary} />,
+      open: () => Linking.openURL(`sms:${Platform.OS === 'ios' ? '&' : '?'}body=${encoded}`).catch(() => {}),
+    },
+    {
+      key: 'email',
+      label: t('Email'),
+      render: <Mail size={22} color={COLORS.info} />,
+      open: () =>
+        Linking.openURL(`mailto:?subject=${encodeURIComponent(t('Shop with my referral link'))}&body=${encoded}`).catch(() => {}),
+    },
+    {
+      key: 'more',
+      label: t('More'),
+      render: <MoreHorizontal size={22} color={COLORS.textSecondary} />,
+      open: () => shareReferral(t, application),
+    },
+  ];
+
   const initials = String(profile.name || '?')
     .trim()
     .split(/\s+/)
@@ -139,6 +189,47 @@ const AffiliateProfile = ({navigation}) => {
             />
           </Card>
 
+          <SectionHeader title={t('Share to')} style={styles.sectionGap} />
+          <Card style={styles.channelsCard}>
+            {channels.map(channel => (
+              <TouchableOpacity
+                key={channel.key}
+                style={styles.channel}
+                onPress={channel.open}
+                disabled={suspended || !code}
+                activeOpacity={0.75}>
+                <View style={styles.channelIcon}>{channel.render}</View>
+                <Text style={styles.channelLabel} numberOfLines={1}>{channel.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </Card>
+
+          {!!application.socialLinks?.length && (
+            <>
+              <SectionHeader title={t('Your channels')} style={styles.sectionGap} />
+              <Card style={styles.listCard}>
+                {application.socialLinks.map((item, index) => {
+                  const platform = getPlatform(item.platform);
+                  return (
+                    <TouchableOpacity
+                      key={`${item.platform}-${index}`}
+                      style={[styles.socialRow, index < application.socialLinks.length - 1 && styles.divider]}
+                      onPress={() => openUrl(item.url)}>
+                      <View style={styles.socialIcon}>
+                        <Ionicons name={platform.icon} size={18} color={platform.color} />
+                      </View>
+                      <View style={styles.flex}>
+                        <Text style={styles.socialName}>{platform.label}</Text>
+                        <Text style={styles.socialUrl} numberOfLines={1}>{displayLink(item.url)}</Text>
+                      </View>
+                      <ExternalLink size={16} color={COLORS.muted} />
+                    </TouchableOpacity>
+                  );
+                })}
+              </Card>
+            </>
+          )}
+
           <SectionHeader title={t('Payout method')} style={styles.sectionGap} />
           <Card style={styles.listCard}>
             <View style={styles.zelleBadge}>
@@ -209,6 +300,28 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   zelleText: {fontFamily: FONTS.Bold, fontSize: 12, color: COLORS.white},
+  channelsCard: {flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 6, paddingVertical: 10},
+  channel: {width: '33.33%', alignItems: 'center', paddingVertical: 10},
+  channelIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: COLORS.neutralSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  channelLabel: {fontFamily: FONTS.Medium, fontSize: 12, color: COLORS.textSecondary, marginTop: 6},
+  socialRow: {flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12},
+  socialIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.neutralSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  socialName: {fontFamily: FONTS.SemiBold, fontSize: 13.5, color: COLORS.text},
+  socialUrl: {fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.muted},
   footnote: {fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.muted, marginTop: 8, marginHorizontal: 4},
 });
 

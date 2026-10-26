@@ -1,79 +1,73 @@
-import React, {useState} from 'react';
-import {Linking, Platform, RefreshControl, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {useCallback, useState} from 'react';
+import {ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Copy, ExternalLink, Link2, Mail, MessageSquareText, MoreHorizontal, Share2} from 'lucide-react-native';
+import {CircleDollarSign, Link2, Plus, Search, Share2} from 'lucide-react-native';
+import {GetApi} from '../../Assets/Helpers/Service';
 import {useAffiliate} from './AffiliateContext';
 import AffiliateHeader from './components/AffiliateHeader';
 import {TAB_BAR_SPACE} from './components/AffiliateTabBar';
-import {Button, Card, SectionHeader} from './components/ui';
+import ProductLinkModal from './components/ProductLinkModal';
+import ReferralCard from './components/ReferralCard';
+import {Button, Card, EmptyState, SectionHeader, StatCard} from './components/ui';
 import {COLORS, FONTS, RADIUS} from './theme';
-import {copyText, displayLink, getPlatform, openUrl, shareReferral} from './utils';
+import {copyText, displayLink, money, shareProductLink} from './utils';
 
-const CAPTIONS = [
-  'caption_weekly',
-  'caption_fresh',
-  'caption_code',
-];
+const PREVIEW_LIMIT = 3;
+const TRENDING_LIMIT = 3;
 
-const AffiliateLinks = () => {
+const AffiliateLinks = ({navigation}) => {
   const {t} = useTranslation();
   const {dashboard, refresh} = useAffiliate();
   const [refreshing, setRefreshing] = useState(false);
+  const [links, setLinks] = useState([]);
+  const [totals, setTotals] = useState({links: 0, revenue: 0});
+  const [linksLoading, setLinksLoading] = useState(true);
+  const [trending, setTrending] = useState([]);
+  const [showAll, setShowAll] = useState(false);
+  // {product} links that product straight away; {} opens the product list.
+  const [picker, setPicker] = useState(null);
 
   const application = dashboard?.application || {};
-  const code = application.referralCode || '';
-  const link = application.referralLink || '';
   const suspended = application.status === 'Suspended';
-  const rate = Number(application.commissionRate || 0);
-  const message = t('Shop at Bach Hoa Houston with my referral code {{code}}: {{link}}', {code, link});
-  const encoded = encodeURIComponent(message);
+  const canCreate = !suspended && !!application.referralCode;
 
-  const channels = [
-    {
-      key: 'whatsapp',
-      label: 'WhatsApp',
-      render: <Ionicons name="logo-whatsapp" size={22} color="#25D366" />,
-      open: () => Linking.openURL(`whatsapp://send?text=${encoded}`).catch(() => openUrl(`https://wa.me/?text=${encoded}`)),
-    },
-    {
-      key: 'facebook',
-      label: 'Facebook',
-      render: <Ionicons name="logo-facebook" size={22} color="#1877F2" />,
-      open: () => openUrl(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`),
-    },
-    {
-      key: 'x',
-      label: 'X',
-      render: <Ionicons name="logo-twitter" size={22} color="#111111" />,
-      open: () => openUrl(`https://twitter.com/intent/tweet?text=${encoded}`),
-    },
-    {
-      key: 'sms',
-      label: t('Message'),
-      render: <MessageSquareText size={22} color={COLORS.primary} />,
-      open: () => Linking.openURL(`sms:${Platform.OS === 'ios' ? '&' : '?'}body=${encoded}`).catch(() => {}),
-    },
-    {
-      key: 'email',
-      label: t('Email'),
-      render: <Mail size={22} color={COLORS.info} />,
-      open: () =>
-        Linking.openURL(`mailto:?subject=${encodeURIComponent(t('Shop with my referral link'))}&body=${encoded}`).catch(() => {}),
-    },
-    {
-      key: 'more',
-      label: t('More'),
-      render: <MoreHorizontal size={22} color={COLORS.textSecondary} />,
-      open: () => shareReferral(t, application),
-    },
-  ];
+  const loadLinks = useCallback(
+    () =>
+      GetApi('affiliation/links', {})
+        .then(res => {
+          if (res?.status) {
+            setLinks(res.data?.links || []);
+            setTotals(res.data?.totals || {links: 0, revenue: 0});
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLinksLoading(false)),
+    [],
+  );
+
+  const loadTrending = useCallback(
+    () =>
+      GetApi(`affiliation/link-products?limit=${TRENDING_LIMIT}`, {})
+        .then(res => res?.status && setTrending(res.data?.products || []))
+        .catch(() => {}),
+    [],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      loadLinks();
+      loadTrending();
+    }, [loadLinks, loadTrending]),
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await refresh();
+    await Promise.all([refresh(), loadLinks(), loadTrending()]);
     setRefreshing(false);
   };
+
+  const visibleLinks = showAll ? links : links.slice(0, PREVIEW_LIMIT);
 
   return (
     <View style={styles.container}>
@@ -81,124 +75,117 @@ const AffiliateLinks = () => {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}>
-        <AffiliateHeader
-          compact
-          title={t('My links')}
-          subtitle={t('Earn {{rate}}% on every eligible order placed with your code', {rate})}
-        />
+        <AffiliateHeader compact inline title={t('My links')} onBack={() => navigation.navigate('AffiliateHome')} />
 
         <View style={styles.body}>
-          <Card>
-            <Text style={styles.overline}>{t('Your referral code')}</Text>
-            <View style={styles.ticket}>
-              <Text style={styles.ticketCode} numberOfLines={1} adjustsFontSizeToFit>{code || '—'}</Text>
-              <Text style={styles.ticketHint}>
-                {t('Customers enter this code in "Coupon or referral code" at checkout.')}
-              </Text>
+          <View style={styles.stats}>
+            <StatCard icon={Link2} label={t('Active Links')} value={String(totals.links || 0)} />
+            <StatCard icon={CircleDollarSign} label={t('Revenue')} value={money(totals.revenue)} />
+          </View>
+
+          <ReferralCard
+            application={application}
+            suspended={suspended}
+            rateBadge={t('Storewide')}
+            style={styles.sectionGap}
+          />
+
+          <Card style={styles.sectionGap}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>{t('Generate Custom Product Link')}</Text>
+              <View style={styles.instant}>
+                <Text style={styles.instantText}>{t('INSTANT')}</Text>
+              </View>
             </View>
 
-            {!!link && (
+            <TouchableOpacity
+              style={styles.pickerField}
+              activeOpacity={0.8}
+              onPress={() => setPicker({})}
+              disabled={!canCreate}>
+              <Search size={16} color={COLORS.muted} />
+              <Text style={styles.pickerPlaceholder} numberOfLines={1}>{t('Search a product from the shop')}</Text>
+              <View style={styles.browse}>
+                <Text style={styles.browseText}>{t('Browse')}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <Button
+              label={t('Create Affiliate Link')}
+              icon={Plus}
+              onPress={() => setPicker({})}
+              disabled={!canCreate}
+              style={styles.createButton}
+            />
+
+            {!!trending.length && (
               <>
-                <Text style={[styles.overline, styles.gapTop]}>{t('Your referral link')}</Text>
-                <View style={styles.linkBox}>
-                  <Link2 size={16} color={COLORS.primary} />
-                  <Text style={styles.linkText} numberOfLines={1}>{displayLink(link)}</Text>
-                  <TouchableOpacity onPress={() => openUrl(link)} hitSlop={10} accessibilityLabel={t('Open link')}>
-                    <ExternalLink size={16} color={COLORS.muted} />
-                  </TouchableOpacity>
+                <Text style={styles.overline}>{t('Trending in Houston')}</Text>
+                <View style={styles.chips}>
+                  {trending.map(product => (
+                    <TouchableOpacity
+                      key={product._id}
+                      style={styles.chip}
+                      onPress={() => setPicker({product})}
+                      disabled={!canCreate}
+                      activeOpacity={0.75}>
+                      <Text style={styles.chipText} numberOfLines={1}>+ {product.name}</Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </>
             )}
-
-            <View style={styles.actions}>
-              <Button
-                label={t('Copy Link')}
-                icon={Copy}
-                onPress={() => copyText(link || code, t('Referral link copied'))}
-                disabled={suspended || !code}
-              />
-              <Button
-                label={t('Share')}
-                icon={Share2}
-                variant="outline"
-                onPress={() => shareReferral(t, application)}
-                disabled={suspended || !code}
-              />
-            </View>
           </Card>
 
-          <SectionHeader title={t('Share to')} style={styles.sectionGap} />
-          <Card style={styles.channelsCard}>
-            {channels.map(channel => (
-              <TouchableOpacity
-                key={channel.key}
-                style={styles.channel}
-                onPress={channel.open}
-                disabled={suspended || !code}
-                activeOpacity={0.75}>
-                <View style={styles.channelIcon}>{channel.render}</View>
-                <Text style={styles.channelLabel} numberOfLines={1}>{channel.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </Card>
-
-          <SectionHeader title={t('Ready-to-post captions')} style={styles.sectionGap} />
-          {CAPTIONS.map(key => {
-            const text = t(key, {code, link: link || code});
-            return (
-              <Card key={key} style={styles.caption}>
-                <Text style={styles.captionText}>{text}</Text>
-                <View style={styles.captionActions}>
-                  <TouchableOpacity
-                    style={styles.captionAction}
-                    onPress={() => copyText(text, t('Caption copied'))}
-                    disabled={suspended || !code}>
-                    <Copy size={14} color={COLORS.primary} />
-                    <Text style={styles.captionActionText}>{t('Copy')}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.captionAction}
-                    onPress={() => Share.share({message: text}).catch(() => {})}
-                    disabled={suspended || !code}>
-                    <Share2 size={14} color={COLORS.primary} />
-                    <Text style={styles.captionActionText}>{t('Share')}</Text>
-                  </TouchableOpacity>
-                </View>
-              </Card>
-            );
-          })}
-
-          {!!application.socialLinks?.length && (
-            <>
-              <SectionHeader title={t('Your channels')} style={styles.sectionGap} />
-              <Card style={styles.listCard}>
-                {application.socialLinks.map((item, index) => {
-                  const platform = getPlatform(item.platform);
-                  return (
+          <Card style={styles.sectionGap}>
+            <SectionHeader
+              title={t('Active Links ({{count}})', {count: links.length})}
+              actionLabel={links.length > PREVIEW_LIMIT ? (showAll ? t('Show less') : t('View All')) : undefined}
+              onAction={() => setShowAll(value => !value)}
+              style={styles.linksHeader}
+            />
+            {linksLoading && !links.length ? (
+              <ActivityIndicator style={styles.loader} color={COLORS.primary} />
+            ) : links.length === 0 ? (
+              <EmptyState
+                icon={Link2}
+                title={t('No product links yet')}
+                text={t('Tap "Create Affiliate Link", pick a product and share the link.')}
+              />
+            ) : (
+              visibleLinks.map(link => (
+                <View key={link._id} style={styles.linkCard}>
+                  <Text style={styles.linkName} numberOfLines={2}>{link.product?.name || t('Product unavailable')}</Text>
+                  <Text style={styles.linkUrl} numberOfLines={1}>{displayLink(link.url)}</Text>
+                  <View style={styles.linkFooter}>
+                    <Text style={styles.linkStats}>
+                      {t('{{clicks}} clicks • {{orders}} orders', {clicks: link.clicks, orders: link.orders})}
+                    </Text>
                     <TouchableOpacity
-                      key={`${item.platform}-${index}`}
-                      style={[styles.socialRow, index < application.socialLinks.length - 1 && styles.divider]}
-                      onPress={() => openUrl(item.url)}>
-                      <View style={styles.socialIcon}>
-                        <Ionicons name={platform.icon} size={18} color={platform.color} />
-                      </View>
-                      <View style={styles.flex}>
-                        <Text style={styles.socialName}>{platform.label}</Text>
-                        <Text style={styles.socialUrl} numberOfLines={1}>{displayLink(item.url)}</Text>
-                      </View>
-                      <ExternalLink size={16} color={COLORS.muted} />
+                      style={styles.copyPill}
+                      onPress={() => copyText(link.url, t('Link copied'))}
+                      disabled={suspended}>
+                      <Text style={styles.copyPillText}>{t('Copy')}</Text>
                     </TouchableOpacity>
-                  );
-                })}
-              </Card>
-            </>
-          )}
+                    <TouchableOpacity
+                      onPress={() => shareProductLink(t, link)}
+                      disabled={suspended}
+                      hitSlop={10}
+                      accessibilityLabel={t('Share')}>
+                      <Share2 size={16} color={COLORS.textSecondary} />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            )}
+          </Card>
 
           <SectionHeader title={t('How it works')} style={styles.sectionGap} />
           <Card>
             {[
-              {title: t('Share your code'), text: t('Post your link or code where your audience shops.')},
-              {title: t('Customers order'), text: t('They enter your code at checkout on the app or website.')},
+              {title: t('Pick a product'), text: t('Tap "Create Affiliate Link" and choose any product from the shop.')},
+              {title: t('Share your link'), text: t('Post the product link or your referral code where your audience shops.')},
+              {title: t('Customers order'), text: t('They open your link in the app, or enter your code at checkout.')},
               {title: t('You earn commission'), text: t('Commission is added when the order is completed or delivered.')},
             ].map((step, index, list) => (
               <View key={step.title} style={styles.step}>
@@ -217,6 +204,13 @@ const AffiliateLinks = () => {
           </Card>
         </View>
       </ScrollView>
+
+      <ProductLinkModal
+        visible={!!picker}
+        initialProduct={picker?.product}
+        onClose={() => setPicker(null)}
+        onCreated={loadLinks}
+      />
     </View>
   );
 };
@@ -226,64 +220,62 @@ const styles = StyleSheet.create({
   scroll: {paddingBottom: TAB_BAR_SPACE},
   body: {paddingHorizontal: 14, paddingTop: 18},
   flex: {flex: 1},
-  overline: {fontFamily: FONTS.SemiBold, fontSize: 13, color: COLORS.textSecondary},
-  gapTop: {marginTop: 16},
-  ticket: {
-    marginTop: 10,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    borderColor: COLORS.primary,
-    backgroundColor: COLORS.primarySoft,
-    borderRadius: RADIUS.md,
-    paddingVertical: 18,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  ticketCode: {fontFamily: FONTS.Bold, fontSize: 30, color: COLORS.primary, letterSpacing: 3},
-  ticketHint: {fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.textSecondary, textAlign: 'center', marginTop: 6},
-  linkBox: {
-    marginTop: 8,
+  stats: {flexDirection: 'row', gap: 10},
+  sectionGap: {marginTop: 18},
+  cardHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10},
+  cardTitle: {flex: 1, fontFamily: FONTS.SemiBold, fontSize: 15, color: COLORS.text},
+  instant: {backgroundColor: COLORS.primarySoft, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 3},
+  instantText: {fontFamily: FONTS.Bold, fontSize: 10.5, color: COLORS.primary, letterSpacing: 0.5},
+  pickerField: {
+    marginTop: 12,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: RADIUS.sm,
     height: 46,
-    paddingHorizontal: 12,
+    paddingLeft: 12,
+    paddingRight: 6,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  linkText: {flex: 1, fontFamily: FONTS.Regular, fontSize: 13, color: COLORS.text},
-  actions: {flexDirection: 'row', gap: 10, marginTop: 14},
-  sectionGap: {marginTop: 22},
-  channelsCard: {flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 6, paddingVertical: 10},
-  channel: {width: '33.33%', alignItems: 'center', paddingVertical: 10},
-  channelIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: COLORS.neutralSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
+  pickerPlaceholder: {flex: 1, fontFamily: FONTS.Regular, fontSize: 13, color: COLORS.muted},
+  browse: {backgroundColor: COLORS.neutralSoft, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6},
+  browseText: {fontFamily: FONTS.SemiBold, fontSize: 12, color: COLORS.textSecondary},
+  createButton: {flex: 0, marginTop: 12},
+  overline: {
+    fontFamily: FONTS.SemiBold,
+    fontSize: 11,
+    color: COLORS.muted,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+    marginTop: 16,
   },
-  channelLabel: {fontFamily: FONTS.Medium, fontSize: 12, color: COLORS.textSecondary, marginTop: 6},
-  caption: {marginBottom: 10, padding: 14},
-  captionText: {fontFamily: FONTS.Regular, fontSize: 13, color: COLORS.text, lineHeight: 20},
-  captionActions: {flexDirection: 'row', gap: 18, marginTop: 10, borderTopWidth: 1, borderTopColor: COLORS.divider, paddingTop: 10},
-  captionAction: {flexDirection: 'row', alignItems: 'center', gap: 6},
-  captionActionText: {fontFamily: FONTS.SemiBold, fontSize: 13, color: COLORS.primary},
-  listCard: {paddingVertical: 4},
-  socialRow: {flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12},
-  divider: {borderBottomWidth: 1, borderBottomColor: COLORS.divider},
-  socialIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.neutralSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
+  chips: {flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8},
+  chip: {
+    maxWidth: '100%',
+    backgroundColor: COLORS.primarySoft,
+    borderWidth: 1,
+    borderColor: COLORS.primaryBorder,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
-  socialName: {fontFamily: FONTS.SemiBold, fontSize: 13.5, color: COLORS.text},
-  socialUrl: {fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.muted},
+  chipText: {fontFamily: FONTS.Medium, fontSize: 12, color: COLORS.primary},
+  linksHeader: {marginBottom: 2},
+  loader: {marginVertical: 24},
+  linkCard: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: RADIUS.md,
+    padding: 14,
+    marginTop: 10,
+  },
+  linkName: {fontFamily: FONTS.SemiBold, fontSize: 14, color: COLORS.text},
+  linkUrl: {fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.muted, marginTop: 3},
+  linkFooter: {flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14},
+  linkStats: {flex: 1, fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.textSecondary},
+  copyPill: {backgroundColor: COLORS.primarySoft, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 5},
+  copyPillText: {fontFamily: FONTS.SemiBold, fontSize: 12, color: COLORS.primary},
   step: {flexDirection: 'row'},
   stepRail: {alignItems: 'center', width: 30},
   stepDot: {

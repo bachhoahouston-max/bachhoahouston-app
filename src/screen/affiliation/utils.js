@@ -78,6 +78,7 @@ export const buildAttributedOrders = dashboard => {
     rate: item.commissionRate,
     orderStatus: item.order?.status || 'Delivered',
     commissionStatus: item.status,
+    linkProduct: item.order?.affiliationLink?.product?.name,
     pending: false,
   }));
   const pending = (dashboard?.pendingOrders || []).map(order => ({
@@ -88,6 +89,7 @@ export const buildAttributedOrders = dashboard => {
     commission: null,
     orderStatus: order.status || 'Pending',
     commissionStatus: null,
+    linkProduct: order.affiliationLink?.product?.name,
     pending: true,
   }));
   return [...commissions, ...pending].sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -118,6 +120,18 @@ export const shareReferral = (t, application, message) => {
         code: referralCode,
         link: referralLink || '',
       }),
+  }).catch(() => {});
+};
+
+// `link` is a product link from affiliation/links ({url, product: {name}}).
+export const shareProductLink = (t, link) => {
+  if (!link?.url) {
+    return;
+  }
+  const name = link.product?.name || '';
+  Share.share({
+    title: name,
+    message: t('Check out {{name}} at Bach Hoa Houston: {{link}}', {name, link: link.url}),
   }).catch(() => {});
 };
 
