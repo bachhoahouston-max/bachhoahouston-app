@@ -1,7 +1,7 @@
-import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {Alert, RefreshControl, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {useTranslation} from 'react-i18next';
-import {useNavigation} from '@react-navigation/native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, RefreshControl, ScrollView, Share, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
 import moment from 'moment-timezone';
 import {
   Banknote,
@@ -16,35 +16,35 @@ import {
   ShoppingBag,
   Wallet,
 } from 'lucide-react-native';
-import {Post} from '../../Assets/Helpers/Service';
-import {useAffiliate} from './AffiliateContext';
+import { Post } from '../../Assets/Helpers/Service';
+import { useAffiliate } from './AffiliateContext';
 import AffiliateHeader from './components/AffiliateHeader';
-import CommissionHistoryRow, {CommissionHistoryHeader} from './components/CommissionHistoryRow';
-import {TAB_BAR_SPACE} from './components/AffiliateTabBar';
-import {Card, EmptyState, StatusPill} from './components/ui';
-import {COLORS, FONTS, RADIUS} from './theme';
-import {PAYOUT_STATUS, TZ, buildAttributedOrders, money, shortDate} from './utils';
+import CommissionHistoryRow, { CommissionHistoryHeader } from './components/CommissionHistoryRow';
+import { TAB_BAR_SPACE } from './components/AffiliateTabBar';
+import { Card, EmptyState, StatusPill } from './components/ui';
+import { COLORS, FONTS, RADIUS } from './theme';
+import { PAYOUT_STATUS, TZ, buildAttributedOrders, money, shortDate } from './utils';
 
 // Commission status tabs. "Pending" is earned and ready for payout,
 // "Approved" is inside a payout request, "Processing" is an order that has
 // not been completed yet (no commission amount so far).
 const STATUS_TABS = [
-  {value: 'all', label: 'All', match: () => true},
-  {value: 'pending', label: 'Pending', match: item => item.commissionStatus === 'Pending'},
-  {value: 'approved', label: 'Approved', match: item => item.commissionStatus === 'Approved'},
-  {value: 'paid', label: 'Paid', match: item => item.commissionStatus === 'Paid'},
-  {value: 'processing', label: 'Processing', match: item => item.pending},
-  {value: 'reversed', label: 'Reversed', match: item => item.commissionStatus === 'Reversed'},
+  { value: 'all', label: 'All', match: () => true },
+  { value: 'pending', label: 'Pending', match: item => item.commissionStatus === 'Pending' },
+  { value: 'approved', label: 'Approved', match: item => item.commissionStatus === 'Approved' },
+  { value: 'paid', label: 'Paid', match: item => item.commissionStatus === 'Paid' },
+  { value: 'processing', label: 'Processing', match: item => item.pending },
+  { value: 'reversed', label: 'Reversed', match: item => item.commissionStatus === 'Reversed' },
 ];
 
 const DATE_RANGES = [
-  {value: 0, label: 'All time'},
-  {value: 7, label: 'Last 7 days'},
-  {value: 30, label: 'Last 30 days'},
-  {value: 90, label: 'Last 90 days'},
+  { value: 0, label: 'All time' },
+  { value: 7, label: 'Last 7 days' },
+  { value: 30, label: 'Last 30 days' },
+  { value: 90, label: 'Last 90 days' },
 ];
 
-const SummaryCard = ({icon: Icon, label, value, meta}) => (
+const SummaryCard = ({ icon: Icon, label, value, meta }) => (
   <View style={styles.summary}>
     <View style={styles.summaryIcon}>
       <Icon size={15} color={COLORS.primary} />
@@ -55,10 +55,10 @@ const SummaryCard = ({icon: Icon, label, value, meta}) => (
   </View>
 );
 
-const AffiliateCommissions = ({route}) => {
-  const {t} = useTranslation();
+const AffiliateCommissions = ({ route }) => {
+  const { t } = useTranslation();
   const navigation = useNavigation();
-  const {dashboard, refresh} = useAffiliate();
+  const { dashboard, refresh } = useAffiliate();
   const scrollRef = useRef(null);
   const payoutsY = useRef(0);
   const [tab, setTab] = useState('all');
@@ -87,7 +87,7 @@ const AffiliateCommissions = ({route}) => {
   const activeRange = DATE_RANGES.find(r => r.value === range) || DATE_RANGES[0];
 
   const scrollToPayouts = () => {
-    setTimeout(() => scrollRef.current?.scrollTo({y: payoutsY.current, animated: true}), 300);
+    setTimeout(() => scrollRef.current?.scrollTo({ y: payoutsY.current, animated: true }), 300);
   };
 
   // Links to this tab can ask for the payout list.
@@ -124,10 +124,10 @@ const AffiliateCommissions = ({route}) => {
   const requestPayout = () => {
     Alert.alert(
       t('Request payout'),
-      t('Request {{amount}} to be sent to {{zelle}} via Zelle?', {amount: money(totals.available), zelle: zelle || 'Zelle'}),
+      t('Request {{amount}} to be sent to {{zelle}} via Zelle?', { amount: money(totals.available), zelle: zelle || 'Zelle' }),
       [
-        {text: t('Cancel'), style: 'cancel'},
-        {text: t('Request'), onPress: submitPayout},
+        { text: t('Cancel'), style: 'cancel' },
+        { text: t('Request'), onPress: submitPayout },
       ],
     );
   };
@@ -135,7 +135,7 @@ const AffiliateCommissions = ({route}) => {
   const showRateDetails = () => {
     Alert.alert(
       t('Your Commission Rate'),
-      t('You earn {{rate}}% of the eligible amount of every order placed with your referral code or links, once the order is completed or delivered.', {rate}),
+      t('You earn {{rate}}% of the eligible amount of every order placed with your referral code or links, once the order is completed or delivered.', { rate }),
     );
   };
 
@@ -158,7 +158,7 @@ const AffiliateCommissions = ({route}) => {
       '',
       ...(lines.length ? lines : [t('No orders match this filter.')]),
     ].join('\n');
-    Share.share({title: t('Commission report'), message}).catch(() => {});
+    Share.share({ title: t('Commission report'), message }).catch(() => { });
   };
 
   return (
@@ -176,13 +176,13 @@ const AffiliateCommissions = ({route}) => {
               icon={Wallet}
               label={t('Pending Commission')}
               value={money(totals.available)}
-              meta={t('From {{count}} orders', {count: countOf('Pending')})}
+              meta={t('From {{count}} orders', { count: countOf('Pending') })}
             />
             <SummaryCard
               icon={CheckCircle2}
               label={t('Approved')}
               value={money(totals.inPayout)}
-              meta={t('From {{count}} orders', {count: countOf('Approved')})}
+              meta={t('From {{count}} orders', { count: countOf('Approved') })}
             />
             <SummaryCard
               icon={CircleDollarSign}
@@ -192,7 +192,7 @@ const AffiliateCommissions = ({route}) => {
             />
           </View>
 
-          <View style={styles.rateCard}>
+          {/* <View style={styles.rateCard}>
             <View style={styles.rateIcon}>
               <Percent size={20} color={COLORS.white} />
             </View>
@@ -204,7 +204,7 @@ const AffiliateCommissions = ({route}) => {
               <Text style={styles.rateButtonText}>{t('View Details')}</Text>
               <ChevronRight size={16} color={COLORS.primary} />
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           <View style={styles.balance}>
             <Text style={styles.balanceLabel}>{t('Available commission')}</Text>
@@ -244,7 +244,7 @@ const AffiliateCommissions = ({route}) => {
             <Info size={16} color={COLORS.info} />
             <Text style={styles.noteText}>
               {zelle
-                ? t('Payouts are sent by Zelle to {{zelle}} after owner approval.', {zelle})
+                ? t('Payouts are sent by Zelle to {{zelle}} after owner approval.', { zelle })
                 : t('Add a Zelle email or phone number before requesting a payout.')}
             </Text>
           </View>
@@ -352,7 +352,7 @@ const AffiliateCommissions = ({route}) => {
                           <Text style={styles.payoutMeta}>{t('Ref')}: {payout.transactionReference}</Text>
                         )}
                         {!!payout.rejectionReason && (
-                          <Text style={[styles.payoutMeta, {color: COLORS.danger}]}>{payout.rejectionReason}</Text>
+                          <Text style={[styles.payoutMeta, { color: COLORS.danger }]}>{payout.rejectionReason}</Text>
                         )}
                       </View>
                       <StatusPill label={t(config.label)} color={config.color} bg={config.bg} />
@@ -387,11 +387,11 @@ const AffiliateCommissions = ({route}) => {
 };
 
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: COLORS.background},
-  scroll: {paddingBottom: TAB_BAR_SPACE},
-  body: {paddingHorizontal: 14, paddingTop: 18},
-  flex: {flex: 1},
-  summaryRow: {flexDirection: 'row', gap: 8},
+  container: { flex: 1, backgroundColor: COLORS.background },
+  scroll: { paddingBottom: TAB_BAR_SPACE },
+  body: { paddingHorizontal: 14, paddingTop: 18 },
+  flex: { flex: 1 },
+  summaryRow: { flexDirection: 'row', gap: 8 },
   summary: {
     flex: 1,
     backgroundColor: COLORS.primarySoft,
@@ -411,9 +411,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 10,
   },
-  summaryLabel: {fontFamily: FONTS.Medium, fontSize: 11.5, color: COLORS.primaryDark, lineHeight: 15, minHeight: 30},
-  summaryValue: {fontFamily: FONTS.Bold, fontSize: 17, color: COLORS.text, marginTop: 6},
-  summaryMeta: {fontFamily: FONTS.Regular, fontSize: 10, color: COLORS.muted, marginTop: 2},
+  summaryLabel: { fontFamily: FONTS.Medium, fontSize: 11.5, color: COLORS.primaryDark, lineHeight: 15, minHeight: 30 },
+  summaryValue: { fontFamily: FONTS.Bold, fontSize: 17, color: COLORS.text, marginTop: 6 },
+  summaryMeta: { fontFamily: FONTS.Regular, fontSize: 10, color: COLORS.muted, marginTop: 2 },
   rateCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -433,8 +433,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  rateLabel: {fontFamily: FONTS.Medium, fontSize: 13, color: COLORS.text},
-  rateValue: {fontFamily: FONTS.SemiBold, fontSize: 20, color: COLORS.text, marginTop: 2},
+  rateLabel: { fontFamily: FONTS.Medium, fontSize: 13, color: COLORS.text },
+  rateValue: { fontFamily: FONTS.SemiBold, fontSize: 20, color: COLORS.text, marginTop: 2 },
   rateButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -446,11 +446,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     backgroundColor: COLORS.white,
   },
-  rateButtonText: {fontFamily: FONTS.SemiBold, fontSize: 12.5, color: COLORS.primary},
-  balance: {backgroundColor: COLORS.primaryDark, borderRadius: RADIUS.lg, padding: 18, marginTop: 12},
-  balanceLabel: {fontFamily: FONTS.Medium, fontSize: 13, color: 'rgba(255,255,255,0.8)'},
-  balanceAmount: {fontFamily: FONTS.Bold, fontSize: 32, color: COLORS.white, marginTop: 2},
-  balanceMeta: {fontFamily: FONTS.Regular, fontSize: 12, color: 'rgba(255,255,255,0.78)'},
+  rateButtonText: { fontFamily: FONTS.SemiBold, fontSize: 12.5, color: COLORS.primary },
+  balance: { backgroundColor: COLORS.primaryDark, borderRadius: RADIUS.lg, padding: 18, marginTop: 12 },
+  balanceLabel: { fontFamily: FONTS.Medium, fontSize: 13, color: 'rgba(255,255,255,0.8)' },
+  balanceAmount: { fontFamily: FONTS.Bold, fontSize: 32, color: COLORS.white, marginTop: 2 },
+  balanceMeta: { fontFamily: FONTS.Regular, fontSize: 12, color: 'rgba(255,255,255,0.78)' },
   payoutButton: {
     marginTop: 14,
     height: 46,
@@ -461,8 +461,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  payoutDisabled: {opacity: 0.6},
-  payoutText: {fontFamily: FONTS.SemiBold, fontSize: 14, color: COLORS.primary},
+  payoutDisabled: { opacity: 0.6 },
+  payoutText: { fontFamily: FONTS.SemiBold, fontSize: 14, color: COLORS.primary },
   balanceStats: {
     flexDirection: 'row',
     marginTop: 16,
@@ -470,10 +470,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.18)',
   },
-  balanceStat: {flex: 1, alignItems: 'center'},
-  balanceDivider: {width: 1, backgroundColor: 'rgba(255,255,255,0.18)'},
-  balanceStatValue: {fontFamily: FONTS.SemiBold, fontSize: 14, color: COLORS.white},
-  balanceStatLabel: {fontFamily: FONTS.Regular, fontSize: 10.5, color: 'rgba(255,255,255,0.75)', marginTop: 2, textAlign: 'center'},
+  balanceStat: { flex: 1, alignItems: 'center' },
+  balanceDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.18)' },
+  balanceStatValue: { fontFamily: FONTS.SemiBold, fontSize: 14, color: COLORS.white },
+  balanceStatLabel: { fontFamily: FONTS.Regular, fontSize: 10.5, color: 'rgba(255,255,255,0.75)', marginTop: 2, textAlign: 'center' },
   note: {
     flexDirection: 'row',
     gap: 10,
@@ -483,9 +483,9 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 12,
   },
-  noteText: {flex: 1, fontFamily: FONTS.Regular, fontSize: 12.5, color: COLORS.info, lineHeight: 18},
-  sectionHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 22},
-  sectionTitle: {fontFamily: FONTS.Bold, fontSize: 16, color: COLORS.text},
+  noteText: { flex: 1, fontFamily: FONTS.Regular, fontSize: 12.5, color: COLORS.info, lineHeight: 18 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 22 },
+  sectionTitle: { fontFamily: FONTS.Bold, fontSize: 16, color: COLORS.text },
   filterButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -497,9 +497,9 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primaryBorder,
     backgroundColor: COLORS.primarySoft,
   },
-  filterButtonActive: {borderColor: COLORS.primary},
-  filterButtonText: {fontFamily: FONTS.Medium, fontSize: 12.5, color: COLORS.primary},
-  ranges: {flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10},
+  filterButtonActive: { borderColor: COLORS.primary },
+  filterButtonText: { fontFamily: FONTS.Medium, fontSize: 12.5, color: COLORS.primary },
+  ranges: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
   rangeChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -508,9 +508,9 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     backgroundColor: COLORS.white,
   },
-  rangeChipActive: {backgroundColor: COLORS.primary, borderColor: COLORS.primary},
-  rangeText: {fontFamily: FONTS.Medium, fontSize: 12, color: COLORS.textSecondary},
-  rangeTextActive: {color: COLORS.white},
+  rangeChipActive: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
+  rangeText: { fontFamily: FONTS.Medium, fontSize: 12, color: COLORS.textSecondary },
+  rangeTextActive: { color: COLORS.white },
   tabsBar: {
     marginTop: 12,
     backgroundColor: COLORS.primarySoft,
@@ -518,16 +518,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.primaryBorder,
   },
-  tabs: {padding: 4, gap: 4},
-  tab: {paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20},
-  tabActive: {backgroundColor: COLORS.primaryDark},
-  tabText: {fontFamily: FONTS.Medium, fontSize: 12.5, color: COLORS.textSecondary},
-  tabTextActive: {fontFamily: FONTS.SemiBold, color: COLORS.white},
-  tableCard: {marginTop: 12, paddingHorizontal: 10, paddingVertical: 8},
-  payoutsTitle: {marginTop: 22, marginBottom: 10},
-  listCard: {paddingVertical: 2},
-  payoutRow: {flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14},
-  divider: {borderBottomWidth: 1, borderBottomColor: COLORS.divider},
+  tabs: { padding: 4, gap: 4 },
+  tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
+  tabActive: { backgroundColor: COLORS.primaryDark },
+  tabText: { fontFamily: FONTS.Medium, fontSize: 12.5, color: COLORS.textSecondary },
+  tabTextActive: { fontFamily: FONTS.SemiBold, color: COLORS.white },
+  tableCard: { marginTop: 12, paddingHorizontal: 10, paddingVertical: 8 },
+  payoutsTitle: { marginTop: 22, marginBottom: 10 },
+  listCard: { paddingVertical: 2 },
+  payoutRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },
+  divider: { borderBottomWidth: 1, borderBottomColor: COLORS.divider },
   payoutIcon: {
     width: 38,
     height: 38,
@@ -536,8 +536,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  payoutTitle: {fontFamily: FONTS.SemiBold, fontSize: 15, color: COLORS.text},
-  payoutMeta: {fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.muted, marginTop: 1},
+  payoutTitle: { fontFamily: FONTS.SemiBold, fontSize: 15, color: COLORS.text },
+  payoutMeta: { fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.muted, marginTop: 1 },
   important: {
     flexDirection: 'row',
     gap: 10,
@@ -557,8 +557,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginTop: 1,
   },
-  importantTitle: {fontFamily: FONTS.SemiBold, fontSize: 13, color: COLORS.text},
-  importantText: {fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.textSecondary, lineHeight: 18, marginTop: 2},
+  importantTitle: { fontFamily: FONTS.SemiBold, fontSize: 13, color: COLORS.text },
+  importantText: { fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.textSecondary, lineHeight: 18, marginTop: 2 },
   reportButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     backgroundColor: COLORS.primaryDark,
   },
-  reportText: {fontFamily: FONTS.SemiBold, fontSize: 15, color: COLORS.white},
+  reportText: { fontFamily: FONTS.SemiBold, fontSize: 15, color: COLORS.white },
 });
 
 export default AffiliateCommissions;
