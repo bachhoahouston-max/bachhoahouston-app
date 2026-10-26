@@ -749,6 +749,7 @@ const Cart = ({ route }) => {
         paymentId: stripePaymentResult?.paymentId || stripePaymentResult?.id || '',
         paymentIntentId: stripePaymentResult?.paymentIntentId || '',
         order_platform: Platform.OS,
+        lang: i18n.language === 'vi' ? 'vi' : 'en',
         extraFees
       };
 
@@ -770,11 +771,22 @@ const Cart = ({ route }) => {
         setLoading(false);
         console.log('Order creation response:', response);
         if (!response.status) {
+          let errorMsg = response?.message || t('Failed to create order. Please try again.');
+          if (
+            i18n.language === 'vi' &&
+            typeof errorMsg === 'string' &&
+            errorMsg.includes('is deleted. Remove the item to continue.')
+          ) {
+            errorMsg = errorMsg.replace(
+              'is deleted. Remove the item to continue.',
+              'đã bị xóa. Vui lòng xóa sản phẩm để tiếp tục.'
+            );
+          }
           Alert.alert(
             t('Order Creation Failed'),
-            response?.message || t('Failed to create order. Please try again.'),
+            errorMsg,
           );
-          return
+          return;
         }
 
         console.log('Order created successfully:', response);
@@ -794,10 +806,21 @@ const Cart = ({ route }) => {
 
       } catch (err) {
         setLoading(false);
+        let errorMsg = err?.message;
+        if (
+          i18n.language === 'vi' &&
+          typeof errorMsg === 'string' &&
+          errorMsg.includes('is deleted. Remove the item to continue.')
+        ) {
+          errorMsg = errorMsg.replace(
+            'is deleted. Remove the item to continue.',
+            'đã bị xóa. Vui lòng xóa sản phẩm để tiếp tục.'
+          );
+        }
         Toast.show({
           type: 'error',
-          text1: err?.message,
-        })
+          text1: errorMsg,
+        });
       }
 
 

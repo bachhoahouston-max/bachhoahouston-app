@@ -554,5 +554,7 @@
   "Loyal": "Loyal",
   "Silver": "Silver",
   "Gold": "Gold",
-  "Diamond": "Diamond"
+  "Diamond": "Diamond",
+  "Order Creation Failed": "Order Creation Failed",
+  "is deleted. Remove the item to continue.": "is deleted. Remove the item to continue."
 }

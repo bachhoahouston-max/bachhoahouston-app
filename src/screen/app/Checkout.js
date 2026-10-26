@@ -1,6 +1,7 @@
 /* eslint-disable quotes */
 /* eslint-disable react-native/no-inline-styles */
 import {
+  Alert,
   Dimensions,
   FlatList,
   Image,
@@ -42,7 +43,7 @@ import {Dropdown} from 'react-native-element-dropdown';
 // import StarRating from 'react-native-star-rating-widget';
 
 const Checkout = ({route}) => {
-  const {t} = useTranslation();
+  const {t, i18n} = useTranslation();
   const {checkoutData} = route.params;
   const [toast, setToast] = useContext(ToastContext);
   const [loading, setLoading] = useContext(LoadContext);
@@ -174,6 +175,7 @@ const Checkout = ({route}) => {
         pointtype === 'REDEEM'
           ? (Math.floor(pointamount / 1000) * 1000) / 1000
           : checkoutData?.couponDiscount || 0,
+      lang: i18n?.language === 'vi' ? 'vi' : 'en',
     };
     if (user?._id) {
       data.user = user._id;
@@ -190,6 +192,21 @@ const Checkout = ({route}) => {
     Post('createProductRquest', data, {}).then(
       async res => {
         setLoading(false);
+        if (!res?.status) {
+          let errorMsg = res?.message || t('Failed to create order. Please try again.');
+          if (
+            i18n?.language === 'vi' &&
+            typeof errorMsg === 'string' &&
+            errorMsg.includes('is deleted. Remove the item to continue.')
+          ) {
+            errorMsg = errorMsg.replace(
+              'is deleted. Remove the item to continue.',
+              'đã bị xóa. Vui lòng xóa sản phẩm để tiếp tục.'
+            );
+          }
+          Alert.alert(t('Order Creation Failed'), errorMsg);
+          return;
+        }
         setTimeout(() => {
           setModalVisible(true);
         }, 500);

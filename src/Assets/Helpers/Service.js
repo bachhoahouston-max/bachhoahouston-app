@@ -5,7 +5,69 @@ import ConnectionCheck from './ConnectionCheck';
 import RNFetchBlob from 'react-native-blob-util';
 import { reset } from '../../../navigationRef';
 import { Platform } from 'react-native';
+import DeviceInfo from 'react-native-device-info';
 // import RNFetchBlob from 'rn-fetch-blob';
+import i18n from '../../../i18n';
+
+const getAppLanguage = async () => {
+  try {
+    const stored = await AsyncStorage.getItem('LANG');
+    if (stored) {
+      return stored.toLowerCase().startsWith('vi') ? 'vi' : 'en';
+    }
+  } catch (e) {}
+  if (i18n && i18n.language) {
+    return i18n.language.toLowerCase().startsWith('vi') ? 'vi' : 'en';
+  }
+  return 'en';
+};
+
+const getAppPlatform = () => {
+  return Platform.OS || 'mobile';
+};
+
+const getAppVersion = () => {
+  try {
+    if (DeviceInfo && typeof DeviceInfo.getVersion === 'function') {
+      const v = DeviceInfo.getVersion();
+      if (v) return v;
+    }
+  } catch (e) {}
+  try {
+    const pkg = require('../../../package.json');
+    if (pkg && pkg.version) return pkg.version;
+  } catch (e) {}
+  return '1.0.0';
+};
+
+const getCommonHeaders = async () => {
+  const lang = await getAppLanguage();
+  const platform = getAppPlatform();
+  const appVersion = getAppVersion();
+  return {
+    language: lang,
+    lang: lang,
+    'Accept-Language': lang,
+    platform: platform,
+    Platform: platform,
+    'x-platform': platform,
+    'app-platform': platform,
+    'app-version': appVersion,
+    appversion: appVersion,
+    'x-app-version': appVersion,
+    version: appVersion,
+  };
+};
+
+// Global interceptor: ensures language, platform, and app version keys are attached to every outgoing axios request
+axios.interceptors.request.use(async (config) => {
+  try {
+    const commonHeaders = await getCommonHeaders();
+    config.headers = config.headers || {};
+    Object.assign(config.headers, commonHeaders);
+  } catch (e) {}
+  return config;
+});
 
 const GetApi = async (url, props, data) => {
   return new Promise(function (resolve, reject) {
@@ -15,11 +77,13 @@ const GetApi = async (url, props, data) => {
         if (connected) {
           const user = await AsyncStorage.getItem('userDetail');
           let userDetail = JSON.parse(user);
+          const commonHeaders = await getCommonHeaders();
 
           axios
             .get(Constants.baseUrl + url, {
               headers: {
                 Authorization: `jwt ${userDetail?.token}`,
+                ...commonHeaders,
               },
               params: {
                 id: data
@@ -60,6 +124,7 @@ const GetApi2 = async (url, props, data) => {
         if (connected) {
           const user = await AsyncStorage.getItem('userDetail');
           let userDetail = JSON.parse(user);
+          const commonHeaders = await getCommonHeaders();
           console.log(Constants.baseUrl + url);
           console.log(`jwt ${userDetail?.token}`);
 
@@ -67,6 +132,7 @@ const GetApi2 = async (url, props, data) => {
             .get(Constants.baseUrl + url, {
               headers: {
                 Authorization: `jwt ${userDetail?.token}`,
+                ...commonHeaders,
               },
               params: {
                 keyword: data
@@ -108,6 +174,7 @@ const Post = async (url, data, props) => {
         if (connected) {
           const user = await AsyncStorage.getItem('userDetail');
           let userDetail = JSON.parse(user);
+          const commonHeaders = await getCommonHeaders();
           console.log('url===>', Constants.baseUrl + url);
           console.log('token===>', `jwt ${userDetail?.token}`);
           console.log('data=====>', data);
@@ -115,6 +182,7 @@ const Post = async (url, data, props) => {
             .post(Constants.baseUrl + url, data, {
               headers: {
                 Authorization: `jwt ${userDetail?.token}`,
+                ...commonHeaders,
               },
             })
             .then(res => {
@@ -152,12 +220,14 @@ const Put = async (url, data, props) => {
         if (connected) {
           const user = await AsyncStorage.getItem('userDetail');
           let userDetail = JSON.parse(user);
+          const commonHeaders = await getCommonHeaders();
           console.log(Constants.baseUrl + url);
           console.log(`jwt ${userDetail?.token}`);
           axios
             .put(Constants.baseUrl + url, data, {
               headers: {
                 Authorization: `jwt ${userDetail?.token}`,
+                ...commonHeaders,
               },
             })
             .then(res => {
@@ -193,12 +263,14 @@ const Patch = async (url, data, props) => {
         if (connected) {
           const user = await AsyncStorage.getItem('userDetail');
           let userDetail = JSON.parse(user);
+          const commonHeaders = await getCommonHeaders();
           console.log(Constants.baseUrl + url);
           console.log(`jwt ${userDetail?.token}`);
           axios
             .patch(Constants.baseUrl + url, data, {
               headers: {
                 Authorization: `jwt ${userDetail?.token}`,
+                ...commonHeaders,
               },
             })
             .then(res => {
@@ -235,12 +307,14 @@ const Delete = async (url, data, props) => {
         if (connected) {
           const user = await AsyncStorage.getItem('userDetail');
           let userDetail = JSON.parse(user);
+          const commonHeaders = await getCommonHeaders();
           console.log(Constants.baseUrl + url);
           console.log(`jwt ${userDetail?.token}`);
           axios
             .delete(Constants.baseUrl + url, {
               headers: {
                 Authorization: `jwt ${userDetail?.token}`,
+                ...commonHeaders,
               },
             })
             .then(res => {
@@ -274,6 +348,7 @@ const ApiFormData = async (img) => {
   console.log('Starting file upload:', img);
   const user = await AsyncStorage.getItem('userDetail');
   let userDetail = JSON.parse(user);
+  const commonHeaders = await getCommonHeaders();
 
   return new Promise((resolve, reject) => {
     try {
@@ -292,6 +367,7 @@ const ApiFormData = async (img) => {
         `${Constants.baseUrl}user/fileupload`,
         {
           'Content-Type': 'multipart/form-data',
+          ...commonHeaders,
           // Authorization: `jwt ${userDetail.token}`,
         },
         [

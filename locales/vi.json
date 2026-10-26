@@ -710,5 +710,7 @@
     "Loyal": "Thân thiết",
     "Silver": "Bạc",
     "Gold": "Vàng",
-    "Diamond": "Kim cương"
+    "Diamond": "Kim cương",
+    "Order Creation Failed": "Tạo Đơn Hàng Thất Bại",
+    "is deleted. Remove the item to continue.": "đã bị xóa. Vui lòng xóa sản phẩm để tiếp tục."
 }
