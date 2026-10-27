@@ -5,6 +5,7 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
@@ -13,7 +14,7 @@ import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {CartContext, LoadContext, UserContext} from '../../../App';
 import {
-  // getBuyItAgainProducts,
+  getBuyItAgainCategoryProducts,
   getPurchasedProducts,
 } from '../../Assets/Helpers/buyItAgain';
 import {navigate} from '../../../navigationRef';
@@ -27,31 +28,54 @@ const BuyItAgain = () => {
   const [cartdetail, setcartdetail] = useContext(CartContext);
   const [, setLoading] = useContext(LoadContext);
   const [products, setProducts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const loadProducts = useCallback(async () => {
+  const loadProducts = useCallback(async (pageToLoad = 1) => {
     if (!user?._id || !user?.token) {
       navigate('Auth');
       return;
     }
 
-    setLoading(true);
+    if (pageToLoad === 1) setLoading(true);
+    else setLoadingMore(true);
     try {
-      // Previous process: only show products that were short during a completed order.
-      // setProducts(await getBuyItAgainProducts());
-      setProducts(await getPurchasedProducts());
+      const result = await getBuyItAgainCategoryProducts(pageToLoad);
+      setProducts(previous =>
+        pageToLoad === 1 ? result.products : [...previous, ...result.products],
+      );
+      setPage(pageToLoad);
+      setTotalPages(result.totalPages);
     } catch (error) {
-      Toast.show({
-        type: 'error',
-        text1: error?.message || t('Failed to load buy it again products'),
-      });
+      // Older deployments may not expose the paginated endpoint yet.
+      if (pageToLoad === 1) {
+        try {
+          setProducts(await getPurchasedProducts());
+        } catch (fallbackError) {
+          Toast.show({
+            type: 'error',
+            text1:
+              fallbackError?.message ||
+              error?.message ||
+              t('Failed to load buy it again products'),
+          });
+        }
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: error?.message || t('Failed to load buy it again products'),
+        });
+      }
     } finally {
-      setLoading(false);
+      if (pageToLoad === 1) setLoading(false);
+      else setLoadingMore(false);
     }
   }, [setLoading, t, user?._id, user?.token]);
 
   useFocusEffect(
     useCallback(() => {
-      loadProducts();
+      loadProducts(1);
     }, [loadProducts]),
   );
 
@@ -112,6 +136,18 @@ const BuyItAgain = () => {
             </Text>
           </View>
         }
+        ListFooterComponent={
+          page < totalPages ? (
+            <TouchableOpacity
+              style={styles.loadMoreButton}
+              onPress={() => loadProducts(page + 1)}
+              disabled={loadingMore}>
+              <Text style={styles.loadMoreText}>
+                {loadingMore ? t('Loading...') : t('Load more')}
+              </Text>
+            </TouchableOpacity>
+          ) : null
+        }
         renderItem={({item}) => {
           const cartItem = cartdetail?.find(
             cart => cart?.productid === item?._id && (cart?.priceSlotIndex ?? 0) === 0,
@@ -163,5 +199,18 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: FONTS.Medium,
     textAlign: 'center',
+  },
+  loadMoreButton: {
+    alignSelf: 'center',
+    marginVertical: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: Constants.greennew,
+  },
+  loadMoreText: {
+    color: Constants.white,
+    fontFamily: FONTS.Bold,
+    fontSize: 14,
   },
 });
