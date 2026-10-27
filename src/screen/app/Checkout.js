@@ -134,6 +134,7 @@ const Checkout = ({route}) => {
         qty: item.qty,
         seller_id: item.seller_id,
         price_slot: item.price_slot,
+        referralCode: item.referralCode || '',
       };
     });
 

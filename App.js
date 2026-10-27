@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navigation from './src/navigation';
 import { GetApi, Post } from './src/Assets/Helpers/Service';
 import { getSyncedCart, saveSyncedCart } from './src/Assets/Helpers/CartSync';
+import { getProductSlugFromUrl, saveProductReferral } from './src/Assets/Helpers/affiliateReferral';
 import {
     PermissionsAndroid,
     Platform,
@@ -130,17 +131,23 @@ const App = () => {
 
     useEffect(() => {
         const saveReferralFromUrl = async url => {
-            if (!url) return;
+            if (!url) return '';
             const match = url.match(/[?&](?:ref|referralCode)=([^&#]+)/i);
-            if (match?.[1]) {
-                await AsyncStorage.setItem(
-                    'affiliateReferralCode',
-                    decodeURIComponent(match[1]).trim().toUpperCase(),
-                );
+            if (!match?.[1]) return '';
+            const code = decodeURIComponent(match[1]).trim().toUpperCase();
+            const slug = getProductSlugFromUrl(url);
+            if (slug) {
+                await saveProductReferral(slug, code);
+            } else {
+                await AsyncStorage.setItem('affiliateReferralCode', code);
             }
+            return slug;
         };
         Linking.getInitialURL().then(saveReferralFromUrl);
-        const subscription = Linking.addEventListener('url', event => saveReferralFromUrl(event.url));
+        const subscription = Linking.addEventListener('url', async event => {
+            const slug = await saveReferralFromUrl(event.url);
+            if (slug) navigate('Preview', slug);
+        });
         return () => subscription.remove();
     }, []);
 

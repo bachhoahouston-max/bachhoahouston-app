@@ -33,6 +33,7 @@ import {
 } from '../../../App';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveSyncedCart } from '../../Assets/Helpers/CartSync';
+import { getProductReferrals } from '../../Assets/Helpers/affiliateReferral';
 import { navigate, reset } from '../../../navigationRef';
 import { useTranslation } from 'react-i18next';
 import { RadioButton } from 'react-native-paper';
@@ -137,10 +138,22 @@ const Cart = ({ route }) => {
   const [waiting, setWaiting] = useState(false);
   const [isPriceChanged, setIsPriceChanged] = useState(false);
   const [rewardCatalog, setRewardCatalog] = useState([]);
+  const [productReferrals, setProductReferrals] = useState({});
 
   useEffect(() => {
     AsyncStorage.getItem('affiliateReferralCode').then(code => setAffiliateCode(code || ''));
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      getProductReferrals().then(setProductReferrals);
+    }, []),
+  );
+
+  const lineReferralCode = item =>
+    isRewardItem(item) || item?.productSource === 'COMBO'
+      ? ''
+      : item?.referralCode || productReferrals[item?.slug] || '';
 
   useFocusEffect(
     useCallback(() => {
@@ -804,7 +817,7 @@ const Cart = ({ route }) => {
           productSource: item.productSource || "NORMAL",
           saleID: item.saleID || null,
           combo_id: item.combo_id || null,
-
+          referralCode: lineReferralCode(item),
         };
       });
 
@@ -1286,6 +1299,11 @@ console.log(result)
                           </Text>
                           {isProductUnavailable(item) && (
                             <Text style={styles.stockIssueStatus}>{t('Product Unavailable')}</Text>
+                          )}
+                          {!!lineReferralCode(item) && (
+                            <View style={styles.referralBadge}>
+                              <Text style={styles.referralBadgeTxt}>{t('Referral code applied')}</Text>
+                            </View>
                           )}
                           <View
                             style={{
@@ -2857,6 +2875,21 @@ const styles = StyleSheet.create({
   },
   rewardBadgeTxt: {
     color: Constants.white,
+    fontSize: 11,
+    fontFamily: FONTS.SemiBold,
+  },
+  referralBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  referralBadgeTxt: {
+    color: '#15803D',
     fontSize: 11,
     fontFamily: FONTS.SemiBold,
   },
