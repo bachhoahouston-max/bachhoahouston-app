@@ -7,7 +7,6 @@ import {
   Bell,
   CalendarCheck,
   ChevronRight,
-  ExternalLink,
   Hash,
   LogOut,
   Mail,
@@ -27,7 +26,7 @@ import AffiliateHeader from './components/AffiliateHeader';
 import { TAB_BAR_SPACE } from './components/AffiliateTabBar';
 import { Card, SectionHeader, StatusPill } from './components/ui';
 import { COLORS, FONTS, RADIUS } from './theme';
-import { APPLICATION_STATUS, copyText, displayLink, getPlatform, openUrl, shareReferral, shortDate } from './utils';
+import { APPLICATION_STATUS, copyText, openUrl, shareReferral, shortDate } from './utils';
 
 const InfoRow = ({ icon: Icon, label, value, onPress, last }) => (
   <TouchableOpacity
@@ -204,32 +203,6 @@ const AffiliateProfile = ({ navigation }) => {
             ))}
           </Card>
 
-          {!!application.socialLinks?.length && (
-            <>
-              <SectionHeader title={t('Your channels')} style={styles.sectionGap} />
-              <Card style={styles.listCard}>
-                {application.socialLinks.map((item, index) => {
-                  const platform = getPlatform(item.platform);
-                  return (
-                    <TouchableOpacity
-                      key={`${item.platform}-${index}`}
-                      style={[styles.socialRow, index < application.socialLinks.length - 1 && styles.divider]}
-                      onPress={() => openUrl(item.url)}>
-                      <View style={styles.socialIcon}>
-                        <Ionicons name={platform.icon} size={18} color={platform.color} />
-                      </View>
-                      <View style={styles.flex}>
-                        <Text style={styles.socialName}>{platform.label}</Text>
-                        <Text style={styles.socialUrl} numberOfLines={1}>{displayLink(item.url)}</Text>
-                      </View>
-                      <ExternalLink size={16} color={COLORS.muted} />
-                    </TouchableOpacity>
-                  );
-                })}
-              </Card>
-            </>
-          )}
-
           <SectionHeader title={t('Payout method')} style={styles.sectionGap} />
           <Card style={styles.listCard}>
             <View style={styles.zelleBadge}>
@@ -311,17 +284,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   channelLabel: { fontFamily: FONTS.Medium, fontSize: 12, color: COLORS.textSecondary, marginTop: 6 },
-  socialRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
-  socialIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.neutralSoft,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  socialName: { fontFamily: FONTS.SemiBold, fontSize: 13.5, color: COLORS.text },
-  socialUrl: { fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.muted },
   footnote: { fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.muted, marginTop: 8, marginHorizontal: 4 },
 });
 
