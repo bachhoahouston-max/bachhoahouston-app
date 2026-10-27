@@ -56,35 +56,18 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Bách Hoá Houston Will use Camera to click and upload the documents for verification.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Bách Hoá Houston Will use the Microphone to record packing verification videos.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Bách Hoá Houston Will use Location to show nearby drivers </string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>Bách Hoá Houston Will use Location to show nearby drivers </string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Bách Hoá Houston Will use Location to show nearby drivers.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Bách Hoá Houston Will use the Microphone to record packing verification videos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Bách Hoá Houston Will use Photo Library to upload the documents for verification.</string>
 	<key>RCTNewArchEnabled</key>
 	<true/>
-	<key>UIApplicationSceneManifest</key>
-	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key>
-		<false/>
-		<key>UISceneConfigurations</key>
-		<dict>
-			<key>UIWindowSceneSessionRoleApplication</key>
-			<array>
-				<dict>
-					<key>UISceneConfigurationName</key>
-					<string>Default Configuration</string>
-					<key>UISceneDelegateClassName</key>
-					<string>SceneDelegate</string>
-				</dict>
-			</array>
-		</dict>
-	</dict>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Roboto-Black.ttf</string>
@@ -110,6 +93,23 @@
 		<string>Zocial.ttf</string>
 		<string>Fontisto.ttf</string>
 	</array>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneConfigurationName</key>
+					<string>Default Configuration</string>
+					<key>UISceneDelegateClassName</key>
+					<string>SceneDelegate</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
