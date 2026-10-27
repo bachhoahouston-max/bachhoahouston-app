@@ -41,25 +41,25 @@ const CIRCLE_RADIUS = CIRCLE_SIZE / 2;
 const PADDING_ABOVE = 5;
 const WRAPPER_HEIGHT = BAR_HEIGHT + 35;
 
-const clampNotchX = x => {
-  const clearance = CORNER_RADIUS + NOTCH_WIDTH / 2 + NOTCH_PAD;
-  return Math.min(Math.max(x, clearance), BAR_WIDTH - clearance);
-};
+const ICON_SIZE = 20;
 
-const buildBarPath = rawNotchX => {
-  const notchX = clampNotchX(rawNotchX);
+const buildBarPath = notchX => {
   const half = NOTCH_WIDTH / 2;
   const left = notchX - half;
   const right = notchX + half;
+  const shoulderLeft = Math.max(left - NOTCH_PAD, 0);
+  const shoulderRight = Math.min(right + NOTCH_PAD, BAR_WIDTH);
+  const leftRadius = Math.min(CORNER_RADIUS, shoulderLeft);
+  const rightRadius = Math.min(CORNER_RADIUS, BAR_WIDTH - shoulderRight);
 
   return [
-    `M0,${CORNER_RADIUS}`,
-    `Q0,0 ${CORNER_RADIUS},0`,
-    `L${left - NOTCH_PAD},0`,
+    `M0,${leftRadius}`,
+    `Q0,0 ${leftRadius},0`,
+    `L${shoulderLeft},0`,
     `C${left},0 ${left},${NOTCH_DEPTH} ${notchX},${NOTCH_DEPTH}`,
-    `C${right},${NOTCH_DEPTH} ${right},0 ${right + NOTCH_PAD},0`,
-    `L${BAR_WIDTH - CORNER_RADIUS},0`,
-    `Q${BAR_WIDTH},0 ${BAR_WIDTH},${CORNER_RADIUS}`,
+    `C${right},${NOTCH_DEPTH} ${right},0 ${shoulderRight},0`,
+    `L${BAR_WIDTH - rightRadius},0`,
+    `Q${BAR_WIDTH},0 ${BAR_WIDTH},${rightRadius}`,
     `L${BAR_WIDTH},${BAR_HEIGHT}`,
     `L0,${BAR_HEIGHT}`,
     'Z',
@@ -102,9 +102,7 @@ const AnimatedTabBar = ({ state, navigation, tabs, cartCount, translate }) => {
   });
   const activeTranslateX = activeAnim.interpolate({
     inputRange,
-    outputRange: tabs.map(
-      (_, index) => clampNotchX(tabWidth * index + tabWidth / 2) - tabWidth / 2,
-    ),
+    outputRange: tabs.map((_, index) => tabWidth * index),
   });
   const activeTab = tabs[state.index];
   const ActiveIcon = activeTab.icon;
@@ -140,18 +138,23 @@ const AnimatedTabBar = ({ state, navigation, tabs, cartCount, translate }) => {
               onPress={onPress}
               activeOpacity={0.8}
               style={[styles.animatedTabButton, { width: tabWidth }]}>
-              {!isFocused && (
-                <>
-                  <IconComponent color={Constants.white} size={20} />
-                  <Text style={styles.animatedTabText} numberOfLines={1}>{translate(item.name)}</Text>
-          {item.routeName === 'Cart' && cartCount > 0 && (
-                    <View style={styles.animatedBadge}>
-                      <Text style={[styles.animatedBadgeText, styles.animatedBadgeTextOnBar]}>
-                        {cartCount > 99 ? '99+' : cartCount}
-                      </Text>
-                    </View>
-                  )}
-                </>
+              {/* The active icon lives in the floating circle; keep its slot so every label shares one baseline. */}
+              {isFocused ? (
+                <View style={styles.animatedIconSlot} />
+              ) : (
+                <IconComponent color={Constants.white} size={ICON_SIZE} />
+              )}
+              <Text
+                style={[styles.animatedTabText, isFocused && styles.animatedActiveText]}
+                numberOfLines={1}>
+                {translate(item.name)}
+              </Text>
+              {!isFocused && item.routeName === 'Cart' && cartCount > 0 && (
+                <View style={styles.animatedBadge}>
+                  <Text style={[styles.animatedBadgeText, styles.animatedBadgeTextOnBar]}>
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </Text>
+                </View>
               )}
             </TouchableOpacity>
           );
@@ -166,7 +169,6 @@ const AnimatedTabBar = ({ state, navigation, tabs, cartCount, translate }) => {
         <View style={styles.animatedActiveCircle}>
           <ActiveIcon color={Constants.greennew} size={22} />
         </View>
-        <Text style={styles.animatedActiveText} numberOfLines={1}>{translate(activeTab.name)}</Text>
         {activeTab.routeName === 'Cart' && cartCount > 0 && (
           <View style={styles.animatedActiveBadge}>
             <Text style={styles.animatedBadgeText}>
@@ -310,10 +312,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 3,
   },
+  animatedIconSlot: {
+    width: ICON_SIZE,
+    height: ICON_SIZE,
+  },
   animatedTabText: {
     color: Constants.white,
     fontFamily: FONTS.Medium,
     fontSize: 11,
+    lineHeight: 14,
     opacity: 0.92,
   },
   animatedActiveGroup: {
@@ -336,10 +343,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   animatedActiveText: {
-    color: Constants.white,
     fontFamily: FONTS.Bold,
-    fontSize: 11,
-    marginTop: 12,
+    opacity: 1,
   },
   animatedBadge: {
     position: 'absolute',
