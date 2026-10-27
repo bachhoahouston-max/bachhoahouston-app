@@ -759,5 +759,16 @@
   "Important": "Important",
   "Commissions are calculated only for completed or delivered orders. Canceled, refunded or adjusted orders do not earn commission.": "Commissions are calculated only for completed or delivered orders. Canceled, refunded or adjusted orders do not earn commission.",
   "View Commission Report": "View Commission Report",
-  "Commission report": "Commission report"
+  "Commission report": "Commission report",
+  "Enter a Zelle email or phone number.": "Enter a Zelle email or phone number.",
+  "Enter a valid Zelle email.": "Enter a valid Zelle email.",
+  "Enter a valid Zelle phone number.": "Enter a valid Zelle phone number.",
+  "Save payout details?": "Save payout details?",
+  "Once saved, you can not edit these details. Please make sure they are correct.": "Once saved, you can not edit these details. Please make sure they are correct.",
+  "Payout details saved": "Payout details saved",
+  "Unable to save": "Unable to save",
+  "Not added": "Not added",
+  "Enter your Zelle email": "Enter your Zelle email",
+  "Enter your Zelle phone number": "Enter your Zelle phone number",
+  "Details can not be edited after saving. To change them later, please contact the store.": "Details can not be edited after saving. To change them later, please contact the store."
 }

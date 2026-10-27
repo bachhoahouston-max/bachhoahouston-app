@@ -15,9 +15,9 @@ import {
   Package,
   Pencil,
   Percent,
-  Phone,
   ShoppingBag,
   UserRound,
+  Wallet,
 } from 'lucide-react-native';
 import { UserContext } from '../../../App';
 import { reset } from '../../../navigationRef';
@@ -203,18 +203,9 @@ const AffiliateProfile = ({ navigation }) => {
             ))}
           </Card>
 
-          <SectionHeader title={t('Payout method')} style={styles.sectionGap} />
-          <Card style={styles.listCard}>
-            <View style={styles.zelleBadge}>
-              <Text style={styles.zelleText}>Zelle</Text>
-            </View>
-            <InfoRow icon={Mail} label={t('Zelle email')} value={application.zelleEmail} />
-            <InfoRow icon={Phone} label={t('Zelle phone')} value={application.zellePhone} last />
-          </Card>
-          <Text style={styles.footnote}>{t('To change your payout details, please contact the store.')}</Text>
-
           <SectionHeader title={t('Account')} style={styles.sectionGap} />
           <Card style={styles.listCard}>
+            <MenuRow icon={Wallet} label={t('Payout method')} onPress={() => navigation.navigate('AffiliatePayout')} />
             <MenuRow icon={ShoppingBag} label={t('Shop the store')} onPress={() => navigation.navigate('App')} />
             <MenuRow icon={Package} label={t('My orders')} onPress={() => navigation.navigate('Myorder')} />
             <MenuRow icon={Bell} label={t('Notifications')} onPress={() => navigation.navigate('Notification')} />
@@ -263,16 +254,6 @@ const styles = StyleSheet.create({
   infoLabel: { fontFamily: FONTS.Regular, fontSize: 13.5, color: COLORS.textSecondary },
   infoValue: { flex: 1, textAlign: 'right', fontFamily: FONTS.SemiBold, fontSize: 13.5, color: COLORS.text },
   menuLabel: { flex: 1, fontFamily: FONTS.Medium, fontSize: 14, color: COLORS.text },
-  zelleBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#6D1ED4',
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    marginTop: 10,
-    marginBottom: 2,
-  },
-  zelleText: { fontFamily: FONTS.Bold, fontSize: 12, color: COLORS.white },
   channelsCard: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 6, paddingVertical: 10 },
   channel: { width: '33.33%', alignItems: 'center', paddingVertical: 10 },
   channelIcon: {
@@ -284,7 +265,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   channelLabel: { fontFamily: FONTS.Medium, fontSize: 12, color: COLORS.textSecondary, marginTop: 6 },
-  footnote: { fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.muted, marginTop: 8, marginHorizontal: 4 },
 });
 
 export default AffiliateProfile;

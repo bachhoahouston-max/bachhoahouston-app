@@ -913,5 +913,16 @@
   "Important": "Quan trọng",
   "Commissions are calculated only for completed or delivered orders. Canceled, refunded or adjusted orders do not earn commission.": "Hoa hồng chỉ được tính cho các đơn hàng đã hoàn tất hoặc đã giao. Đơn hàng bị hủy, hoàn tiền hoặc điều chỉnh sẽ không được tính hoa hồng.",
   "View Commission Report": "Xem báo cáo hoa hồng",
-  "Commission report": "Báo cáo hoa hồng"
+  "Commission report": "Báo cáo hoa hồng",
+  "Enter a Zelle email or phone number.": "Nhập email hoặc số điện thoại Zelle.",
+  "Enter a valid Zelle email.": "Nhập email Zelle hợp lệ.",
+  "Enter a valid Zelle phone number.": "Nhập số điện thoại Zelle hợp lệ.",
+  "Save payout details?": "Lưu thông tin thanh toán?",
+  "Once saved, you can not edit these details. Please make sure they are correct.": "Sau khi lưu, bạn không thể chỉnh sửa các thông tin này. Vui lòng kiểm tra kỹ trước khi lưu.",
+  "Payout details saved": "Đã lưu thông tin thanh toán",
+  "Unable to save": "Không thể lưu",
+  "Not added": "Chưa thêm",
+  "Enter your Zelle email": "Nhập email Zelle của bạn",
+  "Enter your Zelle phone number": "Nhập số điện thoại Zelle của bạn",
+  "Details can not be edited after saving. To change them later, please contact the store.": "Thông tin không thể chỉnh sửa sau khi lưu. Để thay đổi sau này, vui lòng liên hệ cửa hàng."
 }
