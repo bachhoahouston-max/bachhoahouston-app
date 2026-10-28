@@ -30,10 +30,10 @@ export const shortDate = value => (value ? moment(value).tz(TZ).format('MMM D, Y
 // "https://www.bachhoahouston.com/ref/maya15" → "bachhoahouston.com/ref/maya15"
 export const displayLink = link => String(link || '').replace(/^https?:\/\//, '').replace(/^www\./, '');
 
-// Commission status → label + pill colors. "Approved" means the commission is
-// inside a payout request; "Pending" means it is earned and ready for payout.
+// Commission status → label + pill colors. "Pending" means earned but not paid
+// yet; "Approved" means it is inside an old payout request.
 export const COMMISSION_STATUS = {
-  Pending: {label: 'Ready for payout', color: COLORS.primary, bg: COLORS.primarySoft},
+  Pending: {label: 'Unpaid', color: COLORS.primary, bg: COLORS.primarySoft},
   Approved: {label: 'In payout request', color: COLORS.info, bg: COLORS.infoSoft},
   Paid: {label: 'Paid', color: COLORS.primaryDark, bg: COLORS.primaryMuted},
   Reversed: {label: 'Reversed', color: COLORS.danger, bg: COLORS.dangerSoft},
@@ -44,6 +44,15 @@ export const PAYOUT_STATUS = {
   Approved: {label: 'Approved', color: COLORS.info, bg: COLORS.infoSoft},
   Paid: {label: 'Paid', color: COLORS.primaryDark, bg: COLORS.primaryMuted},
   Rejected: {label: 'Rejected', color: COLORS.danger, bg: COLORS.dangerSoft},
+};
+
+// How the store paid a payout (set by the admin) → translation key.
+export const PAYMENT_METHOD_LABELS = {
+  Zelle: 'Zelle',
+  'Bank transfer': 'Bank transfer',
+  Cash: 'Cash',
+  Check: 'Paper check',
+  Other: 'Other method',
 };
 
 export const APPLICATION_STATUS = {

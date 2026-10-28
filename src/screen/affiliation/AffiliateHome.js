@@ -58,8 +58,8 @@ const AffiliateHome = ({navigation}) => {
           )}
 
           <View style={styles.stats}>
-            <StatCard icon={WalletCards} label={t('Available commission')} value={money(totals.available)} />
-            <StatCard icon={PieChart} label={t('Pending')} value={money(totals.inPayout)} />
+            <StatCard icon={WalletCards} label={t('Balance due')} value={money(totals.available)} />
+            <StatCard icon={PieChart} label={t('Total earned')} value={money(totals.earned)} />
             <StatCard icon={ReceiptText} label={t('Paid lifetime')} value={money(totals.paid)} />
           </View>
 

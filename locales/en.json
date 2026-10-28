@@ -777,5 +777,20 @@
   "Not added": "Not added",
   "Enter your Zelle email": "Enter your Zelle email",
   "Enter your Zelle phone number": "Enter your Zelle phone number",
-  "Details can not be edited after saving. To change them later, please contact the store.": "Details can not be edited after saving. To change them later, please contact the store."
+  "Details can not be edited after saving. To change them later, please contact the store.": "Details can not be edited after saving. To change them later, please contact the store.",
+  "Unpaid": "Unpaid",
+  "Balance due": "Balance due",
+  "Last paid {{date}}": "Last paid {{date}}",
+  "Not paid yet": "Not paid yet",
+  "Paid in advance": "Paid in advance",
+  "The store sends your commission by Zelle to {{zelle}}. Each payment shows below with its proof.": "The store sends your commission by Zelle to {{zelle}}. Each payment shows below with its proof.",
+  "Add a Zelle email or phone number so the store can pay you.": "Add a Zelle email or phone number so the store can pay you.",
+  "Payments from the store will appear here with the amount and proof.": "Payments from the store will appear here with the amount and proof.",
+  "Paid via {{method}}": "Paid via {{method}}",
+  "View proof": "View proof",
+  "Zelle": "Zelle",
+  "Bank transfer": "Bank transfer",
+  "Cash": "Cash",
+  "Paper check": "Check",
+  "Other method": "Other"
 }

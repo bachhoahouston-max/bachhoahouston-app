@@ -11,26 +11,26 @@ import {
   FileText,
   Filter,
   Info,
+  Paperclip,
   Percent,
   ReceiptText,
   ShoppingBag,
   Wallet,
 } from 'lucide-react-native';
-import { Post } from '../../Assets/Helpers/Service';
 import { useAffiliate } from './AffiliateContext';
 import AffiliateHeader from './components/AffiliateHeader';
 import CommissionHistoryRow, { CommissionHistoryHeader } from './components/CommissionHistoryRow';
 import { TAB_BAR_SPACE } from './components/AffiliateTabBar';
 import { Card, EmptyState, StatusPill } from './components/ui';
 import { COLORS, FONTS, RADIUS } from './theme';
-import { PAYOUT_STATUS, TZ, buildAttributedOrders, money, shortDate } from './utils';
+import { PAYMENT_METHOD_LABELS, PAYOUT_STATUS, TZ, buildAttributedOrders, money, openUrl, shortDate } from './utils';
 
-// Commission status tabs. "Pending" is earned and ready for payout,
-// "Approved" is inside a payout request, "Processing" is an order that has
-// not been completed yet (no commission amount so far).
+// Commission status tabs. "Pending" is earned but not paid yet, "Approved"
+// is inside an old payout request (tab hidden when empty), "Processing" is an
+// order that has not been completed yet (no commission amount so far).
 const STATUS_TABS = [
   { value: 'all', label: 'All', match: () => true },
-  { value: 'pending', label: 'Pending', match: item => item.commissionStatus === 'Pending' },
+  { value: 'pending', label: 'Unpaid', match: item => item.commissionStatus === 'Pending' },
   { value: 'approved', label: 'Approved', match: item => item.commissionStatus === 'Approved' },
   { value: 'paid', label: 'Paid', match: item => item.commissionStatus === 'Paid' },
   { value: 'processing', label: 'Processing', match: item => item.pending },
@@ -65,7 +65,6 @@ const AffiliateCommissions = ({ route }) => {
   const [range, setRange] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [requesting, setRequesting] = useState(false);
 
   const application = dashboard?.application || {};
   const totals = dashboard?.totals || {};
@@ -82,7 +81,6 @@ const AffiliateCommissions = ({ route }) => {
   const activeTab = STATUS_TABS.find(f => f.value === tab) || STATUS_TABS[0];
   const visibleOrders = rangeOrders.filter(activeTab.match);
   const countOf = status => orders.filter(item => item.commissionStatus === status).length;
-  const canRequest = Number(totals.available) > 0;
   const zelle = application.zelleEmail || application.zellePhone;
   const activeRange = DATE_RANGES.find(r => r.value === range) || DATE_RANGES[0];
 
@@ -101,35 +99,6 @@ const AffiliateCommissions = ({ route }) => {
     setRefreshing(true);
     await refresh();
     setRefreshing(false);
-  };
-
-  const submitPayout = async () => {
-    setRequesting(true);
-    try {
-      const res = await Post('affiliation/payouts', {}, {});
-      if (!res?.status) {
-        Alert.alert(t('Payout unavailable'), res?.message || t('No unpaid commission is ready yet.'));
-        return;
-      }
-      Alert.alert(t('Payout requested'), t('Your payout has been sent for owner approval.'));
-      scrollToPayouts();
-      refresh();
-    } catch (error) {
-      Alert.alert(t('Payout unavailable'), error?.message || t('Please check your connection.'));
-    } finally {
-      setRequesting(false);
-    }
-  };
-
-  const requestPayout = () => {
-    Alert.alert(
-      t('Request payout'),
-      t('Request {{amount}} to be sent to {{zelle}} via Zelle?', { amount: money(totals.available), zelle: zelle || 'Zelle' }),
-      [
-        { text: t('Cancel'), style: 'cancel' },
-        { text: t('Request'), onPress: submitPayout },
-      ],
-    );
   };
 
   const showRateDetails = () => {
@@ -151,8 +120,8 @@ const AffiliateCommissions = ({ route }) => {
     );
     const message = [
       t('Commission report'),
-      `${t('Pending Commission')}: ${money(totals.available)}`,
-      `${t('Approved')}: ${money(totals.inPayout)}`,
+      `${t('Balance due')}: ${money(totals.available)}`,
+      `${t('Total earned')}: ${money(totals.earned)}`,
       `${t('Total Paid')}: ${money(totals.paid)}`,
       `${t('Commission Rate')}: ${rate}%`,
       '',
@@ -174,21 +143,21 @@ const AffiliateCommissions = ({ route }) => {
           <View style={styles.summaryRow}>
             <SummaryCard
               icon={Wallet}
-              label={t('Pending Commission')}
+              label={t('Balance due')}
               value={money(totals.available)}
-              meta={t('From {{count}} orders', { count: countOf('Pending') })}
+              meta={t('From {{count}} orders', { count: countOf('Pending') + countOf('Approved') })}
             />
             <SummaryCard
               icon={CheckCircle2}
-              label={t('Approved')}
-              value={money(totals.inPayout)}
-              meta={t('From {{count}} orders', { count: countOf('Approved') })}
+              label={t('Total earned')}
+              value={money(totals.earned)}
+              meta={t('Lifetime earnings')}
             />
             <SummaryCard
               icon={CircleDollarSign}
               label={t('Total Paid')}
               value={money(totals.paid)}
-              meta={t('Lifetime earnings')}
+              meta={totals.lastPaidAt ? t('Last paid {{date}}', { date: shortDate(totals.lastPaidAt) }) : t('Not paid yet')}
             />
           </View>
 
@@ -206,26 +175,21 @@ const AffiliateCommissions = ({ route }) => {
             </TouchableOpacity>
           </View> */}
 
-          <View style={styles.balance}>
-            <Text style={styles.balanceLabel}>{t('Available commission')}</Text>
+          {/* <View style={styles.balance}>
+            <Text style={styles.balanceLabel}>{t('Balance due')}</Text>
             <Text style={styles.balanceAmount}>{money(totals.available)}</Text>
             <Text style={styles.balanceMeta}>
               {t('Lifetime earned')} {money(totals.earned)} · {rate}% {t('commission rate')}
             </Text>
-            <TouchableOpacity
-              style={[styles.payoutButton, (!canRequest || requesting) && styles.payoutDisabled]}
-              onPress={requestPayout}
-              disabled={!canRequest || requesting}
-              activeOpacity={0.85}>
-              <Banknote size={18} color={COLORS.primary} />
-              <Text style={styles.payoutText}>
-                {requesting ? t('Requesting...') : canRequest ? t('Request payout') : t('Nothing to pay out yet')}
+            {Number(totals.credit) > 0 && (
+              <Text style={styles.balanceMeta}>
+                {t('Paid in advance')}: {money(totals.credit)}
               </Text>
-            </TouchableOpacity>
+            )}
             <View style={styles.balanceStats}>
               <View style={styles.balanceStat}>
-                <Text style={styles.balanceStatValue}>{money(totals.inPayout)}</Text>
-                <Text style={styles.balanceStatLabel}>{t('In payout request')}</Text>
+                <Text style={styles.balanceStatValue}>{money(totals.earned)}</Text>
+                <Text style={styles.balanceStatLabel}>{t('Total earned')}</Text>
               </View>
               <View style={styles.balanceDivider} />
               <View style={styles.balanceStat}>
@@ -238,14 +202,14 @@ const AffiliateCommissions = ({ route }) => {
                 <Text style={styles.balanceStatLabel}>{t('Orders')}</Text>
               </View>
             </View>
-          </View>
+          </View> */}
 
           <View style={styles.note}>
             <Info size={16} color={COLORS.info} />
             <Text style={styles.noteText}>
               {zelle
-                ? t('Payouts are sent by Zelle to {{zelle}} after owner approval.', { zelle })
-                : t('Add a Zelle email or phone number before requesting a payout.')}
+                ? t('The store sends your commission by Zelle to {{zelle}}. Each payment shows below with its proof.', { zelle })
+                : t('Add a Zelle email or phone number so the store can pay you.')}
             </Text>
           </View>
 
@@ -288,6 +252,9 @@ const AffiliateCommissions = ({ route }) => {
             {STATUS_TABS.map(option => {
               const active = option.value === tab;
               const count = option.value === 'all' ? 0 : rangeOrders.filter(option.match).length;
+              if (option.value === 'approved' && !countOf('Approved')) {
+                return null;
+              }
               return (
                 <TouchableOpacity
                   key={option.value}
@@ -332,12 +299,14 @@ const AffiliateCommissions = ({ route }) => {
                 <EmptyState
                   icon={ReceiptText}
                   title={t('No payouts yet')}
-                  text={t('When you request a payout it will appear here with its status.')}
+                  text={t('Payments from the store will appear here with the amount and proof.')}
                 />
               ) : (
                 payouts.map((payout, index) => {
                   const config = PAYOUT_STATUS[payout.status] || PAYOUT_STATUS['Pending Approval'];
-                  const amount = payout.status === 'Paid' ? payout.paymentAmount ?? payout.totalAmount : payout.totalAmount;
+                  const paid = payout.status === 'Paid';
+                  const amount = paid ? payout.paymentAmount ?? payout.totalAmount : payout.totalAmount;
+                  const method = PAYMENT_METHOD_LABELS[payout.paymentMethod] || PAYMENT_METHOD_LABELS.Zelle;
                   return (
                     <View key={payout._id} style={[styles.payoutRow, index < payouts.length - 1 && styles.divider]}>
                       <View style={styles.payoutIcon}>
@@ -346,13 +315,24 @@ const AffiliateCommissions = ({ route }) => {
                       <View style={styles.flex}>
                         <Text style={styles.payoutTitle}>{money(amount)}</Text>
                         <Text style={styles.payoutMeta}>
-                          {shortDate(payout.paidAt || payout.createdAt)} · {payout.orderCount} {t('orders')}
+                          {shortDate(payout.paidAt || payout.createdAt)}
+                          {paid ? ` · ${t('Paid via {{method}}', { method: t(method) })}` : ''}
                         </Text>
                         {!!payout.transactionReference && (
                           <Text style={styles.payoutMeta}>{t('Ref')}: {payout.transactionReference}</Text>
                         )}
+                        {!!payout.paymentNote && <Text style={styles.payoutMeta}>{payout.paymentNote}</Text>}
                         {!!payout.rejectionReason && (
                           <Text style={[styles.payoutMeta, { color: COLORS.danger }]}>{payout.rejectionReason}</Text>
+                        )}
+                        {!!payout.paymentProof?.url && (
+                          <TouchableOpacity
+                            style={styles.proofButton}
+                            onPress={() => openUrl(payout.paymentProof.url)}
+                            activeOpacity={0.8}>
+                            <Paperclip size={13} color={COLORS.primary} />
+                            <Text style={styles.proofText}>{t('View proof')}</Text>
+                          </TouchableOpacity>
                         )}
                       </View>
                       <StatusPill label={t(config.label)} color={config.color} bg={config.bg} />
@@ -451,18 +431,6 @@ const styles = StyleSheet.create({
   balanceLabel: { fontFamily: FONTS.Medium, fontSize: 13, color: 'rgba(255,255,255,0.8)' },
   balanceAmount: { fontFamily: FONTS.Bold, fontSize: 32, color: COLORS.white, marginTop: 2 },
   balanceMeta: { fontFamily: FONTS.Regular, fontSize: 12, color: 'rgba(255,255,255,0.78)' },
-  payoutButton: {
-    marginTop: 14,
-    height: 46,
-    borderRadius: 24,
-    backgroundColor: COLORS.white,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  payoutDisabled: { opacity: 0.6 },
-  payoutText: { fontFamily: FONTS.SemiBold, fontSize: 14, color: COLORS.primary },
   balanceStats: {
     flexDirection: 'row',
     marginTop: 16,
@@ -538,6 +506,18 @@ const styles = StyleSheet.create({
   },
   payoutTitle: { fontFamily: FONTS.SemiBold, fontSize: 15, color: COLORS.text },
   payoutMeta: { fontFamily: FONTS.Regular, fontSize: 12, color: COLORS.muted, marginTop: 1 },
+  proofButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 5,
+    marginTop: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    backgroundColor: COLORS.primarySoft,
+  },
+  proofText: { fontFamily: FONTS.SemiBold, fontSize: 12, color: COLORS.primary },
   important: {
     flexDirection: 'row',
     gap: 10,

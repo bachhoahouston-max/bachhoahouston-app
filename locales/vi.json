@@ -931,5 +931,20 @@
   "Not added": "Chưa thêm",
   "Enter your Zelle email": "Nhập email Zelle của bạn",
   "Enter your Zelle phone number": "Nhập số điện thoại Zelle của bạn",
-  "Details can not be edited after saving. To change them later, please contact the store.": "Thông tin không thể chỉnh sửa sau khi lưu. Để thay đổi sau này, vui lòng liên hệ cửa hàng."
+  "Details can not be edited after saving. To change them later, please contact the store.": "Thông tin không thể chỉnh sửa sau khi lưu. Để thay đổi sau này, vui lòng liên hệ cửa hàng.",
+  "Unpaid": "Chưa thanh toán",
+  "Balance due": "Số tiền còn nợ",
+  "Last paid {{date}}": "Thanh toán gần nhất {{date}}",
+  "Not paid yet": "Chưa được thanh toán",
+  "Paid in advance": "Đã trả trước",
+  "The store sends your commission by Zelle to {{zelle}}. Each payment shows below with its proof.": "Cửa hàng gửi hoa hồng của bạn qua Zelle tới {{zelle}}. Mỗi khoản thanh toán được hiển thị bên dưới kèm bằng chứng.",
+  "Add a Zelle email or phone number so the store can pay you.": "Hãy thêm email hoặc số điện thoại Zelle để cửa hàng có thể thanh toán cho bạn.",
+  "Payments from the store will appear here with the amount and proof.": "Các khoản thanh toán từ cửa hàng sẽ hiển thị tại đây cùng số tiền và bằng chứng.",
+  "Paid via {{method}}": "Thanh toán qua {{method}}",
+  "View proof": "Xem bằng chứng",
+  "Zelle": "Zelle",
+  "Bank transfer": "Chuyển khoản ngân hàng",
+  "Cash": "Tiền mặt",
+  "Paper check": "Séc",
+  "Other method": "Khác"
 }
