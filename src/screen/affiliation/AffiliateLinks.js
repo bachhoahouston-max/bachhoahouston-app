@@ -27,10 +27,12 @@ const AffiliateLinks = ({navigation}) => {
   const [showAll, setShowAll] = useState(false);
   // {product} links that product straight away; {} opens the product list.
   const [picker, setPicker] = useState(null);
+  const [linkAccess, setLinkAccess] = useState('');
 
   const application = dashboard?.application || {};
   const suspended = application.status === 'Suspended';
-  const canCreate = !suspended && !!application.referralCode;
+  const specificOnly = (linkAccess || application.linkAccess) === 'specific';
+  const canCreate = !suspended && !!application.referralCode && !specificOnly;
 
   const loadLinks = useCallback(
     () =>
@@ -39,6 +41,7 @@ const AffiliateLinks = ({navigation}) => {
           if (res?.status) {
             setLinks(res.data?.links || []);
             setTotals(res.data?.totals || {links: 0, revenue: 0});
+            setLinkAccess(res.data?.linkAccess || 'all');
           }
         })
         .catch(() => {})
@@ -86,10 +89,18 @@ const AffiliateLinks = ({navigation}) => {
           <ReferralCard
             application={application}
             suspended={suspended}
-            rateBadge={t('Storewide')}
+            rateBadge={specificOnly ? t('Selected products') : t('Storewide')}
             style={styles.sectionGap}
           />
 
+          {specificOnly ? (
+            <Card style={styles.sectionGap}>
+              <Text style={styles.infoTitle}>{t('Links created by the store')}</Text>
+              <Text style={styles.infoText}>
+                {t('The store creates your product links. Your referral code works only on the products below.')}
+              </Text>
+            </Card>
+          ) : (
           <Card style={styles.sectionGap}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardTitle}>{t('Generate Custom Product Link')}</Text>
@@ -136,6 +147,7 @@ const AffiliateLinks = ({navigation}) => {
               </>
             )}
           </Card>
+          )}
 
           <Card style={styles.sectionGap}>
             <SectionHeader
@@ -150,7 +162,11 @@ const AffiliateLinks = ({navigation}) => {
               <EmptyState
                 icon={Link2}
                 title={t('No product links yet')}
-                text={t('Tap "Create Affiliate Link", pick a product and share the link.')}
+                text={
+                  specificOnly
+                    ? t('The store has not created any product links for you yet.')
+                    : t('Tap "Create Affiliate Link", pick a product and share the link.')
+                }
               />
             ) : (
               visibleLinks.map(link => (
@@ -183,7 +199,9 @@ const AffiliateLinks = ({navigation}) => {
           <SectionHeader title={t('How it works')} style={styles.sectionGap} />
           <Card>
             {[
-              {title: t('Pick a product'), text: t('Tap "Create Affiliate Link" and choose any product from the shop.')},
+              specificOnly
+                ? {title: t('Get your links'), text: t('The store creates product links for you. They show up on this page.')}
+                : {title: t('Pick a product'), text: t('Tap "Create Affiliate Link" and choose any product from the shop.')},
               {title: t('Share your link'), text: t('Post the product link or your referral code where your audience shops.')},
               {title: t('Customers order'), text: t('They open your link in the app, or enter your code at checkout.')},
               {title: t('You earn commission'), text: t('Commission is added when the order is completed or delivered.')},
@@ -206,7 +224,7 @@ const AffiliateLinks = ({navigation}) => {
       </ScrollView>
 
       <ProductLinkModal
-        visible={!!picker}
+        visible={!!picker && canCreate}
         initialProduct={picker?.product}
         onClose={() => setPicker(null)}
         onCreated={loadLinks}
@@ -224,6 +242,8 @@ const styles = StyleSheet.create({
   sectionGap: {marginTop: 18},
   cardHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10},
   cardTitle: {flex: 1, fontFamily: FONTS.SemiBold, fontSize: 15, color: COLORS.text},
+  infoTitle: {fontFamily: FONTS.SemiBold, fontSize: 15, color: COLORS.text},
+  infoText: {fontFamily: FONTS.Regular, fontSize: 12.5, color: COLORS.muted, marginTop: 4, lineHeight: 18},
   instant: {backgroundColor: COLORS.primarySoft, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 3},
   instantText: {fontFamily: FONTS.Bold, fontSize: 10.5, color: COLORS.primary, letterSpacing: 0.5},
   pickerField: {

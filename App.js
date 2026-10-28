@@ -137,7 +137,12 @@ const App = () => {
             const code = decodeURIComponent(match[1]).trim().toUpperCase();
             const slug = getProductSlugFromUrl(url);
             if (slug) {
-                await saveProductReferral(slug, code);
+                const res = await Post('affiliation/link-click', { ref: code, slug }).catch(() => null);
+                if (res?.data?.valid === false) {
+                    Toast.show({ type: 'error', text1: i18n.t('Not a valid referral code') });
+                } else {
+                    await saveProductReferral(slug, code);
+                }
             } else {
                 await AsyncStorage.setItem('affiliateReferralCode', code);
             }

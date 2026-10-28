@@ -2057,10 +2057,14 @@ console.log(result)
                         return;
                       }
 
-                      // The same field accepts an affiliate referral code.
+                      // The same field accepts an affiliate referral code. Some
+                      // codes only work on specific products, so send the cart's products.
                       try {
+                        const productIds = cartdetail
+                          .filter(item => !isRewardItem(item) && item?.productid)
+                          .map(item => item.productid);
                         const referralResponse = await GetApi(
-                          `affiliation/referral/${encodeURIComponent(couponCode.trim())}`,
+                          `affiliation/referral/${encodeURIComponent(couponCode.trim())}?products=${encodeURIComponent(productIds.join(','))}`,
                           {},
                         );
                         if (referralResponse?.status) {
@@ -2075,7 +2079,7 @@ console.log(result)
                           return;
                         }
                         if (referralResponse?.message && referralResponse?.message !== 'Referral code not found.') {
-                          Toast.show({ type: 'error', text1: referralResponse.message });
+                          Toast.show({ type: 'error', text1: t(referralResponse.message) });
                           return;
                         }
                       } catch (error) {
