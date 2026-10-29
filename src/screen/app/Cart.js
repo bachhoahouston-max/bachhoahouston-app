@@ -138,6 +138,7 @@ const Cart = ({ route }) => {
   const [waiting, setWaiting] = useState(false);
   const [isPriceChanged, setIsPriceChanged] = useState(false);
   const [rewardCatalog, setRewardCatalog] = useState([]);
+  const [pointsPerDollar, setPointsPerDollar] = useState(10);
   const [productReferrals, setProductReferrals] = useState({});
 
   useEffect(() => {
@@ -165,8 +166,21 @@ const Cart = ({ route }) => {
         res => setRewardCatalog(Array.isArray(res?.data) ? res.data : []),
         err => Toast.show({ type: 'error', text1: err?.message }),
       );
+      GetApi('rewards/summary', {}).then(
+        res => {
+          if (res?.status && res?.data?.pointsPerDollar) {
+            setPointsPerDollar(res.data.pointsPerDollar);
+          }
+        },
+        err => console.log(err),
+      );
       return undefined;
     }, [user?._id, user?.token]),
+  );
+
+  const pointsToEarn = Math.max(
+    Math.floor((Math.round(Number(totalFinal || 0) * 100) * pointsPerDollar) / 100),
+    0,
   );
 
   const validateCart = useCallback(async snapshot => {
@@ -2192,6 +2206,18 @@ console.log(result)
 
               <View style={styles.totalcov}>
                 <Text style={styles.boxtxtlg}>{t('Cart Summary')}</Text>
+                {pointsToEarn > 0 && (
+                  <View style={styles.pointsBanner}>
+                    <Text style={styles.pointsIcon}>🎁</Text>
+                    <Text style={styles.pointsTxt}>
+                      {t('You will receive')}{' '}
+                      <Text style={{ fontFamily: FONTS.Bold }}>
+                        {pointsToEarn.toLocaleString()} {t('points')}
+                      </Text>{' '}
+                      {t('for this purchase.')}
+                    </Text>
+                  </View>
+                )}
                 {/* Sub Total */}
                 <View style={styles.total}>
                   <Text style={styles.boxtxt}>{t('Subtotal')}</Text>
@@ -3200,6 +3226,25 @@ const styles = StyleSheet.create({
     // fontWeight: '500',
     fontFamily: FONTS.Medium,
     marginBottom: 10,
+  },
+  pointsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Constants.lightgreen,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+  pointsIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  pointsTxt: {
+    flex: 1,
+    color: Constants.greennew,
+    fontSize: 13,
+    fontFamily: FONTS.Regular,
   },
   boxtxt: {
     color: Constants.black,
