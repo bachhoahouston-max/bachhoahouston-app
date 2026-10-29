@@ -178,10 +178,22 @@ const Cart = ({ route }) => {
     }, [user?._id, user?.token]),
   );
 
-  const pointsToEarn = Math.max(
-    Math.floor((Math.round(Number(totalFinal || 0) * 100) * pointsPerDollar) / 100),
-    0,
-  );
+  const isRestaurantLine = item =>
+    item?.isRestaurant ?? item?.vendorType === 'restaurant';
+  const purchasedLines = (cartdetail || []).filter(item => !isRewardItem(item));
+  const restaurantAmount = purchasedLines
+    .filter(isRestaurantLine)
+    .reduce((sum, item) => sum + Number(item?.offer || 0) * Number(item?.qty || 1), 0);
+  const pointsToEarn = purchasedLines.some(item => !isRestaurantLine(item))
+    ? Math.max(
+      Math.floor(
+        (Math.round(Math.max(Number(totalFinal || 0) - restaurantAmount, 0) * 100) *
+          pointsPerDollar) /
+        100,
+      ),
+      0,
+    )
+    : 0;
 
   const validateCart = useCallback(async snapshot => {
     if (!snapshot.length) return snapshot;
@@ -211,6 +223,7 @@ const Cart = ({ route }) => {
         stockStatus: result.stockStatus,
         availableQty: result.availableQty,
         productUnavailable: result.productUnavailable,
+        isRestaurant: result.isRestaurant,
       };
       if (result.price !== null && result.price !== undefined && !isRewardItem(item)) {
         next.offer = result.price;
