@@ -28,12 +28,12 @@ const Tab = createBottomTabNavigator();
 
 const Stack = createStackNavigator();
 const BAR_WIDTH = Dimensions.get('window').width;
-const SIDE_MARGIN = 16;
+const SIDE_MARGIN = 8;
 const BOTTOM_OFFSET = Platform.OS === 'ios' ? 28 : 12;
-const PILL_HEIGHT = 72;
+const PILL_HEIGHT = 58;
 const PILL_PADDING = 4;
 const PILL_WIDTH = BAR_WIDTH - SIDE_MARGIN * 2;
-const ACTIVE_SIZE = 64;
+const ACTIVE_SIZE = 54;
 
 const ICON_SIZE = 22;
 
@@ -252,35 +252,29 @@ const styles = StyleSheet.create({
   pill: {
     height: PILL_HEIGHT,
     borderRadius: PILL_HEIGHT / 2,
-    backgroundColor: '#F4F5F4',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderWidth: 1,
-    borderColor: Constants.white,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: PILL_PADDING,
-    elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
   activeCircle: {
     position: 'absolute',
     left: 0,
-    backgroundColor: Constants.lightgreen,
+    backgroundColor: 'rgba(232, 245, 233, 0.9)',
     borderWidth: 1,
     borderColor: Constants.white,
-    elevation: 3,
-    shadowColor: Constants.greennew,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 6,
   },
   tabButton: {
     height: PILL_HEIGHT,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
+    gap: 2,
   },
   tabText: {
     fontFamily: FONTS.Medium,
