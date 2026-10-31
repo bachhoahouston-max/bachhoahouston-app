@@ -16,6 +16,7 @@ import AffiliateCommissions from '../screen/affiliation/AffiliateCommissions';
 import AffiliateProfile from '../screen/affiliation/AffiliateProfile';
 import AffiliateApply from '../screen/affiliation/AffiliateApply';
 import AffiliateStatus from '../screen/affiliation/AffiliateStatus';
+import AffiliatePayout from '../screen/affiliation/AffiliatePayout';
 import {COLORS} from '../screen/affiliation/theme';
 
 const Tab = createBottomTabNavigator();
@@ -95,7 +96,10 @@ const AffiliateGate = () => {
       screenOptions={{headerShown: false}}
       initialRouteName={initialRoute}>
       {hasPanel ? (
-        <Stack.Screen name="AffiliateTabs" component={AffiliateTabs} />
+        <>
+          <Stack.Screen name="AffiliateTabs" component={AffiliateTabs} />
+          <Stack.Screen name="AffiliatePayout" component={AffiliatePayout} />
+        </>
       ) : (
         <>
           <Stack.Screen name="AffiliateStatus" component={AffiliateStatus} />

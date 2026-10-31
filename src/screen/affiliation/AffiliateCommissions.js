@@ -375,11 +375,11 @@ const AffiliateCommissions = ({ route }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.reportButton} onPress={shareReport} activeOpacity={0.85}>
+          {/* <TouchableOpacity style={styles.reportButton} onPress={shareReport} activeOpacity={0.85}>
             <FileText size={18} color={COLORS.white} />
             <Text style={styles.reportText}>{t('View Commission Report')}</Text>
             <ChevronRight size={18} color={COLORS.white} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </ScrollView>
     </View>

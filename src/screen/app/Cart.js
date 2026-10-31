@@ -850,6 +850,7 @@ const Cart = ({ route }) => {
         discount: couponvalue || couponDiscount,
         discountCode: discountCode || '',
         referralCode: referralCode || '',
+        appliedReferralCode: referralCode || '',
         user: shipAdd._id,
         Email: shipAdd.email,
         paymentmode: 'online',
@@ -1300,7 +1301,7 @@ console.log(result)
                           {isProductUnavailable(item) && (
                             <Text style={styles.stockIssueStatus}>{t('Product Unavailable')}</Text>
                           )}
-                          {!!lineReferralCode(item) && (
+                          {!isRewardItem(item) && !!(affiliateCode || lineReferralCode(item)) && (
                             <View style={styles.referralBadge}>
                               <Text style={styles.referralBadgeTxt}>{t('Referral code applied')}</Text>
                             </View>
