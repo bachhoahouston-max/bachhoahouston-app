@@ -1,45 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { navigate } from '../../../navigationRef';
-import { GetApi } from '../../Assets/Helpers/Service';
 
 const { width } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const navigation = useNavigation();
-  const { t, i18n } = useTranslation();
-  const [welcomeImage, setWelcomeImage] = useState('');
-  const [announcement, setAnnouncement] = useState('');
-  const [language, setLanguage] = useState(i18n.language?.startsWith('vi') ? 'vi' : 'en');
-
-  useEffect(() => {
-    GetApi('getsetting', {})
-      .then(res => {
-        const setting = res?.setting?.[0];
-        if (setting) {
-          setWelcomeImage(setting.welcomeImage || '');
-          setAnnouncement(
-            (i18n.language?.startsWith('vi')
-              ? setting.announcementVi
-              : setting.announcementEn) || '',
-          );
-        }
-      })
-      .catch(error => {
-        console.log('Unable to load welcome settings', error);
-      });
-  }, [i18n.language]);
-
-  const changeLanguage = async nextLanguage => {
-    await AsyncStorage.setItem('LANG', nextLanguage);
-    await i18n.changeLanguage(nextLanguage);
-    setLanguage(nextLanguage);
-  };
-
-  const imageSource = welcomeImage ? { uri: welcomeImage } : require('../../Assets/Images/welcome.png');
+  const { t } = useTranslation();
 
   const handleAuthPress = () => {
     navigation.navigate('Auth');
@@ -50,7 +19,7 @@ export default function WelcomeScreen() {
       {/* Top Section with Light Green Background */}
       <View style={styles.topSection}>
         <Image
-          source={imageSource}
+          source={require('../../Assets/Images/welcome.png')}
           style={styles.basketImage}
           resizeMode="contain"
         />
@@ -66,26 +35,22 @@ export default function WelcomeScreen() {
 
       {/* Bottom Section with Dark Green Background */}
       <View style={styles.bottomSection}>
+        {/* Background Image */}
+        <Image
+          source={require('../../Assets/Images/new.png')}
+          style={styles.backgroundImage}
+          resizeMode="stretch"
+        />
+
         {/* Content Overlay */}
         <View style={styles.contentOverlay}>
-          <View style={styles.languageSwitcher}>
-            {['en', 'vi'].map(code => (
-              <TouchableOpacity
-                key={code}
-                style={[styles.languageButton, language === code && styles.activeLanguageButton]}
-                onPress={() => changeLanguage(code)}>
-                <Text style={styles.languageButtonText}>{code.toUpperCase()}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <Text style={styles.welcomeText}>{t('Welcome')}</Text>
-          {!!announcement && <Text style={styles.announcementText}>{announcement}</Text>}
-          <Text style={styles.subtitleText}>{t('Vietnamese Grocery Delivery Service')}</Text>
+          <Text style={styles.welcomeText}>Welcome!</Text>
+          <Text style={styles.subtitleText}>Vietnamese Grocery Delivery Service</Text>
           <TouchableOpacity
             style={styles.linkButton}
             onPress={handleAuthPress}
           >
-            <Text style={styles.linkText}>{t('Click here to Sign In/Sign Up')}</Text>
+            <Text style={styles.linkText}>Click here to Sign In/Sign Up</Text>
 
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigate('App')}>
@@ -110,9 +75,11 @@ const styles = StyleSheet.create({
     paddingTop: 120,
   },
   basketImage: {
-    width: width,
+    width: 300,
     height: 300,
-    marginTop: 40,
+    position: 'absolute',
+    left: -10,
+    top: 80,
   },
   logoContainer: {
     alignItems: 'center',
@@ -126,6 +93,13 @@ const styles = StyleSheet.create({
     width: width,
     height: 320,
     position: 'relative',
+  },
+  backgroundImage: {
+    position: 'absolute',
+    width: width,
+    height: 360,
+    top: 0,
+    left: 0,
   },
   contentOverlay: {
     flex: 1,
@@ -141,13 +115,6 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 4,
-  },
-  announcementText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 8,
   },
   subtitleText: {
     fontSize: 16,
@@ -170,25 +137,5 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 20,
     textDecorationLine: 'underline',
-  },
-  languageSwitcher: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  languageButton: {
-    borderWidth: 1,
-    borderColor: '#FFFFFF',
-    borderRadius: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginHorizontal: 4,
-  },
-  activeLanguageButton: {
-    backgroundColor: '#FFFFFF',
-  },
-  languageButtonText: {
-    color: '#206B3A',
-    fontSize: 12,
-    fontWeight: 'bold',
   },
 });
