@@ -85,9 +85,10 @@ const GetApi = async (url, props, data) => {
                 Authorization: `jwt ${userDetail?.token}`,
                 ...commonHeaders,
               },
-              params: {
-                id: data
-              }
+              params:
+                data && typeof data === 'object'
+                  ? data
+                  : {id: data},
             })
             .then(res => {
               // console.log(res.data);

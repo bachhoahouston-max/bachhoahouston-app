@@ -13,7 +13,11 @@ import React, { createRef, useContext, useEffect, useState } from 'react';
 import Constants, { FONTS } from '../../Assets/Helpers/constant';
 import { BackIcon, EditIcon } from '../../../Theme';
 import Spinner from '../../Assets/Component/Spinner';
-import { ApiFormData, GetApi, Post } from '../../Assets/Helpers/Service';
+import { ApiFormData, GetApi, Post, Put } from '../../Assets/Helpers/Service';
+import { Dropdown } from 'react-native-element-dropdown';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import { ExternalLink, Plus, X } from 'lucide-react-native';
+import { SOCIAL_PLATFORMS, displayLink, getPlatform, openUrl } from '../affiliation/utils';
 import CameraGalleryPeacker from '../../Assets/Component/CameraGalleryPeacker';
 import { checkEmail } from '../../Assets/Helpers/InputsNullChecker';
 import { LoadContext, ToastContext, UserContext } from '../../../App';
@@ -41,10 +45,70 @@ const Profile = props => {
     number: '',
     img: '',
   });
+  // Affiliates only: social accounts from their affiliation application.
+  // null = not an affiliate (or no application), so the section stays hidden.
+  const [socialLinks, setSocialLinks] = useState(null);
   useEffect(() => {
     getProfile();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useEffect(() => {
+    if (user?.isAffiliate) {
+      getSocialLinks();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.isAffiliate]);
+
+  const getSocialLinks = () => {
+    GetApi('affiliation/applications/me', {}).then(
+      res => {
+        if (res?.status && res.data) {
+          setSocialLinks(
+            (res.data.socialLinks || []).map(link => ({
+              platform: link.platform || 'website',
+              url: link.url || '',
+            })),
+          );
+        }
+      },
+      err => console.log(err),
+    );
+  };
+
+  const updateLink = (index, changes) =>
+    setSocialLinks(links => links.map((link, i) => (i === index ? { ...link, ...changes } : link)));
+
+  const addLink = () => {
+    const used = socialLinks.map(link => link.platform);
+    const next = SOCIAL_PLATFORMS.find(p => !used.includes(p.value)) || SOCIAL_PLATFORMS[SOCIAL_PLATFORMS.length - 1];
+    setSocialLinks(links => [...links, { platform: next.value, url: '' }]);
+  };
+
+  const removeLink = index => setSocialLinks(links => links.filter((_, i) => i !== index));
+
+  // Returns false when the links could not be saved, so the profile update stops.
+  const saveSocialLinks = async () => {
+    if (!socialLinks) {
+      return true;
+    }
+    const filledLinks = socialLinks
+      .map(link => ({ platform: link.platform, url: link.url.trim() }))
+      .filter(link => link.url);
+    if (!filledLinks.length) {
+      Toast.show({
+        type: 'error',
+        text1: t('Add at least one social media or website link.'),
+      });
+      return false;
+    }
+    const res = await Put('affiliation/applications/me/social-links', { socialLinks: filledLinks }, { ...props });
+    if (!res?.status) {
+      Toast.show({ type: 'error', text1: res?.message || t('Please try again.') });
+      return false;
+    }
+    setSocialLinks(filledLinks);
+    return true;
+  };
   const cameraRef = createRef();
   const getImageValue = async img => {
     console.log(img)
@@ -101,7 +165,7 @@ const Profile = props => {
       },
     );
   };
-  const submit = () => {
+  const submit = async () => {
     console.log(userDetail);
     if (
       userDetail.username === '' ||
@@ -137,6 +201,11 @@ const Profile = props => {
     }
     console.log('data==========>', data);
     setLoading(true);
+    const linksSaved = await saveSocialLinks().catch(() => false);
+    if (!linksSaved) {
+      setLoading(false);
+      return;
+    }
     Post('updateprofile', data, { ...props }).then(
       async res => {
         setLoading(false);
@@ -315,6 +384,94 @@ const Profile = props => {
             </View>
           )}
         </View>
+        {!!socialLinks && (
+          <View
+            style={[
+              styles.card,
+              styles.socialCard,
+              styles.shadowProp,
+              { backgroundColor: Constants.white },
+              { shadowColor: Constants.black },
+            ]}>
+            <Text style={styles.sectionTitle}>{t('Your Social Accounts')}</Text>
+            {edit ? (
+              <>
+                {socialLinks.map((link, index) => (
+                  <View style={styles.socialEditRow} key={index}>
+                    <Dropdown
+                      style={styles.platformDropdown}
+                      containerStyle={styles.platformMenu}
+                      data={SOCIAL_PLATFORMS}
+                      value={link.platform}
+                      labelField="label"
+                      valueField="value"
+                      maxHeight={280}
+                      onChange={item => updateLink(index, { platform: item.value })}
+                      selectedTextStyle={styles.platformText}
+                      selectedTextProps={{ numberOfLines: 1 }}
+                      renderLeftIcon={() => (
+                        <Ionicons
+                          style={styles.platformIcon}
+                          name={getPlatform(link.platform).icon}
+                          size={18}
+                          color={getPlatform(link.platform).color}
+                        />
+                      )}
+                      renderItem={item => (
+                        <View style={styles.platformItem}>
+                          <Ionicons name={item.icon} size={18} color={item.color} />
+                          <Text style={styles.platformItemText}>{item.label}</Text>
+                        </View>
+                      )}
+                    />
+                    <TextInput
+                      style={styles.socialInput}
+                      value={link.url}
+                      onChangeText={url => updateLink(index, { url })}
+                      placeholder={getPlatform(link.platform).placeholder}
+                      placeholderTextColor={Constants.customgrey}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      keyboardType="url"
+                    />
+                    {socialLinks.length > 1 && (
+                      <TouchableOpacity onPress={() => removeLink(index)} hitSlop={8} accessibilityLabel={t('Remove')}>
+                        <X size={18} color={Constants.customgrey} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                ))}
+                <TouchableOpacity style={styles.addLink} onPress={addLink}>
+                  <View style={styles.addLinkIcon}>
+                    <Plus size={14} color={Constants.white} />
+                  </View>
+                  <Text style={styles.addLinkText}>{t('Add another link')}</Text>
+                </TouchableOpacity>
+              </>
+            ) : socialLinks.length ? (
+              socialLinks.map((item, index) => {
+                const platform = getPlatform(item.platform);
+                return (
+                  <TouchableOpacity
+                    key={`${item.platform}-${index}`}
+                    style={[styles.socialRow, index < socialLinks.length - 1 && styles.socialDivider]}
+                    onPress={() => openUrl(item.url)}>
+                    <View style={styles.socialIcon}>
+                      <Ionicons name={platform.icon} size={18} color={platform.color} />
+                    </View>
+                    <View style={styles.flex}>
+                      <Text style={styles.socialName}>{platform.label}</Text>
+                      <Text style={styles.socialUrl} numberOfLines={1}>{displayLink(item.url)}</Text>
+                    </View>
+                    <ExternalLink size={16} color={Constants.customgrey} />
+                  </TouchableOpacity>
+                );
+              })
+            ) : (
+              <Text style={styles.socialUrl}>{t('Add at least one social media or website link.')}</Text>
+            )}
+          </View>
+        )}
         {/* {edit ? (
         <TouchableOpacity style={styles.signInbtn} onPress={submit}>
           <Text style={styles.buttontxt}>Update Profile</Text>
@@ -459,4 +616,96 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Bold,
     marginLeft: 10,
   },
+  flex: { flex: 1 },
+  socialCard: {
+    marginTop: 0,
+    paddingBottom: 15,
+  },
+  sectionTitle: {
+    color: Constants.black,
+    fontSize: 16,
+    fontFamily: FONTS.SemiBold,
+    marginBottom: 5,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+  },
+  socialDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  socialIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F2F2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  socialName: {
+    color: Constants.black,
+    fontSize: 14,
+    fontFamily: FONTS.SemiBold,
+  },
+  socialUrl: {
+    color: Constants.customgrey,
+    fontSize: 12,
+    fontFamily: FONTS.Regular,
+  },
+  socialEditRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    gap: 8,
+  },
+  platformDropdown: {
+    width: 128,
+    height: 46,
+    borderWidth: 1,
+    borderColor: Constants.customgrey,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+  },
+  platformMenu: { borderRadius: 10, overflow: 'hidden' },
+  platformIcon: { marginRight: 6 },
+  platformText: { fontFamily: FONTS.Medium, color: Constants.black, fontSize: 13 },
+  platformItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 10,
+  },
+  platformItemText: { fontFamily: FONTS.Regular, color: Constants.black, fontSize: 14 },
+  socialInput: {
+    flex: 1,
+    height: 46,
+    borderWidth: 1,
+    borderColor: Constants.customgrey,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    color: Constants.black,
+    fontFamily: FONTS.Regular,
+    fontSize: 13,
+  },
+  addLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingVertical: 8,
+    marginTop: 10,
+  },
+  addLinkIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: Constants.greennew,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  addLinkText: { fontFamily: FONTS.SemiBold, color: Constants.greennew, fontSize: 14 },
 });

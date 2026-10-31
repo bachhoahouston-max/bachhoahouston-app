@@ -16,7 +16,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import Constants, { Currency, FONTS } from '../../Assets/Helpers/constant';
 import {
   Calendar,
@@ -33,6 +33,7 @@ import {
 } from '../../../App';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveSyncedCart } from '../../Assets/Helpers/CartSync';
+import { getProductReferrals } from '../../Assets/Helpers/affiliateReferral';
 import { navigate, reset } from '../../../navigationRef';
 import { useTranslation } from 'react-i18next';
 import { RadioButton } from 'react-native-paper';
@@ -123,6 +124,7 @@ const Cart = ({ route }) => {
   const [availableZipCodes, setAvailableZipCodes] = useState([]);
   const [showStripePayment, setShowStripePayment] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
+  const [affiliateCode, setAffiliateCode] = useState('');
   const [isOnce, setIsOnce] = useState(false);
   const [orderID, setOrderID] = useState('')
   const [cancelModel, setCancelModel] = useState(false)
@@ -136,6 +138,22 @@ const Cart = ({ route }) => {
   const [waiting, setWaiting] = useState(false);
   const [isPriceChanged, setIsPriceChanged] = useState(false);
   const [rewardCatalog, setRewardCatalog] = useState([]);
+  const [productReferrals, setProductReferrals] = useState({});
+
+  useEffect(() => {
+    AsyncStorage.getItem('affiliateReferralCode').then(code => setAffiliateCode(code || ''));
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      getProductReferrals().then(setProductReferrals);
+    }, []),
+  );
+
+  const lineReferralCode = item =>
+    isRewardItem(item) || item?.productSource === 'COMBO'
+      ? ''
+      : item?.referralCode || productReferrals[item?.slug] || '';
 
   useFocusEffect(
     useCallback(() => {
@@ -150,6 +168,101 @@ const Cart = ({ route }) => {
       return undefined;
     }, [user?._id, user?.token]),
   );
+
+  const validateCart = useCallback(async snapshot => {
+    if (!snapshot.length) return snapshot;
+    const res = await Post(
+      'validateCart',
+      {
+        items: snapshot.map(item => ({
+          productId: cartLineProductId(item),
+          productSource: item?.productSource || 'NORMAL',
+          priceSlotIndex: item?.priceSlotIndex,
+          qty: item?.qty,
+        })),
+      },
+      {},
+    );
+    if (res?.status === false) {
+      throw new Error(res?.message || t('Unable to validate cart.'));
+    }
+
+    const results = Array.isArray(res?.data) ? res.data : [];
+    return snapshot.map((item, index) => {
+      const result = results[index];
+      if (!result) return item;
+
+      const next = {
+        ...item,
+        stockStatus: result.stockStatus,
+        availableQty: result.availableQty,
+        productUnavailable: result.productUnavailable,
+      };
+      if (result.price !== null && result.price !== undefined && !isRewardItem(item)) {
+        next.offer = result.price;
+        next.price = result.price;
+        next.total = Number(result.price) * Number(item.qty || 1);
+      }
+      return next;
+    });
+  }, [t]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      const snapshot = Array.isArray(cartdetail) ? cartdetail : [];
+      validateCart(snapshot)
+        .then(next => {
+          if (!active || JSON.stringify(next) === JSON.stringify(snapshot)) return;
+          setcartdetail(next);
+          return AsyncStorage.setItem('cartdata', JSON.stringify(next));
+        })
+        .catch(err => {
+          if (active) Toast.show({ type: 'error', text1: err?.message || t('Unable to validate cart.') });
+        });
+      return () => {
+        active = false;
+      };
+    }, [cartdetail, setcartdetail, t, validateCart]),
+  );
+
+  // Deleted (or hidden) from the admin panel — can only be removed, never ordered
+  const isProductUnavailable = item =>
+    item?.productUnavailable === true || item?.stockStatus === 'UNAVAILABLE';
+  const hasStockIssue = item =>
+    isProductUnavailable(item) ||
+    item?.stockStatus === 'OUT_OF_STOCK' ||
+    item?.stockStatus === 'LIMITED';
+
+  const stockIssues = useMemo(
+    () => (cartdetail || []).filter(hasStockIssue),
+    [cartdetail],
+  );
+
+  const removeOutOfStock = async () => {
+    const next = (cartdetail || []).filter(item => !hasStockIssue(item));
+    setcartdetail(next);
+    await AsyncStorage.setItem('cartdata', JSON.stringify(next));
+  };
+
+  const setStockIssueQuantity = async (item, quantity) => {
+    const productId = cartLineProductId(item);
+    const otherLinesQty = cartQtyForProduct(cartdetail, productId) - Number(item?.qty || 0);
+    const keepableQty = Number(item?.availableQty || 0) - otherLinesQty;
+    if (keepableQty < 1) return;
+    const next = cartdetail.map(line =>
+      line === item
+        ? {
+            ...line,
+            qty: Math.min(Number(quantity), keepableQty),
+            total: Number(line?.price || line?.offer || 0) * Math.min(Number(quantity), keepableQty),
+            stockStatus: 'AVAILABLE',
+          }
+        : line,
+    );
+    setcartdetail(next);
+    await AsyncStorage.setItem('cartdata', JSON.stringify(next));
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -275,11 +388,11 @@ const Cart = ({ route }) => {
       const currentHour = now.getHours();
       const minDate = new Date();
 
-      if (currentHour >= 14) {
-        // After 2 PM, set min date to tomorrow
+      if (currentHour >= 17) {
+        // After 5 PM, set min date to tomorrow
         minDate.setDate(now.getDate() + 1);
       } else {
-        // Before 2 PM, min date is today
+        // Before 5 PM, min date is today
         minDate.setDate(now.getDate());
       }
 
@@ -704,7 +817,7 @@ const Cart = ({ route }) => {
           productSource: item.productSource || "NORMAL",
           saleID: item.saleID || null,
           combo_id: item.combo_id || null,
-
+          referralCode: lineReferralCode(item),
         };
       });
 
@@ -724,6 +837,7 @@ const Cart = ({ route }) => {
 
       console.log('Formatted Date:', formattedDate);
       const servicefee = parseFloat(serviceFee || 0);
+      const referralCode = affiliateCode || await AsyncStorage.getItem('affiliateReferralCode');
       const data = {
         productDetail: newarr,
         shipping_address: shipAdd.address,
@@ -734,7 +848,9 @@ const Cart = ({ route }) => {
         Deliverytip: deliveryTip || 0,
         deliveryfee: deliveryFees || 0,
         discount: couponvalue || couponDiscount,
-        discountCode: couponCode || '',
+        discountCode: discountCode || '',
+        referralCode: referralCode || '',
+        appliedReferralCode: referralCode || '',
         user: shipAdd._id,
         Email: shipAdd.email,
         paymentmode: 'online',
@@ -862,6 +978,8 @@ const Cart = ({ route }) => {
     AsyncStorage.removeItem('pickupType');
     AsyncStorage.removeItem('pickupDate');
     AsyncStorage.removeItem('couponDiscount')
+    AsyncStorage.removeItem('affiliateReferralCode');
+    setAffiliateCode('');
     setcartdetail([]);
     // Clear the synced cart immediately rather than waiting on the generic
     // debounced sync — if the app gets backgrounded/killed right after
@@ -1113,6 +1231,63 @@ console.log(result)
         {cartdetail && cartdetail.length > 0 ? (
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={{ backgroundColor: Constants.lightgreen }}>
+              {stockIssues.length > 0 && (
+                <View style={styles.stockIssuePanel}>
+                  <Text style={styles.stockIssueTitle}>
+                    {stockIssues.some(isProductUnavailable)
+                      ? t('Product Unavailable')
+                      : t('Out of Stock')}{' '}
+                    ({stockIssues.length})
+                  </Text>
+                  <Text style={styles.stockIssueDescription}>
+                    {t('These items are unavailable. Remove them to continue.')}
+                  </Text>
+                  {stockIssues.map((item, index) => {
+                    const otherLinesQty =
+                      cartQtyForProduct(cartdetail, cartLineProductId(item)) -
+                      Number(item?.qty || 0);
+                    const keepableQty = Number(item?.availableQty || 0) - otherLinesQty;
+                    const isUnavailable = isProductUnavailable(item);
+                    const isLimited = !isUnavailable && item?.stockStatus === 'LIMITED';
+                    return (
+                      <View style={styles.stockIssueRow} key={`${cartLineProductId(item)}-${index}`}>
+                        <View style={styles.stockIssueInfo}>
+                          <Text style={styles.stockIssueName} numberOfLines={2}>
+                            {i18n.language === 'vi'
+                              ? item?.vietnamiesName || item?.productname
+                              : item?.productname}
+                          </Text>
+                          <Text style={styles.stockIssueStatus}>
+                            {isUnavailable
+                              ? t('Product Unavailable')
+                              : isLimited
+                              ? `${t('Available quantity')}: ${item?.availableQty}`
+                              : t('Out of stock')}
+                          </Text>
+                          {isLimited && keepableQty > 0 && (
+                            <TouchableOpacity onPress={() => setStockIssueQuantity(item, keepableQty)}>
+                              <Text style={styles.stockIssueAction}>
+                                {t('Set quantity to')} {keepableQty}
+                              </Text>
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                        <TouchableOpacity
+                          onPress={async () => {
+                            const next = cartdetail.filter(line => line !== item);
+                            setcartdetail(next);
+                            await AsyncStorage.setItem('cartdata', JSON.stringify(next));
+                          }}>
+                          <Text style={styles.stockIssueRemove}>{t('Remove')}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+                  <TouchableOpacity style={styles.removeAllStockButton} onPress={removeOutOfStock}>
+                    <Text style={styles.removeAllStockText}>{t('Remove all')}</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
               {cartdetail.map((item, i) => (
                 item?.productSource === "COMBO" ? (
                   <ComboOfferCard key={i} cartItem={item} isCartMode />
@@ -1146,6 +1321,14 @@ console.log(result)
                             {i18n.language === 'vi' ? (item?.vietnamiesName || item?.productname) : item?.productname}
                             {/* {item?.productname} */}
                           </Text>
+                          {isProductUnavailable(item) && (
+                            <Text style={styles.stockIssueStatus}>{t('Product Unavailable')}</Text>
+                          )}
+                          {!isRewardItem(item) && !!(affiliateCode || lineReferralCode(item)) && (
+                            <View style={styles.referralBadge}>
+                              <Text style={styles.referralBadgeTxt}>{t('Referral code applied')}</Text>
+                            </View>
+                          )}
                           <View
                             style={{
                               flexDirection: 'row',
@@ -1194,14 +1377,17 @@ console.log(result)
                                     onPress={() => redeemReward(item, i)}>
                                     <Text style={styles.redeemRewardTxt} numberOfLines={1} adjustsFontSizeToFit>
                                       🎁{' '}
-                                      {(
-                                        Number(
-                                          rewardCatalog.find(
-                                            reward => String(reward?.product?._id) === String(item?.productid),
-                                          )?.points || 0,
-                                        ) * Number(item?.qty || 1)
-                                      ).toLocaleString()}{' '}
-                                      {t('points')} · {t('Redeem with points')}
+                                      <Text style={styles.redeemRewardPts}>
+                                        {(
+                                          Number(
+                                            rewardCatalog.find(
+                                              reward => String(reward?.product?._id) === String(item?.productid),
+                                            )?.points || 0,
+                                          ) * Number(item?.qty || 1)
+                                        ).toLocaleString()}{' '}
+                                        {t('points')}
+                                      </Text>{' '}
+                                      · {t('Redeem with points')}
                                     </Text>
                                   </TouchableOpacity>
                                 )}
@@ -1570,7 +1756,7 @@ console.log(result)
                             },
                           ]}>
                           {t(
-                            '*Note: Orders placed before 2 PM are eligible for same-day pickup. Orders placed after 2 PM will be available for pickup the next day.',
+                            '*Note: Orders placed before 5 PM can be picked up the same day. Orders placed after 5 PM will be ready for pickup the next day.',
                           )}
                         </Text>
 
@@ -1643,7 +1829,7 @@ console.log(result)
                             },
                           ]}>
                           {t(
-                            '*Note: Orders placed before 2 PM are eligible for same-day pickup. Orders placed after 2 PM will be available for pickup the next day.',
+                            '*Note: Orders placed before 5 PM can be picked up the same day. Orders placed after 5 PM will be ready for pickup the next day.',
                           )}
                         </Text>
 
@@ -1862,7 +2048,7 @@ console.log(result)
                   <TextInput
                     value={couponCode}
                     onChangeText={text => setCouponCode(text)}
-                    placeholder={t('Enter Promo Code')}
+                    placeholder={t('Coupon or referral code')}
                     placeholderTextColor={Constants.customgrey}
                     style={{
                       flex: 1,
@@ -1892,6 +2078,31 @@ console.log(result)
                           text1: t('Please log in first'),
                         });
                         return;
+                      }
+
+                      // The same field accepts an affiliate referral code.
+                      try {
+                        const referralResponse = await GetApi(
+                          `affiliation/referral/${encodeURIComponent(couponCode.trim())}`,
+                          {},
+                        );
+                        if (referralResponse?.status) {
+                          const normalizedCode = referralResponse?.data?.referralCode || couponCode.trim().toUpperCase();
+                          setAffiliateCode(normalizedCode);
+                          setCouponCode('');
+                          await AsyncStorage.setItem('affiliateReferralCode', normalizedCode);
+                          Toast.show({
+                            type: 'success',
+                            text1: t('Referral code applied successfully'),
+                          });
+                          return;
+                        }
+                        if (referralResponse?.message && referralResponse?.message !== 'Referral code not found.') {
+                          Toast.show({ type: 'error', text1: referralResponse.message });
+                          return;
+                        }
+                      } catch (error) {
+                        console.warn(error);
                       }
 
                       const notAvailablecoupan = cartdetail.some(
@@ -1962,6 +2173,22 @@ console.log(result)
                     </Text>
                   </TouchableOpacity>
                 </View>
+                {!!affiliateCode && (
+                  <View style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={[styles.boxtxt, { color: Constants.green }]}>
+                      {t('Referral code applied')}: {affiliateCode}
+                    </Text>
+                    <Pressable
+                      onPress={async () => {
+                        setAffiliateCode('');
+                        await AsyncStorage.removeItem('affiliateReferralCode');
+                      }}>
+                      <Text style={[styles.boxtxt, { color: Constants.red }]}>
+                        {t('Remove')}
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
                 {coupon && couponDiscount > 0 && (
                   <View style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Text style={[styles.boxtxt, { color: Constants.green }]}>
@@ -2258,6 +2485,22 @@ console.log(result)
                           text1: t('Please login to continue'),
                         });
                         navigate('Auth');
+                        return;
+                      }
+
+                      if (stockIssues.some(isProductUnavailable)) {
+                        Toast.show({
+                          type: 'error',
+                          text1: t('Product Unavailable. Remove it from your cart to continue.'),
+                        });
+                        return;
+                      }
+
+                      if (stockIssues.length > 0) {
+                        Toast.show({
+                          type: 'error',
+                          text1: t('Remove out-of-stock items and review updated prices before continuing.'),
+                        });
                         return;
                       }
 
@@ -2659,6 +2902,21 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: FONTS.SemiBold,
   },
+  referralBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginTop: 4,
+  },
+  referralBadgeTxt: {
+    color: '#15803D',
+    fontSize: 11,
+    fontFamily: FONTS.SemiBold,
+  },
   rewardStrike: {
     color: Constants.customgrey2,
     fontSize: 12,
@@ -2678,15 +2936,21 @@ const styles = StyleSheet.create({
     marginTop: 8,
     alignSelf: 'flex-start',
     maxWidth: '100%',
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#FFF1C2',
+    borderWidth: 1,
+    borderColor: '#F5B82E',
     borderRadius: 20,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 5,
   },
   redeemRewardTxt: {
-    color: Constants.white,
+    color: '#6B4300',
     fontSize: 11,
-    fontFamily: FONTS.Medium,
+    fontFamily: FONTS.SemiBold,
+  },
+  redeemRewardPts: {
+    color: '#E87500',
+    fontFamily: FONTS.Bold,
   },
   container: {
     flex: 1,
@@ -2738,6 +3002,74 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 1,
+  },
+  stockIssuePanel: {
+    marginHorizontal: 10,
+    marginTop: 10,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    backgroundColor: '#FEF2F2',
+  },
+  stockIssueTitle: {
+    color: '#DC2626',
+    fontSize: 18,
+    fontFamily: FONTS.Bold,
+  },
+  stockIssueDescription: {
+    color: '#374151',
+    fontSize: 13,
+    fontFamily: FONTS.Regular,
+    marginTop: 4,
+  },
+  stockIssueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FECACA',
+  },
+  stockIssueInfo: {
+    flex: 1,
+  },
+  stockIssueName: {
+    color: Constants.black,
+    fontSize: 14,
+    fontFamily: FONTS.Medium,
+  },
+  stockIssueStatus: {
+    color: '#DC2626',
+    fontSize: 12,
+    fontFamily: FONTS.Medium,
+    marginTop: 3,
+  },
+  stockIssueAction: {
+    color: Constants.greennew,
+    fontSize: 12,
+    fontFamily: FONTS.Bold,
+    marginTop: 5,
+  },
+  stockIssueRemove: {
+    color: '#DC2626',
+    fontSize: 13,
+    fontFamily: FONTS.Bold,
+  },
+  removeAllStockButton: {
+    alignSelf: 'flex-end',
+    marginTop: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    backgroundColor: Constants.white,
+  },
+  removeAllStockText: {
+    color: '#DC2626',
+    fontSize: 13,
+    fontFamily: FONTS.Bold,
   },
   removeIconBtn: {
     position: 'absolute',

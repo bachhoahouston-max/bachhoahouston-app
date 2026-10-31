@@ -28,6 +28,13 @@ import i18n from '../../../i18n';
 import Toast from 'react-native-toast-message';
 
 const SignIn = props => {
+  const requestedRedirect = props?.route?.params?.redirect;
+  const redirectTo = ['Home', 'Categories', 'Rewards', 'Orders', 'Cart'].includes(
+    requestedRedirect,
+  )
+    ? requestedRedirect
+    : null;
+  const affiliateSignup = props?.route?.params?.affiliateSignup === true;
   const [showPass, setShowPass] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [toast, setToast] = useContext(ToastContext);
@@ -44,20 +51,17 @@ const SignIn = props => {
 
   useEffect(() => {
     checkLng();
-    checkAuthDetails();
+    AsyncStorage.getItem('authDetails').then(authDetails => {
+      if (authDetails != null) {
+        const details = JSON.parse(authDetails);
+        setUserDetail(previous => ({
+          ...previous,
+          username: details.username,
+          password: details.password,
+        }));
+      }
+    });
   }, []);
-
-  const checkAuthDetails = async () => {
-    const authDetails = await AsyncStorage.getItem('authDetails');
-    if (authDetails != null) {
-      let details = JSON.parse(authDetails);
-      setUserDetail({
-        ...userDetail,
-        username: details.username,
-        password: details.password,
-      });
-    }
-  }
   const checkLng = async () => {
     const x = await AsyncStorage.getItem('LANG');
     if (x != null) {
@@ -136,7 +140,17 @@ const SignIn = props => {
             reset('Employeetab');
           } else {
             setLoading(false);
-            reset('App');
+            const isAffiliate = affiliateSignup || res.data.isAffiliate === true;
+            reset(
+              isAffiliate
+                ? 'Affiliation'
+                : 'App',
+              isAffiliate
+                ? undefined
+                : redirectTo
+                  ? {screen: redirectTo}
+                  : undefined,
+            );
           }
         } else {
           setLoading(false);
@@ -296,7 +310,10 @@ const SignIn = props => {
             <Text style={newStyles.signUpText}>
               {t('Do not have an Account ? ')}
             </Text>
-            <TouchableOpacity onPress={() => navigate('SignUp')}>
+            <TouchableOpacity
+              onPress={() =>
+                navigate('SignUp', redirectTo ? {redirect: redirectTo} : undefined)
+              }>
               <Text style={newStyles.signUpLink}>{t('Sign Up')}</Text>
             </TouchableOpacity>
           </View>

@@ -22,6 +22,7 @@ import DriverHeader from '../../Assets/Component/DriverHeader';
 import { useTranslation } from 'react-i18next';
 import { navigate } from '../../../navigationRef';
 import { GetApi } from '../../Assets/Helpers/Service';
+import { getProductReferralCode } from '../../Assets/Helpers/affiliateReferral';
 import RenderHTML from 'react-native-render-html';
 import ProductCard from './ProductCard';
 import Toast from 'react-native-toast-message';
@@ -253,6 +254,8 @@ const Preview = props => {
         slug: productdata.slug,
         productSource: selectedslot.isFlashSale ? "SALE" : "NORMAL",
       };
+      const referralCode = await getProductReferralCode(productdata.slug);
+      if (referralCode) newProduct.referralCode = referralCode;
 
       const updatedCart = [...existingCart, newProduct];
       setcartdetail(updatedCart);
@@ -296,6 +299,8 @@ const Preview = props => {
         tax: productdata.tax,
         productSource: productdata?.productSource || "NORMAL",
       };
+      const referralCode = await getProductReferralCode(productdata.slug);
+      if (referralCode) newProduct.referralCode = referralCode;
 
       const updatedCart = [...existingCart, newProduct];
       setcartdetail(updatedCart);
