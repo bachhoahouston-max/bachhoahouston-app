@@ -27,7 +27,17 @@
     "ios-log": "npx react-native log-ios",
     "gradle-cache-clean": "rm -rf ~/.gradle/caches/ && cd android && ./gradlew stop && cd ..",
     "open-android": "open -a 'Android Studio' ",
-    "open-ios": "open -a Xcode "
+    "open-ios": "open -a Xcode ",
+    "env:staging": "node scripts/set-env.js staging",
+    "env:prod": "node scripts/set-env.js production",
+    "android:staging": "npm run env:staging && react-native run-android",
+    "android:prod": "npm run env:prod && react-native run-android",
+    "ios:staging": "npm run env:staging && react-native run-ios",
+    "ios:prod": "npm run env:prod && react-native run-ios",
+    "build-apk:staging": "npm run env:staging && cd android && ./gradlew clean && ./gradlew assembleRelease && cd ..",
+    "build-apk:prod": "npm run env:prod && cd android && ./gradlew clean && ./gradlew assembleRelease && cd ..",
+    "build-aab:staging": "npm run env:staging && cd android && ./gradlew clean && ./gradlew bundleRelease && cd ..",
+    "build-aab:prod": "npm run env:prod && cd android && ./gradlew clean && ./gradlew bundleRelease && cd .."
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",

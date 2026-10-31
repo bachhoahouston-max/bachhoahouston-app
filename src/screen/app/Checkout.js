@@ -1,6 +1,7 @@
 /* eslint-disable quotes */
 /* eslint-disable react-native/no-inline-styles */
 import {
+  Alert,
   Dimensions,
   FlatList,
   Image,
@@ -13,16 +14,16 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useContext, useEffect, useState} from 'react';
-import Constants, {Currency, FONTS} from '../../Assets/Helpers/constant';
-import {useIsFocused} from '@react-navigation/native';
+import React, { useContext, useEffect, useState } from 'react';
+import Constants, { Currency, FONTS } from '../../Assets/Helpers/constant';
+import { useIsFocused } from '@react-navigation/native';
 import {
   CartContext,
   LoadContext,
   ToastContext,
   UserContext,
 } from '../../../App';
-import {GetApi, Post} from '../../Assets/Helpers/Service';
+import { GetApi, Post } from '../../Assets/Helpers/Service';
 import moment from 'moment';
 import {
   CheckboxactiveIcon,
@@ -34,16 +35,16 @@ import {
 } from '../../../Theme';
 import DriverHeader from '../../Assets/Component/DriverHeader';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {navigate} from '../../../navigationRef';
-import {RadioButton} from 'react-native-paper';
-import {useTranslation} from 'react-i18next';
-import {Picker} from 'react-native-wheel-pick';
-import {Dropdown} from 'react-native-element-dropdown';
+import { navigate } from '../../../navigationRef';
+import { RadioButton } from 'react-native-paper';
+import { useTranslation } from 'react-i18next';
+import { Picker } from 'react-native-wheel-pick';
+import { Dropdown } from 'react-native-element-dropdown';
 // import StarRating from 'react-native-star-rating-widget';
 
-const Checkout = ({route}) => {
-  const {t} = useTranslation();
-  const {checkoutData} = route.params;
+const Checkout = ({ route }) => {
+  const { t, i18n } = useTranslation();
+  const { checkoutData } = route.params;
   const [toast, setToast] = useContext(ToastContext);
   const [loading, setLoading] = useContext(LoadContext);
   const [cartdetail, setcartdetail] = useContext(CartContext);
@@ -93,34 +94,34 @@ const Checkout = ({route}) => {
   const sumdata =
     cartdetail && cartdetail.length > 0
       ? (
-          cartdetail.reduce((a, item) => {
-            return (
-              Number(a) +
-              Number(item?.offer ? item?.offer : item?.price) *
-                Number(item?.qty)
-            );
-          }, 0) +
-          (checkoutData?.PickupType === 'localDelivery'
-            ? Number(deliveryTip)
-            : 0) +
-          (checkoutData?.PickupType === 'localDelivery' ||
+        cartdetail.reduce((a, item) => {
+          return (
+            Number(a) +
+            Number(item?.offer ? item?.offer : item?.price) *
+            Number(item?.qty)
+          );
+        }, 0) +
+        (checkoutData?.PickupType === 'localDelivery'
+          ? Number(deliveryTip)
+          : 0) +
+        (checkoutData?.PickupType === 'localDelivery' ||
           checkoutData?.PickupType === 'shipping'
-            ? Number(checkoutData?.deliveryFees)
-            : 0) -
-          (pointtype === 'REDEEM'
-            ? (Math.floor(pointamount / 1000) * 1000) / 1000
-            : couponDiscount)
-        ).toFixed(2)
+          ? Number(checkoutData?.deliveryFees)
+          : 0) -
+        (pointtype === 'REDEEM'
+          ? (Math.floor(pointamount / 1000) * 1000) / 1000
+          : couponDiscount)
+      ).toFixed(2)
       : null;
 
   const totaldata =
     cartdetail && cartdetail.length > 0
       ? cartdetail.reduce((a, item) => {
-          return (
-            Number(a) +
-            Number(item?.offer ? item?.offer : item?.price) * Number(item?.qty)
-          );
-        }, 0)
+        return (
+          Number(a) +
+          Number(item?.offer ? item?.offer : item?.price) * Number(item?.qty)
+        );
+      }, 0)
       : null;
 
   const submit = () => {
@@ -177,6 +178,7 @@ const Checkout = ({route}) => {
         pointtype === 'REDEEM'
           ? (Math.floor(pointamount / 1000) * 1000) / 1000
           : checkoutData?.couponDiscount || 0,
+      lang: i18n?.language === 'vi' ? 'vi' : 'en',
       referralCode,
     };
     if (user?._id) {
@@ -194,6 +196,21 @@ const Checkout = ({route}) => {
     Post('createProductRquest', data, {}).then(
       async res => {
         setLoading(false);
+        if (!res?.status) {
+          let errorMsg = res?.message || t('Failed to create order. Please try again.');
+          if (
+            i18n?.language === 'vi' &&
+            typeof errorMsg === 'string' &&
+            errorMsg.includes('is deleted. Remove the item to continue.')
+          ) {
+            errorMsg = errorMsg.replace(
+              'is deleted. Remove the item to continue.',
+              'đã bị xóa. Vui lòng xóa sản phẩm để tiếp tục.'
+            );
+          }
+          Alert.alert(t('Order Creation Failed'), errorMsg);
+          return;
+        }
         setTimeout(() => {
           setModalVisible(true);
         }, 500);
@@ -233,7 +250,7 @@ const Checkout = ({route}) => {
       {cartdetail && cartdetail.length > 0 ? (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          style={{paddingTop: 10}}>
+          style={{ paddingTop: 10 }}>
           {/* <View style={[styles.box, styles.shadowProp]}>
             {cartdetail.map((item, i) => {
               return (
@@ -274,13 +291,13 @@ const Checkout = ({route}) => {
             })}
           </View> */}
           {checkoutData?.PickupType === 'localDelivery' ||
-          checkoutData?.PickupType === 'shipping' ? (
+            checkoutData?.PickupType === 'shipping' ? (
             <View>
               <Text style={styles.deliveloctxt}>{t('Delivery Location')}</Text>
               <View
                 style={[
                   styles.totalpointcov,
-                  {alignItems: 'center', marginBottom: 30},
+                  { alignItems: 'center', marginBottom: 30 },
                 ]}>
                 <View style={styles.locatcov}>
                   <DeliveryIcon
@@ -289,12 +306,12 @@ const Checkout = ({route}) => {
                     color={Constants.black}
                   />
                 </View>
-                <View style={{marginLeft: 10}}>
+                <View style={{ marginLeft: 10 }}>
                   <Text style={styles.boxtxt}>{user?.username}</Text>
                   <Text
                     style={[
                       styles.boxtxt,
-                      {width: Dimensions.get('window').width - 100},
+                      { width: Dimensions.get('window').width - 100 },
                     ]}
                     numberOfLines={1}>
                     {user?.ApartmentNo
@@ -305,7 +322,7 @@ const Checkout = ({route}) => {
               </View>
 
               <View style={styles.timePickerView}>
-                <Text style={[styles.deliveloctxt, {marginBottom: 0}]}>
+                <Text style={[styles.deliveloctxt, { marginBottom: 0 }]}>
                   {t('Select Time Slot')}
                 </Text>
                 <Picker
@@ -334,7 +351,7 @@ const Checkout = ({route}) => {
                   label={t('Pay Online')} //Organization
                   value="pay"
                   position="trailing"
-                  style={[styles.box2, {flexDirection: 'row-reverse'}]}
+                  style={[styles.box2, { flexDirection: 'row-reverse' }]}
                   color={Constants.pink}
                   uncheckedColor={Constants.black}
                   labelStyle={{
@@ -343,7 +360,7 @@ const Checkout = ({route}) => {
                     fontWeight: '700',
                     marginLeft: 10,
                   }}
-                  // labelVariant="displayLarge"
+                // labelVariant="displayLarge"
                 />
 
                 <RadioButton.Item
@@ -351,7 +368,7 @@ const Checkout = ({route}) => {
                   label={t('Cash on delivery')} //Organization
                   value="cod"
                   position="trailing"
-                  style={[styles.box2, {flexDirection: 'row-reverse'}]}
+                  style={[styles.box2, { flexDirection: 'row-reverse' }]}
                   // style={{width:"60%"}}
                   color={Constants.pink}
                   uncheckedColor={Constants.black}
@@ -362,21 +379,21 @@ const Checkout = ({route}) => {
                     marginLeft: 10,
                     // flex:1
                   }}
-                  // labelVariant="displayLarge"
+                // labelVariant="displayLarge"
                 />
               </RadioButton.Group>
 
               <View
                 style={[
                   styles.totalpointcov,
-                  {marginBottom: 5, marginTop: 20},
+                  { marginBottom: 5, marginTop: 20 },
                 ]}>
                 <Text style={styles.boxtxt}>{t('You have total')}</Text>
-                <View style={{flexDirection: 'row'}}>
+                <View style={{ flexDirection: 'row' }}>
                   <StarIcon
                     height={20}
                     width={20}
-                    style={{marginHorizontal: 5}}
+                    style={{ marginHorizontal: 5 }}
                     color={Constants.pink}
                   />
                   <Text style={styles.boxtxt}>
@@ -412,11 +429,11 @@ const Checkout = ({route}) => {
                     />
                   )}
                   <Text style={styles.boxtxt}> Use</Text>
-                  <View style={{flexDirection: 'row'}}>
+                  <View style={{ flexDirection: 'row' }}>
                     <StarIcon
                       height={20}
                       width={20}
-                      style={{marginHorizontal: 5}}
+                      style={{ marginHorizontal: 5 }}
                       color={Constants.pink}
                     />
                     <Text style={styles.boxtxt}>
@@ -426,19 +443,19 @@ const Checkout = ({route}) => {
                 </View>
               ) : (
                 <View style={styles.totalpointcov}>
-                  <Text style={[styles.boxtxt, {color: Constants.saffron}]}>
+                  <Text style={[styles.boxtxt, { color: Constants.saffron }]}>
                     {t('Minimum 25,000 points required to redeem.')}
                   </Text>
                 </View>
               )}
             </View>
           ) : (
-            <View style={{marginBottom: 10}}>
+            <View style={{ marginBottom: 10 }}>
               <Text style={styles.deliveloctxt}>{t('Pickup Location')}</Text>
               <View
                 style={[
                   styles.totalpointcov,
-                  {alignItems: 'center', marginBottom: 30},
+                  { alignItems: 'center', marginBottom: 30 },
                 ]}>
                 <View style={styles.locatcov}>
                   <DeliveryIcon
@@ -447,46 +464,46 @@ const Checkout = ({route}) => {
                     color={Constants.black}
                   />
                 </View>
-                <View style={{marginLeft: 10}}>
+                <View style={{ marginLeft: 10 }}>
                   <Text
                     style={[
                       styles.boxtxt,
-                      {fontFamily: FONTS.Bold, fontSize: 18},
+                      { fontFamily: FONTS.Bold, fontSize: 18 },
                     ]}>
                     Bach Hoa Houston
                   </Text>
                   <Text
                     style={[
                       styles.boxtxt,
-                      {width: Dimensions.get('window').width - 100},
+                      { width: Dimensions.get('window').width - 100 },
                     ]}
                     numberOfLines={1}>
                     11360 Bellaire Blvd Suite 700, Houston, TX 77072
                   </Text>
                 </View>
               </View>
-              <View style={[styles.amountlist, {marginBottom: 0}]}>
-                <Text style={[styles.deliveloctxt, {marginLeft: 0}]}>
+              <View style={[styles.amountlist, { marginBottom: 0 }]}>
+                <Text style={[styles.deliveloctxt, { marginLeft: 0 }]}>
                   {t('Pickup Date')}
                 </Text>
-                <Text style={[styles.boxtxt, {marginTop: 0}]}>
+                <Text style={[styles.boxtxt, { marginTop: 0 }]}>
                   {checkoutData?.pickupDate}
                 </Text>
               </View>
               <View style={styles.amountlist}>
-                <Text style={[styles.deliveloctxt, {marginLeft: 0}]}>
+                <Text style={[styles.deliveloctxt, { marginLeft: 0 }]}>
                   {t('Pickup Type')}
                 </Text>
-                <Text style={[styles.boxtxt, {marginTop: 0}]}>
+                <Text style={[styles.boxtxt, { marginTop: 0 }]}>
                   {checkoutData?.PickupType === 'driveUp'
                     ? t('Curbside Pickup')
                     : checkoutData?.PickupType === 'orderPickup'
-                    ? t('In Store Pickup')
-                    : checkoutData?.PickupType === 'localDelivery'
-                    ? t('Next Day Local Delivery')
-                    : checkoutData?.PickupType === 'shipping'
-                    ? t('Shipping')
-                    : t('Unknown')}
+                      ? t('In Store Pickup')
+                      : checkoutData?.PickupType === 'localDelivery'
+                        ? t('Next Day Local Delivery')
+                        : checkoutData?.PickupType === 'shipping'
+                          ? t('Shipping')
+                          : t('Unknown')}
                 </Text>
               </View>
             </View>
@@ -529,17 +546,17 @@ const Checkout = ({route}) => {
               </View>
               {(checkoutData?.PickupType === 'localDelivery' ||
                 checkoutData?.PickupType === 'shipping') && (
-                <View style={styles.amountlist}>
-                  <View style={{flexDirection: 'row'}}>
-                    <Text style={styles.boxtxt}>{t('Delivery Fee')}</Text>
+                  <View style={styles.amountlist}>
+                    <View style={{ flexDirection: 'row' }}>
+                      <Text style={styles.boxtxt}>{t('Delivery Fee')}</Text>
+                    </View>
+                    <Text style={styles.boxtxt}>
+                      {Currency} {checkoutData?.deliveryFees}
+                    </Text>
                   </View>
-                  <Text style={styles.boxtxt}>
-                    {Currency} {checkoutData?.deliveryFees}
-                  </Text>
-                </View>
-              )}
+                )}
               <View style={styles.amountlist}>
-                <View style={{flexDirection: 'row'}}>
+                <View style={{ flexDirection: 'row' }}>
                   <Text style={styles.boxtxt}>{t('Tax')}</Text>
                 </View>
                 <Text style={styles.boxtxt}>
@@ -547,7 +564,7 @@ const Checkout = ({route}) => {
                 </Text>
               </View>
               <View style={styles.amountlist}>
-                <View style={{flexDirection: 'row'}}>
+                <View style={{ flexDirection: 'row' }}>
                   <Text style={styles.boxtxt}>{t('Coupon Discount')}</Text>
                 </View>
                 <Text style={styles.boxtxt}>
@@ -615,7 +632,7 @@ const Checkout = ({route}) => {
                         gap: 5,
                       }}>
                       <Text
-                        style={[styles.boxtxt, {textDecorationLine: 'none'}]}>
+                        style={[styles.boxtxt, { textDecorationLine: 'none' }]}>
                         {Currency}
                         {deliveryTip}
                       </Text>
@@ -629,7 +646,7 @@ const Checkout = ({route}) => {
               )}
               {pointtype === 'REDEEM' && (
                 <View style={styles.amountlist}>
-                  <View style={{flexDirection: 'row'}}>
+                  <View style={{ flexDirection: 'row' }}>
                     <Text style={styles.boxtxt}>{t('Discount')}</Text>
                   </View>
                   <Text style={styles.boxtxt}>
@@ -688,7 +705,7 @@ const Checkout = ({route}) => {
         }}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <View style={{backgroundColor: 'white', alignItems: 'center'}}>
+            <View style={{ backgroundColor: 'white', alignItems: 'center' }}>
               <Text style={styles.txt}>{t('Your Order is Confirmed.')}</Text>
               <Text style={styles.txt2}>{t('Thanks for your Order')}</Text>
               <View style={styles.cancelAndLogoutButtonWrapStyle}>
@@ -732,7 +749,7 @@ const styles = StyleSheet.create({
   },
   shadowProp: {
     // shadowColor: Constants.black,
-    shadowOffset: {width: -2, height: 4},
+    shadowOffset: { width: -2, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 15,
     elevation: 5,

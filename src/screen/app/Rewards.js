@@ -1,6 +1,7 @@
 
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Image,
   Linking,
   Modal,
@@ -19,7 +20,7 @@ import moment from 'moment';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DatePickerModal } from 'react-native-paper-dates';
-import { ImagePlus, Upload, X, Calendar, ChevronRight } from 'lucide-react-native';
+import { Upload, Calendar, ChevronRight, Camera, CheckCircle2, Pencil, Store, ReceiptText } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { CartContext, LoadContext, UserContext } from '../../../App';
@@ -581,12 +582,37 @@ const StatusTab = ({ t, isVi, isLoggedIn, summary }) => {
   );
 };
 
-const emptyForm = { image: '', amount: '', purchaseDate: '', note: '' };
+const emptyForm = { image: '', amount: '', purchaseDate: '', storeName: '', receiptNumber: '', note: '' };
+const ALL_EDITABLE = { amount: true, purchaseDate: true, storeName: true, receiptNumber: true };
+
+// Read-only value with a pencil "Edit" that turns into an input
+const ReviewField = ({ t, icon: Icon, label, value, display, editing, onEdit, children }) => (
+  <View>
+    <Text style={styles.label}>{label}</Text>
+    <View style={[styles.input, styles.reviewBox, editing && { borderColor: C.green }]}>
+      {Icon && <Icon size={18} color={C.grey} />}
+      {editing ? (
+        children
+      ) : (
+        <>
+          <Text style={styles.reviewValue} numberOfLines={1}>
+            {display || value || '-'}
+          </Text>
+          <TouchableOpacity style={styles.editBtn} onPress={onEdit}>
+            <Pencil size={14} color={C.button} />
+            <Text style={styles.editTxt}>{t('Edit')}</Text>
+          </TouchableOpacity>
+        </>
+      )}
+    </View>
+  </View>
+);
 
 const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
   const [form, setForm] = useState(emptyForm);
   const [receipts, setReceipts] = useState([]);
-  const [scan, setScan] = useState(null);
+  const [scan, setScan] = useState(null); // { status: 'scanning' | 'scanned' | 'manual', ...scan response }
+  const [editing, setEditing] = useState({});
   const [dateOpen, setDateOpen] = useState(false);
   const cameraRef = useRef(null);
 
@@ -603,6 +629,47 @@ const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
 
   if (!isLoggedIn) return <SignInPrompt t={t} />;
 
+  const reset = () => {
+    setForm(emptyForm);
+    setScan(null);
+    setEditing({});
+  };
+
+  const runScan = image => {
+    setScan({ status: 'scanning' });
+    Post('rewards/receipt/scan', { image }, {}).then(
+      res => {
+        const data = res?.data || {};
+        if (!data.scanned) {
+          setScan({ status: 'manual', message: data.message || res?.message });
+          setEditing(ALL_EDITABLE);
+          return;
+        }
+        const s = data.scan;
+        setScan({ status: 'scanned', ...data });
+        // Anything the scan couldn't read starts as an input
+        setEditing({
+          amount: s.subtotal === null,
+          purchaseDate: !s.purchaseDate,
+          storeName: s.isStoreReceipt === false && !s.storeName,
+          receiptNumber: !s.receiptNumber,
+        });
+        setForm(f => ({
+          ...f,
+          amount: s.subtotal !== null ? Number(s.subtotal).toFixed(2) : '',
+          purchaseDate: s.purchaseDate || '',
+          // Our own receipts are the only ones that earn points, so default to our store unless it's clearly another
+          storeName: s.storeName || (s.isStoreReceipt === false ? '' : 'Bách Hoá Houston'),
+          receiptNumber: s.receiptNumber || '',
+        }));
+      },
+      err => {
+        setScan({ status: 'manual', message: err?.message });
+        setEditing(ALL_EDITABLE);
+      },
+    );
+  };
+
   const getImageValue = img => {
     const asset = img?.assets?.[0];
     if (!asset) return;
@@ -611,37 +678,22 @@ const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
       .then(
         res => {
           if (res?.status && res?.data?.file) {
-            const image = res.data.file;
-            setForm(f => ({ ...f, image }));
-            setScan({ status: 'scanning' });
-            Post('rewards/receipt/scan', { image }, {}).then(
-              scanRes => {
-                const detected = scanRes?.data || scanRes;
-                setScan({status: 'scanned', ...detected});
-                setForm(f => ({
-                  ...f,
-                  amount:
-                    detected?.amount !== undefined && detected?.amount !== null
-                      ? String(detected.amount)
-                      : f.amount,
-                  purchaseDate: detected?.purchaseDate || f.purchaseDate,
-                  note: detected?.note || f.note,
-                  storeName: detected?.storeName || f.storeName,
-                  receiptNumber: detected?.receiptNumber || f.receiptNumber,
-                }));
-              },
-              err => {
-                setScan({status: 'failed'});
-                Toast.show({type: 'error', text1: err?.message || t('Receipt scan failed')});
-              },
-            );
-          }
-          else Toast.show({ type: 'error', text1: t('Upload failed') });
+            setForm({ ...emptyForm, image: res.data.file });
+            setEditing({});
+            runScan(res.data.file);
+          } else Toast.show({ type: 'error', text1: t('Upload failed') });
         },
         err => Toast.show({ type: 'error', text1: err?.message || t('Upload failed') }),
       )
       .finally(() => setLoading(false));
   };
+
+  const rate = scan?.pointsPerDollar || 10;
+  const estimatedPoints =
+    form.amount !== '' && Number(form.amount) > 0 ? Math.floor((Math.round(Number(form.amount) * 100) * rate) / 100) : 0;
+  const declined = scan?.scan?.paymentStatus === 'declined';
+  const notOurStore = scan?.status === 'scanned' && scan.scan.isStoreReceipt === false;
+  const editField = key => () => setEditing(e => ({ ...e, [key]: true }));
 
   const submit = () => {
     if (!form.image) {
@@ -649,7 +701,7 @@ const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
       return;
     }
     setLoading(true);
-    Post('rewards/receipt', {...form, scanToken: scan?.scanToken}, {}).then(
+    Post('rewards/receipt', { ...form, scanToken: scan?.scanToken }, {}).then(
       res => {
         setLoading(false);
         if (res?.status === false) {
@@ -657,8 +709,7 @@ const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
           return;
         }
         Toast.show({ type: 'success', text1: res?.data?.message || t('Receipt uploaded') });
-        setForm(emptyForm);
-        setScan(null);
+        reset();
         loadReceipts();
         onUploaded?.();
       },
@@ -681,73 +732,155 @@ const UploadTab = ({ t, isLoggedIn, setLoading, onUploaded }) => {
       <View style={styles.panel}>
         <Text style={styles.panelTitle}>{t('Upload an in-store receipt')}</Text>
         <Text style={styles.body}>
-          {t("Shopped in store? Upload your receipt and we'll add points at your tier rate once it's reviewed.")}
+          {t("Shopped in store? Snap your receipt — we'll read it for you and add points at your tier rate once it's reviewed.")}
         </Text>
 
-        {form.image ? (
-          <View style={{ marginTop: 14 }}>
-            <Image source={{ uri: form.image }} style={styles.receiptPreview} resizeMode="contain" />
-            <TouchableOpacity
-              style={styles.removeImg}
-              onPress={() => {
-                setForm({...form, image: ''});
-                setScan(null);
-              }}>
-              <X size={16} color="#374151" />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <TouchableOpacity style={styles.dropzone} onPress={() => cameraRef.current?.show()}>
-            <ImagePlus color={C.green} size={36} />
-            <Text style={[styles.body, { fontFamily: FONTS.Medium }]}>{t('Tap to choose a receipt photo')}</Text>
+        {!form.image ? (
+          <TouchableOpacity style={styles.scanBtn} onPress={() => cameraRef.current?.show()}>
+            <Camera color="#fff" size={34} />
+            <Text style={styles.scanBtnTitle}>{t('Scan receipt')}</Text>
+            <Text style={styles.scanBtnSub}>{t('Take a photo or choose one from your gallery')}</Text>
           </TouchableOpacity>
-        )}
-        {scan?.status === 'scanning' && (
-          <Text style={[styles.smallGrey, { marginTop: 10 }]}>{t('Reading your receipt...')}</Text>
+        ) : (
+          <View
+            style={[
+              styles.scanCard,
+              scan?.status === 'scanned' && { borderColor: C.earn, backgroundColor: '#EEF9EF' },
+            ]}>
+            <Image source={{ uri: form.image }} style={styles.receiptThumbLg} resizeMode="cover" />
+            <View style={{ flex: 1, gap: 4 }}>
+              {scan?.status === 'scanning' && (
+                <View style={styles.scanStatusRow}>
+                  <ActivityIndicator size="small" color={C.green} />
+                  <Text style={[styles.body, { fontFamily: FONTS.SemiBold, color: C.green }]}>
+                    {t('Reading your receipt…')}
+                  </Text>
+                </View>
+              )}
+              {scan?.status === 'scanned' && (
+                <>
+                  <View style={styles.scanStatusRow}>
+                    <CheckCircle2 size={22} color={C.earn} />
+                    <Text style={[styles.body, { fontFamily: FONTS.Bold, color: C.earn }]}>{t('Receipt scanned')}</Text>
+                  </View>
+                  <Text style={[styles.smallGrey, { color: C.earn }]}>{t('Receipt details detected — please review.')}</Text>
+                </>
+              )}
+              {scan?.status === 'manual' && (
+                <Text style={styles.smallGrey}>{scan.message || t('Please enter the receipt details below.')}</Text>
+              )}
+              <TouchableOpacity onPress={reset}>
+                <Text style={styles.linkTxt}>{t('Use a different photo')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
         {scan?.alreadySubmitted && (
           <Text style={styles.receiptWarning}>{t('This receipt has already been submitted for points.')}</Text>
         )}
-        {scan?.paymentStatus === 'declined' && (
+        {declined && (
           <Text style={styles.receiptWarning}>
             {t('This receipt shows the payment was declined. Points are only given for completed purchases.')}
           </Text>
         )}
-        {scan?.isStoreReceipt === false && (
+        {notOurStore && (
           <Text style={styles.receiptWarning}>
             {t("This doesn't look like a Bách Hoá Houston receipt. Only Bách Hoá Houston purchases earn points.")}
           </Text>
         )}
 
-        <Text style={styles.label}>{t('Receipt total ($)')}</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="decimal-pad"
-          placeholder="0.00"
-          placeholderTextColor={C.lightGrey}
-          value={form.amount}
-          onChangeText={v => /^\d{0,5}(\.\d{0,2})?$/.test(v) && setForm({ ...form, amount: v })}
-        />
+        {!!form.image && scan?.status !== 'scanning' && (
+          <>
+            <ReviewField
+              t={t}
+              label={t('Eligible subtotal before tax ($)')}
+              value={form.amount}
+              display={form.amount !== '' ? `$${form.amount}` : ''}
+              editing={editing.amount}
+              onEdit={editField('amount')}>
+              <Text style={{ color: C.grey }}>$</Text>
+              <TextInput
+                style={styles.reviewInput}
+                keyboardType="decimal-pad"
+                placeholder="0.00"
+                placeholderTextColor={C.lightGrey}
+                autoFocus={!!editing.amount && scan?.status === 'scanned'}
+                value={form.amount}
+                onChangeText={v => /^\d{0,5}(\.\d{0,2})?$/.test(v) && setForm({ ...form, amount: v })}
+              />
+            </ReviewField>
+            <Text style={[styles.smallGrey, { marginTop: 4 }]}>{t('Points are based on eligible purchases before tax.')}</Text>
 
-        <Text style={styles.label}>{t('Purchase date')}</Text>
-        <TouchableOpacity style={[styles.input, styles.dateInput]} onPress={() => setDateOpen(true)}>
-          <Text style={{ color: form.purchaseDate ? '#111' : C.lightGrey, fontFamily: FONTS.Regular }}>
-            {form.purchaseDate ? moment(form.purchaseDate, 'YYYY-MM-DD').format('MMM D, YYYY') : t('Select date')}
-          </Text>
-          <Calendar size={18} color={C.grey} />
-        </TouchableOpacity>
+            <Text style={styles.label}>{t('Purchase date')}</Text>
+            <TouchableOpacity style={[styles.input, styles.dateInput]} onPress={() => setDateOpen(true)}>
+              <Text style={{ color: form.purchaseDate ? '#111' : C.lightGrey, fontFamily: FONTS.Regular }}>
+                {form.purchaseDate ? moment(form.purchaseDate, 'YYYY-MM-DD').format('MMM D, YYYY') : t('Select date')}
+              </Text>
+              <Calendar size={18} color={C.grey} />
+            </TouchableOpacity>
 
-        <Text style={styles.label}>{t('Note (optional)')}</Text>
-        <TextInput
-          style={styles.input}
-          value={form.note}
-          onChangeText={v => setForm({ ...form, note: v })}
-        />
+            <ReviewField
+              t={t}
+              icon={Store}
+              label={t('Store')}
+              value={form.storeName}
+              editing={editing.storeName}
+              onEdit={editField('storeName')}>
+              <TextInput
+                style={styles.reviewInput}
+                placeholder="Bách Hoá Houston"
+                placeholderTextColor={C.lightGrey}
+                value={form.storeName}
+                onChangeText={v => setForm({ ...form, storeName: v })}
+              />
+            </ReviewField>
 
-        <TouchableOpacity style={styles.submitBtn} onPress={submit}>
-          <Upload size={18} color="#fff" />
-          <Text style={styles.addTxt}>{t('Submit receipt')}</Text>
-        </TouchableOpacity>
+            <ReviewField
+              t={t}
+              icon={ReceiptText}
+              label={t('Receipt number')}
+              value={form.receiptNumber}
+              editing={editing.receiptNumber}
+              onEdit={editField('receiptNumber')}>
+              <TextInput
+                style={styles.reviewInput}
+                placeholder={t('Payment ID on the receipt')}
+                placeholderTextColor={C.lightGrey}
+                value={form.receiptNumber}
+                onChangeText={v => setForm({ ...form, receiptNumber: v })}
+              />
+            </ReviewField>
+
+            <Text style={styles.label}>{t('Note (optional)')}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={t('Add a note (optional)')}
+              placeholderTextColor={C.lightGrey}
+              value={form.note}
+              onChangeText={v => setForm({ ...form, note: v })}
+            />
+
+            {estimatedPoints > 0 && !declined && (
+              <View style={styles.estimateBox}>
+                <Text style={[styles.body, { color: '#0B2F5E' }]}>
+                  {t("You'll earn about")}{' '}
+                  <Text style={{ fontFamily: FONTS.Bold }}>
+                    {fmt(estimatedPoints)} {t('pts')}
+                  </Text>{' '}
+                  {t("on this receipt once it's approved.")}
+                </Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={[styles.submitBtn, scan?.alreadySubmitted && { opacity: 0.5 }]}
+              disabled={scan?.alreadySubmitted}
+              onPress={submit}>
+              <Upload size={18} color="#fff" />
+              <Text style={styles.addTxt}>{t('Submit receipt')}</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       <View style={[styles.panel, { paddingHorizontal: 0 }]}>
@@ -836,14 +969,17 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 16,
     marginHorizontal: 14,
-    padding: 24,
+    paddingVertical: 24,
+    // paddingLeft: 24,
+    paddingRight: 24,
     borderRadius: 24,
     overflow: 'hidden',
+    alignSelf: 'stretch',
   },
-  tierWrap: { paddingHorizontal: 32 },
-  tier: { fontFamily: FONTS.SemiBold, fontSize: 13, color: '#0B2F5E', letterSpacing: 3.5 },
-  points: { fontFamily: FONTS.Bold, fontSize: 56, color: '#0B2F5E', lineHeight: 68, marginTop: 4 },
-  pointsLabel: { fontFamily: FONTS.Medium, fontSize: 15, color: '#0B4F8A' },
+  tierWrap: { alignSelf: 'center', alignItems: 'center', paddingHorizontal: 20 },
+  tier: { fontFamily: FONTS.SemiBold, fontSize: 13, color: '#0B2F5E', letterSpacing: 3.5, textAlign: 'center', paddingLeft: 3.5 },
+  points: { fontFamily: FONTS.Bold, fontSize: 56, color: '#0B2F5E', lineHeight: 68, marginTop: 4, textAlign: 'center', alignSelf: 'stretch', includeFontPadding: false },
+  pointsLabel: { fontFamily: FONTS.Medium, fontSize: 15, color: '#0B4F8A', textAlign: 'center', alignSelf: 'stretch' },
   pillRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 12 },
   pill: { backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
   pillTxt: { fontFamily: FONTS.Regular, fontSize: 12, color: '#4B5563' },
@@ -934,6 +1070,45 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     alignItems: 'center',
     gap: 8,
+  },
+  scanBtn: {
+    marginTop: 14,
+    backgroundColor: C.green,
+    borderRadius: 16,
+    paddingVertical: 26,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    gap: 6,
+  },
+  scanBtnTitle: { fontFamily: FONTS.Bold, fontSize: 16, color: '#fff' },
+  scanBtnSub: { fontFamily: FONTS.Regular, fontSize: 12, color: 'rgba(255,255,255,0.8)', textAlign: 'center' },
+  scanCard: {
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 12,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#D1D5DB',
+    borderRadius: 16,
+    backgroundColor: '#F9FAFB',
+  },
+  receiptThumbLg: { width: 90, height: 120, borderRadius: 10, backgroundColor: '#E5E7EB' },
+  scanStatusRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  linkTxt: { fontFamily: FONTS.Regular, fontSize: 13, color: C.grey, textDecorationLine: 'underline', marginTop: 4 },
+  reviewBox: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  reviewValue: { flex: 1, fontFamily: FONTS.Regular, fontSize: 14, color: '#111' },
+  reviewInput: { flex: 1, padding: 0, fontSize: 14, color: '#111', fontFamily: FONTS.Regular },
+  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  editTxt: { fontFamily: FONTS.Medium, fontSize: 13, color: C.button },
+  estimateBox: {
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: '#FFF8E6',
+    borderWidth: 1,
+    borderColor: 'rgba(245,184,46,0.4)',
   },
   receiptPreview: { width: '100%', height: 240, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: '#F9FAFB' },
   removeImg: { position: 'absolute', top: 8, right: 8, backgroundColor: 'rgba(255,255,255,0.9)', borderRadius: 14, padding: 4 },

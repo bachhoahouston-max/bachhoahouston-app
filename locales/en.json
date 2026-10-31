@@ -561,6 +561,8 @@
   "Silver": "Silver",
   "Gold": "Gold",
   "Diamond": "Diamond",
+  "Order Creation Failed": "Order Creation Failed",
+  "is deleted. Remove the item to continue.": "is deleted. Remove the item to continue.",
   "Load more": "Load more",
   "Loading...": "Loading...",
   "Receipt scan failed": "Receipt scan failed",
