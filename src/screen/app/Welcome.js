@@ -51,7 +51,7 @@ export default function WelcomeScreen() {
         <Image
           source={
             welcomeImage
-              ? { uri: welcomeImage }
+              ? null
               : require('../../Assets/Images/welcome.png')
           }
           style={styles.basketImage}
@@ -60,7 +60,12 @@ export default function WelcomeScreen() {
 
         <View style={styles.logoContainer}>
           <Image
-            source={require('../../Assets/Images/newlogo.png')}
+            // source={require('../../Assets/Images/newlogo.png')}
+            source={
+              welcomeImage
+                ? { uri: welcomeImage }
+                : require('../../Assets/Images/newlogo.png')
+            }
             style={styles.logoImage}
             resizeMode="contain"
           />
