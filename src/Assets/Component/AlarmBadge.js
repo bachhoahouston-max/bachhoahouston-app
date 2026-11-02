@@ -48,6 +48,17 @@ export default function AlarmBadge({ currentSale }) {
         (currentSale?.days || 0) * 24 + (currentSale?.hours || 0)
     ).padStart(2, '0');
     const minutes = String(currentSale?.minutes || 0).padStart(2, '0');
+    const endDate = currentSale?.endDateTime
+        ? new Date(currentSale.endDateTime)
+        : null;
+    const endDateLabel =
+        endDate && !Number.isNaN(endDate.getTime())
+            ? endDate.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+            })
+            : null;
 
     return (
         <LinearGradient
@@ -89,6 +100,9 @@ export default function AlarmBadge({ currentSale }) {
                     <Text style={styles.countdown}>
                         {hours}h : {minutes}m
                     </Text>
+                    {endDateLabel && (
+                        <Text style={styles.endDate}>Ends {endDateLabel}</Text>
+                    )}
                 </View>
             </View>
         </LinearGradient>
@@ -145,5 +159,10 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '800',
         letterSpacing: 0.5,
+    },
+    endDate: {
+        color: '#D4AF37',
+        fontSize: 9,
+        fontWeight: '700',
     },
 });

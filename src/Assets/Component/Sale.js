@@ -61,6 +61,7 @@ const Sale = ({ setIsSale }) => {
             ...calculateTimeLeft(distance),
             status: 'upcoming',
             message: 'Sale starts in',
+            endDateTime: sale.endDateTime,
           };
         } else if (now >= startDate && now < endDate) {
           const distance = endDate - now;
@@ -68,6 +69,7 @@ const Sale = ({ setIsSale }) => {
             ...calculateTimeLeft(distance),
             status: 'active',
             message: 'Sale ends in',
+            endDateTime: sale.endDateTime,
           };
         } else {
           newCountdown[sale._id] = {
