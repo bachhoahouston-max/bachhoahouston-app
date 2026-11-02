@@ -228,6 +228,7 @@ const Rewards = () => {
         </View>
 
         {/* Points header */}
+        <View style={{ width: '100%', paddingHorizontal: 14 }}>
         <LinearGradient colors={['#E6F3E8', '#F4F8FC']} style={styles.header}>
           <Leaf size={72} style={{ left: -22, top: 22, opacity: 0.08, transform: [{ rotate: '-30deg' }] }} />
           <Leaf size={52} style={{ left: -8, bottom: 0, opacity: 0.06, transform: [{ rotate: '20deg' }] }} />
@@ -275,6 +276,7 @@ const Rewards = () => {
             </View>
           )}
         </LinearGradient>
+        </View>
 
         {tab === 'redeem' && (
           <RedeemTab
@@ -378,7 +380,7 @@ const RedeemTab = ({ t, groups, banner, catalogLoaded, rewardName, rewardState, 
                 <View key={reward._id} style={styles.card}>
                   <Image
                     source={rewardImageSource(reward.product)}
-                    style={{ width: '100%', height: 72 }}
+                    style={{ width: '100%', height: 165, borderRadius: 12 }}
                     resizeMode="contain"
                   />
                   <Text style={styles.cardName} numberOfLines={2}>
@@ -968,13 +970,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
     marginBottom: 16,
-    marginHorizontal: 14,
     paddingVertical: 24,
-    // paddingLeft: 24,
-    paddingRight: 24,
+    paddingHorizontal: 0,
     borderRadius: 24,
     overflow: 'hidden',
-    alignSelf: 'stretch',
+    width: '100%',
   },
   tierWrap: { alignSelf: 'center', alignItems: 'center', paddingHorizontal: 20 },
   tier: { fontFamily: FONTS.SemiBold, fontSize: 13, color: '#0B2F5E', letterSpacing: 3.5, textAlign: 'center', paddingLeft: 3.5 },
