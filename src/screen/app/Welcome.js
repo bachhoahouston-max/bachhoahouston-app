@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { navigate } from '../../../navigationRef';
 import { GetApi } from '../../Assets/Helpers/Service';
 
@@ -12,8 +13,24 @@ export default function WelcomeScreen() {
   const { t, i18n } = useTranslation();
   const [welcomeImage, setWelcomeImage] = useState('');
   const [announcement, setAnnouncement] = useState('');
+  const [selectLanguage, setSelectLanguage] = useState(
+    i18n.language?.toLowerCase().startsWith('vi') ? 'Vietnames' : 'English',
+  );
 
   useEffect(() => {
+    AsyncStorage.getItem('LANG').then(language => {
+      if (language === 'en' || language === 'vi') {
+        const selectedLanguage = language === 'vi' ? 'Vietnames' : 'English';
+        setSelectLanguage(selectedLanguage);
+        i18n.changeLanguage(language);
+      }
+    });
+  }, [i18n]);
+
+  useEffect(() => {
+    setSelectLanguage(
+      i18n.language?.toLowerCase().startsWith('vi') ? 'Vietnames' : 'English',
+    );
     GetApi('getsetting', {})
       .then(res => {
         const setting = res?.setting?.[0];
@@ -48,6 +65,44 @@ export default function WelcomeScreen() {
     <View style={styles.container}>
       {/* Top Section with Light Green Background */}
       <View style={styles.topSection}>
+        <View style={styles.languageSwitcher}>
+          <TouchableOpacity
+            style={[
+              styles.langButton,
+              selectLanguage === 'English' && styles.langButtonActive,
+            ]}
+            onPress={async () => {
+              await AsyncStorage.setItem('LANG', 'en');
+              i18n.changeLanguage('en');
+              setSelectLanguage('English');
+            }}>
+            <Text
+              style={[
+                styles.langButtonText,
+                selectLanguage === 'English' && styles.langButtonTextActive,
+              ]}>
+              EN
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.langButton,
+              selectLanguage === 'Vietnames' && styles.langButtonActive,
+            ]}
+            onPress={async () => {
+              await AsyncStorage.setItem('LANG', 'vi');
+              i18n.changeLanguage('vi');
+              setSelectLanguage('Vietnames');
+            }}>
+            <Text
+              style={[
+                styles.langButtonText,
+                selectLanguage === 'Vietnames' && styles.langButtonTextActive,
+              ]}>
+              VI
+            </Text>
+          </TouchableOpacity>
+        </View>
         <Image
           source={
             welcomeImage
@@ -115,6 +170,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     paddingTop: 120,
+  },
+  languageSwitcher: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    padding: 3,
+    zIndex: 1,
+  },
+  langButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 6,
+    borderRadius: 18,
+  },
+  langButtonActive: {
+    backgroundColor: '#DCE775',
+  },
+  langButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2E7D32',
+  },
+  langButtonTextActive: {
+    color: '#FFFFFF',
   },
   basketImage: {
     width: 300,
