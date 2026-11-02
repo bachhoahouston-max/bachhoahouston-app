@@ -10,7 +10,7 @@ import Svg, { Defs, Stop, Rect } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
 import { AlarmClock } from 'lucide-react-native';
 
-export default function AlarmBadge({ currentSale }) {
+export default function AlarmBadge({ currentSale, endDateTime }) {
     const rotateAnim = useRef(new Animated.Value(0)).current;
     const [size, setSize] = useState({ width: 0, height: 0 });
 
@@ -44,12 +44,13 @@ export default function AlarmBadge({ currentSale }) {
         outputRange: ['-20deg', '20deg'],
     });
 
-    const hours = String(
-        (currentSale?.days || 0) * 24 + (currentSale?.hours || 0)
-    ).padStart(2, '0');
+    const days = String(currentSale?.days || 0);
+    const hours = String(currentSale?.hours || 0);
     const minutes = String(currentSale?.minutes || 0).padStart(2, '0');
-    const endDate = currentSale?.endDateTime
-        ? new Date(currentSale.endDateTime)
+    const saleEndDateTime =
+        endDateTime || currentSale?.endDateTime || currentSale?.endDate;
+    const endDate = saleEndDateTime
+        ? new Date(saleEndDateTime)
         : null;
     const endDateLabel =
         endDate && !Number.isNaN(endDate.getTime())
@@ -98,11 +99,11 @@ export default function AlarmBadge({ currentSale }) {
                 <View style={styles.textGroup}>
                     <Text style={styles.label}>FLASH DEAL</Text>
                     <Text style={styles.countdown}>
-                        {hours}h : {minutes}m
+                        {days}d : {hours}h : {minutes}m
                     </Text>
-                    {endDateLabel && (
+                    {/* {endDateLabel && (
                         <Text style={styles.endDate}>Ends {endDateLabel}</Text>
-                    )}
+                    )} */}
                 </View>
             </View>
         </LinearGradient>
