@@ -1,57 +1,124 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  useWindowDimensions,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { navigate } from '../../../navigationRef';
+import { GetApi } from '../../Assets/Helpers/Service';
 
-const { width } = Dimensions.get('window');
+const defaultWelcomeImage = require('../../Assets/Images/welcome.png');
 
 export default function WelcomeScreen() {
   const navigation = useNavigation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { height } = useWindowDimensions();
+  const [setting, setSetting] = useState(null);
+  const [imageFailed, setImageFailed] = useState(false);
+  const [language, setLanguage] = useState(
+    i18n.language?.toLowerCase().startsWith('vi') ? 'vi' : 'en',
+  );
 
-  const handleAuthPress = () => {
-    navigation.navigate('Auth');
+  useEffect(() => {
+    const syncLanguage = nextLanguage => {
+      setLanguage(nextLanguage?.toLowerCase().startsWith('vi') ? 'vi' : 'en');
+    };
+
+    syncLanguage(i18n.language);
+    i18n.on('languageChanged', syncLanguage);
+    return () => i18n.off('languageChanged', syncLanguage);
+  }, [i18n]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    GetApi('getsetting', {})
+      .then(res => {
+        const appSetting = res?.setting?.[0];
+        if (isMounted && res?.success && appSetting) {
+          setSetting(appSetting);
+        }
+      })
+      .catch(error => {
+        console.log('Unable to load welcome settings', error);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const changeLanguage = async nextLanguage => {
+    try {
+      await AsyncStorage.setItem('LANG', nextLanguage);
+      await i18n.changeLanguage(nextLanguage);
+    } catch (error) {
+      console.log('Unable to save welcome screen language', error);
+    }
   };
+
+  const remoteImage = typeof setting?.welcomeImage === 'string'
+    ? setting.welcomeImage.trim()
+    : '';
+  const imageSource = remoteImage && !imageFailed
+    ? { uri: remoteImage }
+    : defaultWelcomeImage;
+  const announcement = language === 'vi'
+    ? setting?.announcementVi
+    : setting?.announcementEn;
 
   return (
     <View style={styles.container}>
-      {/* Top Section with Light Green Background */}
-      <View style={styles.topSection}>
+      <View style={[styles.topSection, height < 700 && styles.compactTopSection]}>
         <Image
-          source={require('../../Assets/Images/welcome.png')}
-          style={styles.basketImage}
+          source={imageSource}
+          style={styles.welcomeImage}
           resizeMode="contain"
+          onError={() => setImageFailed(true)}
+          accessibilityLabel={t('Welcome')}
         />
-
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('../../Assets/Images/newlogo.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
-        </View>
+        <Image
+          source={require('../../Assets/Images/newlogo.png')}
+          style={styles.logoImage}
+          resizeMode="contain"
+          accessibilityLabel="Bach Hoa Houston"
+        />
       </View>
 
-      {/* Bottom Section with Dark Green Background */}
-      <View style={styles.bottomSection}>
-        {/* Background Image */}
-        <Image
-          source={require('../../Assets/Images/new.png')}
-          style={styles.backgroundImage}
-          resizeMode="stretch"
-        />
+      <View style={[styles.bottomSection, height < 700 && styles.compactBottomSection]}>
+        <View style={styles.content}>
+          <View style={styles.languageSwitcher} accessibilityRole="radiogroup">
+            {['en', 'vi'].map(code => {
+              const isSelected = language === code;
+              return (
+                <TouchableOpacity
+                  key={code}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isSelected }}
+                  accessibilityLabel={code === 'en' ? 'English' : 'Tiếng Việt'}
+                  style={[styles.languageButton, isSelected && styles.activeLanguageButton]}
+                  onPress={() => changeLanguage(code)}>
+                  <Text style={[styles.languageButtonText, isSelected && styles.activeLanguageButtonText]}>
+                    {code.toUpperCase()}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-        {/* Content Overlay */}
-        <View style={styles.contentOverlay}>
-          <Text style={styles.welcomeText}>Welcome!</Text>
-          <Text style={styles.subtitleText}>Vietnamese Grocery Delivery Service</Text>
-          <TouchableOpacity
-            style={styles.linkButton}
-            onPress={handleAuthPress}
-          >
-            <Text style={styles.linkText}>Click here to Sign In/Sign Up</Text>
-
+          <Text style={styles.welcomeText}>{t('Welcome')}</Text>
+          {!!announcement?.trim?.() && (
+            <Text style={styles.announcementText}>{announcement.trim()}</Text>
+          )}
+          <Text style={styles.subtitleText}>{t('Vietnamese Grocery Delivery Service')}</Text>
+          <TouchableOpacity style={styles.linkButton} onPress={() => navigation.navigate('Auth')}>
+            <Text style={styles.linkText}>{t('Click here to Sign In/Sign Up')}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => navigate('App')}>
             <Text style={styles.skipText}>{t('Skip')}</Text>
@@ -68,74 +135,98 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8F5E9',
   },
   topSection: {
-    flex: 1,
-    backgroundColor: '#E8F5E9',
+    flex: 0.58,
+    minHeight: 0,
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: 120,
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 12,
   },
-  basketImage: {
-    width: 300,
-    height: 300,
-    position: 'absolute',
-    left: -10,
-    top: 80,
+  compactTopSection: {
+    flex: 0.52,
   },
-  logoContainer: {
-    alignItems: 'center',
-    marginTop: 130,
+  welcomeImage: {
+    width: '100%',
+    height: '74%',
   },
   logoImage: {
-    width: 250,
-    height: 180,
+    width: 190,
+    height: 92,
+    marginTop: 2,
   },
   bottomSection: {
-    width: width,
-    height: 320,
-    position: 'relative',
+    flex: 0.42,
+    minHeight: 0,
+    backgroundColor: '#206B3A',
   },
-  backgroundImage: {
-    position: 'absolute',
-    width: width,
-    height: 360,
-    top: 0,
-    left: 0,
+  compactBottomSection: {
+    flex: 0.48,
   },
-  contentOverlay: {
+  content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
-    zIndex: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
   },
   welcomeText: {
-    fontSize: 42,
+    fontSize: 36,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 4,
+    textAlign: 'center',
+  },
+  announcementText: {
+    maxHeight: 76,
+    fontSize: 15,
+    lineHeight: 21,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginTop: 6,
   },
   subtitleText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#FFFFFF',
     opacity: 0.9,
-    marginBottom: 40,
+    textAlign: 'center',
+    marginTop: 7,
   },
   linkButton: {
-    marginTop: 20,
+    marginTop: 12,
   },
   linkText: {
     fontSize: 14,
     color: '#FFFFFF',
     textDecorationLine: 'underline',
+    textAlign: 'center',
   },
   skipText: {
     fontSize: 15,
     color: 'white',
-    alignSelf: 'center',
     fontStyle: 'italic',
-    marginTop: 20,
+    marginTop: 12,
     textDecorationLine: 'underline',
+  },
+  languageSwitcher: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  languageButton: {
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    borderRadius: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    marginHorizontal: 4,
+  },
+  activeLanguageButton: {
+    backgroundColor: '#FFFFFF',
+  },
+  languageButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  activeLanguageButtonText: {
+    color: '#206B3A',
   },
 });
