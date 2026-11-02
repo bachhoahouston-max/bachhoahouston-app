@@ -1,14 +1,44 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { navigate } from '../../../navigationRef';
+import { GetApi } from '../../Assets/Helpers/Service';
 
 const { width } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   const navigation = useNavigation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [welcomeImage, setWelcomeImage] = useState('');
+  const [announcement, setAnnouncement] = useState('');
+
+  useEffect(() => {
+    GetApi('getsetting', {})
+      .then(res => {
+        const setting = res?.setting?.[0];
+        if (!setting) {
+          return;
+        }
+
+        setWelcomeImage(
+          typeof setting.welcomeImage === 'string'
+            ? setting.welcomeImage.trim()
+            : '',
+        );
+        const selectedAnnouncement = i18n.language?.toLowerCase().startsWith('vi')
+          ? setting.announcementVi
+          : setting.announcementEn;
+        setAnnouncement(
+          typeof selectedAnnouncement === 'string'
+            ? selectedAnnouncement.trim()
+            : '',
+        );
+      })
+      .catch(error => {
+        console.log('Unable to load welcome settings', error);
+      });
+  }, [i18n.language]);
 
   const handleAuthPress = () => {
     navigation.navigate('Auth');
@@ -19,7 +49,11 @@ export default function WelcomeScreen() {
       {/* Top Section with Light Green Background */}
       <View style={styles.topSection}>
         <Image
-          source={require('../../Assets/Images/welcome.png')}
+          source={
+            welcomeImage
+              ? { uri: welcomeImage }
+              : require('../../Assets/Images/welcome.png')
+          }
           style={styles.basketImage}
           resizeMode="contain"
         />
@@ -46,6 +80,9 @@ export default function WelcomeScreen() {
         <View style={styles.contentOverlay}>
           <Text style={styles.welcomeText}>Welcome!</Text>
           <Text style={styles.subtitleText}>Vietnamese Grocery Delivery Service</Text>
+          {!!announcement.trim() && (
+            <Text style={styles.announcementText}>{announcement}</Text>
+          )}
           <TouchableOpacity
             style={styles.linkButton}
             onPress={handleAuthPress}
@@ -121,6 +158,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     opacity: 0.9,
     marginBottom: 40,
+  },
+  announcementText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    opacity: 0.9,
+    textAlign: 'center',
+    marginBottom: 8,
   },
   linkButton: {
     marginTop: 20,
