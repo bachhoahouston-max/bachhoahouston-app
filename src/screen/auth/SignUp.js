@@ -17,7 +17,7 @@ import styles from './styles';
 import Constants from '../../Assets/Helpers/constant';
 import { navigate, reset } from '../../../navigationRef';
 import Spinner from '../../Assets/Component/Spinner';
-import { ToastContext } from '../../../App';
+import { ToastContext, UserContext } from '../../../App';
 import { Post } from '../../Assets/Helpers/Service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OneSignal } from 'react-native-onesignal';
@@ -39,6 +39,7 @@ const SignUp = props => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useContext(ToastContext);
+  const [, setCurrentUser] = useContext(UserContext);
   const [title, settile] = useState('');
   const [user, setuser] = useState(0);
   const [selectLanguage, setSelectLanguage] = useState('English');
@@ -111,15 +112,46 @@ const SignUp = props => {
             username: '',
           });
           setToast(res.message);
-          navigate(
-            'SignIn',
-            user === 1
-              ? { affiliateSignup: true }
-              : redirectTo
-                ? { redirect: redirectTo }
-                : undefined,
-          );
+          if (user === 1) {
+            setLoading(true);
+            try {
+              const player_id = await OneSignal.User.pushSubscription.getIdAsync();
+              const device_token = await OneSignal.User.pushSubscription.getTokenAsync();
+              const loginData = {
+                username: signupPayload.email,
+                password: signupPayload.password,
+                player_id,
+                device_token,
+              };
+              const loginResponse = await Post('login', loginData, { ...props });
 
+              if (loginResponse.status) {
+                await AsyncStorage.setItem(
+                  'userDetail',
+                  JSON.stringify(loginResponse.data),
+                );
+                await AsyncStorage.setItem(
+                  'authDetails',
+                  JSON.stringify(loginData),
+                );
+                setCurrentUser(loginResponse.data);
+                reset('Affiliation');
+              } else {
+                setToast(loginResponse.message);
+                navigate('SignIn');
+              }
+            } catch (error) {
+              console.error('Affiliate auto-login failed:', error);
+              setToast(res.message);
+              navigate('SignIn');
+            }
+            setLoading(false);
+          } else {
+            navigate(
+              'SignIn',
+              redirectTo ? { redirect: redirectTo } : undefined,
+            );
+          }
         } else {
           setLoading(false);
           setToast(res.message);
