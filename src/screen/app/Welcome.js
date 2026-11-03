@@ -125,6 +125,12 @@ export default function WelcomeScreen() {
             resizeMode="contain"
           />
         </View>
+
+        {!!announcement.trim() && (
+          <Text style={styles.announcementText}>
+            {announcement}
+          </Text>
+        )}
       </View>
 
       {/* Bottom Section with Dark Green Background */}
@@ -140,9 +146,7 @@ export default function WelcomeScreen() {
         <View style={styles.contentOverlay}>
           <Text style={styles.welcomeText}>Welcome!</Text>
           <Text style={styles.subtitleText}>Vietnamese Grocery Delivery Service</Text>
-          {!!announcement.trim() && (
-            <Text style={styles.announcementText}>{announcement}</Text>
-          )}
+
           <TouchableOpacity
             style={styles.linkButton}
             onPress={handleAuthPress}
@@ -246,11 +250,13 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   announcementText: {
+    position: 'absolute',
+    bottom: 6,
+    width: width - 40,
     fontSize: 16,
-    color: '#FFFFFF',
+    color: '#000',
     opacity: 0.9,
     textAlign: 'center',
-    marginBottom: 8,
   },
   linkButton: {
     marginTop: 20,
