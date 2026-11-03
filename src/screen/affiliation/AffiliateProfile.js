@@ -182,6 +182,21 @@ const AffiliateProfile = ({ navigation }) => {
             <InfoRow icon={Percent} label={t('Commission Rate')} value={`${Number(application.commissionRate || 0)}%`} />
             <InfoRow
               icon={CalendarCheck}
+              label={t('Referral expiration')}
+              value={application.referralExpiresAt ? shortDate(application.referralExpiresAt) : t('No expiration')}
+            />
+            <InfoRow
+              icon={Hash}
+              label={t('Redemptions')}
+              value={application.totalRedemptionLimit ? `${application.redemptionCount || 0}/${application.totalRedemptionLimit}` : `${application.redemptionCount || 0}`}
+            />
+            <InfoRow
+              icon={Hash}
+              label={t('Limit per customer')}
+              value={application.perCustomerRedemptionLimit ? String(application.perCustomerRedemptionLimit) : t('Unlimited')}
+            />
+            <InfoRow
+              icon={CalendarCheck}
               label={t('Member since')}
               value={shortDate(application.approvedAt || application.createdAt)}
               last
