@@ -17,10 +17,24 @@ export const getProductReferrals = async () => {
   }
 };
 
+export const getProductReferralDiscountRates = async () => {
+  try {
+    const saved = JSON.parse((await AsyncStorage.getItem(KEY)) || '{}');
+    const now = Date.now();
+    return Object.fromEntries(
+      Object.entries(saved || {})
+        .filter(([, value]) => value?.code && now - value.at < TTL_MS)
+        .map(([slug, value]) => [slug, Number(value.discountRate || 0)]),
+    );
+  } catch (e) {
+    return {};
+  }
+};
+
 export const getProductReferralCode = async slug =>
   slug ? (await getProductReferrals())[slug] || '' : '';
 
-export const saveProductReferral = async (slug, code) => {
+export const saveProductReferral = async (slug, code, discountRate = 0) => {
   if (!slug || !code) return;
   let saved = {};
   try {
@@ -30,7 +44,7 @@ export const saveProductReferral = async (slug, code) => {
   const next = Object.fromEntries(
     Object.entries(saved).filter(([, value]) => now - value?.at < TTL_MS),
   );
-  next[slug] = { code, at: now };
+  next[slug] = { code, discountRate, at: now };
   await AsyncStorage.setItem(KEY, JSON.stringify(next));
 };
 

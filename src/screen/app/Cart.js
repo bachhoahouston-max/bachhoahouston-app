@@ -33,7 +33,7 @@ import {
 } from '../../../App';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveSyncedCart } from '../../Assets/Helpers/CartSync';
-import { getProductReferrals } from '../../Assets/Helpers/affiliateReferral';
+import { getProductReferrals, getProductReferralDiscountRates } from '../../Assets/Helpers/affiliateReferral';
 import { navigate, reset } from '../../../navigationRef';
 import { useTranslation } from 'react-i18next';
 import { RadioButton } from 'react-native-paper';
@@ -119,6 +119,7 @@ const Cart = ({ route }) => {
   const [open, setOpen] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [affiliateDiscount, setAffiliateDiscount] = useState(0);
   const [minDate, setMinDate] = useState(new Date());
   const [totalTax, setTotalTax] = useState(0);
   const [availableZipCodes, setAvailableZipCodes] = useState([]);
@@ -140,6 +141,7 @@ const Cart = ({ route }) => {
   const [rewardCatalog, setRewardCatalog] = useState([]);
   const [pointsPerDollar, setPointsPerDollar] = useState(10);
   const [productReferrals, setProductReferrals] = useState({});
+  const [productReferralDiscountRates, setProductReferralDiscountRates] = useState({});
 
   useEffect(() => {
     AsyncStorage.getItem('affiliateReferralCode').then(code => setAffiliateCode(code || ''));
@@ -148,6 +150,7 @@ const Cart = ({ route }) => {
   useFocusEffect(
     useCallback(() => {
       getProductReferrals().then(setProductReferrals);
+      getProductReferralDiscountRates().then(setProductReferralDiscountRates);
     }, []),
   );
 
@@ -294,8 +297,20 @@ const Cart = ({ route }) => {
   useFocusEffect(
     useCallback(() => {
       setIsPriceChanged(false)
-    }, [])
-  )
+    }, []),
+  );
+
+  useEffect(() => {
+    if (affiliateCode) return;
+    const linkedDiscount = cartdetail
+      .filter(item => !isRewardItem(item))
+      .reduce((sum, item) => {
+        const rate = Number(productReferralDiscountRates[item?.slug] || 0);
+        const amount = Number(item?.total) || Number(item?.offer || item?.price || 0) * Number(item?.qty || 0);
+        return sum + (amount * rate) / 100;
+      }, 0);
+    setAffiliateDiscount(Number(linkedDiscount.toFixed(2)));
+  }, [cartdetail, affiliateCode, productReferralDiscountRates]);
 
   const isZipAvailable = availableZipCodes.some(
     zip => String(zip.pincode) === String(localDeliveryAddress.zipcode),
@@ -487,7 +502,8 @@ const Cart = ({ route }) => {
     console.log('Offer Total:', offdata);
     settotaloff(offdata);
 
-    const subtotalAfterDiscount = offdata - couponDiscount;
+    const totalDiscount = Number(couponDiscount || 0) + Number(affiliateDiscount || 0);
+    const subtotalAfterDiscount = offdata - totalDiscount;
 
     // Note: Tax calculation is now handled by Stripe automatically
     // We'll set a temporary tax to 0 for display purposes
@@ -537,6 +553,7 @@ const Cart = ({ route }) => {
     localDeliveryCost,
     shippingFee,
     couponDiscount,
+    affiliateDiscount,
     extraFees,
     ExtraFeesObj
   ]);
@@ -874,7 +891,8 @@ const Cart = ({ route }) => {
         subtotal: stripePaymentResult?.subtotal || totaloff,
         Deliverytip: deliveryTip || 0,
         deliveryfee: deliveryFees || 0,
-        discount: couponvalue || couponDiscount,
+        discount: Number(couponvalue || 0) + Number(affiliateDiscount || 0),
+        referralDiscount: affiliateDiscount,
         discountCode: discountCode || '',
         referralCode: referralCode || '',
         appliedReferralCode: referralCode || '',
@@ -1007,6 +1025,7 @@ const Cart = ({ route }) => {
     AsyncStorage.removeItem('couponDiscount')
     AsyncStorage.removeItem('affiliateReferralCode');
     setAffiliateCode('');
+    setAffiliateDiscount(0);
     setcartdetail([]);
     // Clear the synced cart immediately rather than waiting on the generic
     // debounced sync — if the app gets backgrounded/killed right after
@@ -2119,7 +2138,16 @@ console.log(result)
                         );
                         if (referralResponse?.status) {
                           const normalizedCode = referralResponse?.data?.referralCode || couponCode.trim().toUpperCase();
+                          const eligibleProducts = referralResponse?.data?.eligibleProducts;
+                          const eligibleAmount = cartdetail
+                            .filter(item =>
+                              !isRewardItem(item) &&
+                              (!Array.isArray(eligibleProducts) || eligibleProducts.includes(item?.productid)),
+                            )
+                            .reduce((sum, item) => sum + (Number(item?.total) || Number(item?.offer || item?.price || 0) * Number(item?.qty || 0)), 0);
+                          const discountRate = Number(referralResponse?.data?.customerDiscountRate || 0);
                           setAffiliateCode(normalizedCode);
+                          setAffiliateDiscount(Number(((eligibleAmount * discountRate) / 100).toFixed(2)));
                           setCouponCode('');
                           await AsyncStorage.setItem('affiliateReferralCode', normalizedCode);
                           Toast.show({
@@ -2212,6 +2240,7 @@ console.log(result)
                     <Pressable
                       onPress={async () => {
                         setAffiliateCode('');
+                        setAffiliateDiscount(0);
                         await AsyncStorage.removeItem('affiliateReferralCode');
                       }}>
                       <Text style={[styles.boxtxt, { color: Constants.red }]}>
@@ -2855,7 +2884,9 @@ console.log(result)
             deliveryFee: deliveryFees,
             serviceFee: serviceFee,
             deliveryTip: deliveryTip,
-            couponDiscount: couponDiscount,
+            couponDiscount: Number(couponDiscount || 0) + Number(affiliateDiscount || 0),
+            referralDiscount: affiliateDiscount,
+            referralCode: affiliateCode,
             couponCode: couponCode,
             discountCode: discountCode,
             subtotal: totaloff,

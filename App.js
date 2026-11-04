@@ -141,7 +141,7 @@ const App = () => {
                 if (res?.data?.valid === false) {
                     Toast.show({ type: 'error', text1: i18n.t('Not a valid referral code') });
                 } else {
-                    await saveProductReferral(slug, code);
+                    await saveProductReferral(slug, code, res?.data?.customerDiscountRate || 0);
                 }
             } else {
                 await AsyncStorage.setItem('affiliateReferralCode', code);
