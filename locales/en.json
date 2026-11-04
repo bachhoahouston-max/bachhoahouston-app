@@ -778,6 +778,8 @@
   "Last 90 days": "Last 90 days",
   "Order #": "Order #",
   "Important": "Important",
+  "Deducted {{amount}}": "{{amount}}",
+  "Commission deduction notice": "{{amount}} commission was deducted because an order was canceled, returned, or refunded.",
   "Commissions are calculated only for completed or delivered orders. Canceled, refunded or adjusted orders do not earn commission.": "Commissions are calculated only for completed or delivered orders. Canceled, refunded or adjusted orders do not earn commission.",
   "View Commission Report": "View Commission Report",
   "Commission report": "Commission report",

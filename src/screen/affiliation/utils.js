@@ -78,18 +78,34 @@ export const orderPill = status => {
 // Merges earned commissions and orders still awaiting completion into a
 // single, newest-first list for the "attributed orders" views.
 export const buildAttributedOrders = dashboard => {
-  const commissions = (dashboard?.commissions || []).map(item => ({
-    key: item._id,
-    orderNumber: item.orderNumber || item.order?.orderId,
-    date: item.order?.createdAt || item.createdAt,
-    eligibleAmount: item.eligibleOrderAmount,
-    commission: item.commissionAmount,
-    rate: item.commissionRate,
-    orderStatus: item.order?.status || 'Delivered',
-    commissionStatus: item.status,
-    linkProduct: item.order?.affiliationLink?.product?.name,
-    pending: false,
-  }));
+  const commissions = (dashboard?.commissions || []).map(item => {
+    const orderStatus = item.order?.status || 'Delivered';
+    const isOrderReversed = ['Cancel', 'Return'].includes(orderStatus) || Number(item.refundedAmount || 0) > 0;
+    const lastAdjustment = item.adjustments?.[item.adjustments.length - 1];
+    const recordedDeduction = Math.max(
+      0,
+      Number(item.paidAmount || 0) - Number(item.commissionAmount || 0),
+      Number(lastAdjustment?.previousAmount || 0) - Number(lastAdjustment?.newAmount || 0),
+    );
+    const canceledCommission = Number(item.commissionAmount || 0) === 0
+      && Number(item.eligibleOrderAmount || 0) > 0
+      && Number(item.commissionRate || 0) > 0
+      ? (Number(item.eligibleOrderAmount || 0) * Number(item.commissionRate || 0)) / 100
+      : 0;
+    return {
+      key: item._id,
+      orderNumber: item.orderNumber || item.order?.orderId,
+      date: item.order?.createdAt || item.createdAt,
+      eligibleAmount: item.eligibleOrderAmount,
+      commission: item.commissionAmount,
+      deductionAmount: Math.max(isOrderReversed ? recordedDeduction : 0, canceledCommission),
+      rate: item.commissionRate,
+      orderStatus,
+      commissionStatus: item.status,
+      linkProduct: item.order?.affiliationLink?.product?.name,
+      pending: false,
+    };
+  });
   const pending = (dashboard?.pendingOrders || []).map(order => ({
     key: order._id,
     orderNumber: order.orderId,

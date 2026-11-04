@@ -925,6 +925,8 @@
     "Last 90 days": "90 ngày qua",
     "Order #": "Mã đơn",
     "Important": "Quan trọng",
+    "Deducted {{amount}}": "{{amount}}",
+    "Commission deduction notice": "{{amount}} hoa hồng đã bị khấu trừ vì một đơn hàng bị hủy, trả lại hoặc hoàn tiền.",
     "Commissions are calculated only for completed or delivered orders. Canceled, refunded or adjusted orders do not earn commission.": "Hoa hồng chỉ được tính cho các đơn hàng đã hoàn tất hoặc đã giao. Đơn hàng bị hủy, hoàn tiền hoặc điều chỉnh sẽ không được tính hoa hồng.",
     "View Commission Report": "Xem báo cáo hoa hồng",
     "Commission report": "Báo cáo hoa hồng",

@@ -41,9 +41,16 @@ const CommissionHistoryRow = ({item, last, fallbackRate}) => {
         <Text style={[styles.value, styles.right]}>{item.eligibleAmount == null ? '—' : money(item.eligibleAmount)}</Text>
         {rate != null && <Text style={[styles.sub, styles.right]}>{Number(rate)}%</Text>}
       </View>
-      <Text style={[styles.value, styles.strong, styles.amountCol, styles.right, reversed && styles.reversed]}>
-        {item.commission == null ? '—' : money(item.commission)}
-      </Text>
+      <View style={styles.amountCol}>
+        <Text style={[styles.value, styles.strong, styles.right, reversed && styles.reversed]}>
+          {item.commission == null ? '—' : money(item.commission)}
+        </Text>
+        {item.deductionAmount > 0 && (
+          <Text style={styles.deduction} numberOfLines={1}>
+            {t('Deducted {{amount}}', {amount: money(item.deductionAmount)})}
+          </Text>
+        )}
+      </View>
       <View style={[styles.statusCol, styles.pillWrap]}>
         <StatusPill {...pill} />
       </View>
@@ -69,6 +76,7 @@ const styles = StyleSheet.create({
   value: {fontFamily: FONTS.Medium, fontSize: 12, color: COLORS.text},
   strong: {fontFamily: FONTS.SemiBold},
   reversed: {color: COLORS.muted, textDecorationLine: 'line-through'},
+  deduction: {fontFamily: FONTS.Medium, fontSize: 9.5, color: COLORS.danger, textAlign: 'right', marginTop: 2},
   pillWrap: {alignItems: 'center'},
 });
 

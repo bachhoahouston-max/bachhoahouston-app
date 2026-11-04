@@ -77,6 +77,7 @@ const AffiliateCommissions = ({ route }) => {
   }, [orders, range]);
   const activeTab = STATUS_TABS.find(f => f.value === tab) || STATUS_TABS[0];
   const visibleOrders = rangeOrders.filter(activeTab.match);
+  const totalDeductions = rangeOrders.reduce((sum, item) => sum + Number(item.deductionAmount || 0), 0);
   const countOf = status => orders.filter(item => item.commissionStatus === status).length;
   const zelle = application.zelleEmail || application.zellePhone;
   const activeRange = DATE_RANGES.find(r => r.value === range) || DATE_RANGES[0];
@@ -157,6 +158,17 @@ const AffiliateCommissions = ({ route }) => {
               meta={totals.lastPaidAt ? t('Last paid {{date}}', { date: shortDate(totals.lastPaidAt) }) : t('Not paid yet')}
             />
           </View>
+
+          {totalDeductions > 0 && (
+            <View style={styles.deductionNotice}>
+              <View style={styles.deductionIcon}>
+                <Info size={13} color={COLORS.white} />
+              </View>
+              <Text style={styles.deductionText}>
+                {t('Commission deduction notice', {amount: money(totalDeductions)})}
+              </Text>
+            </View>
+          )}
 
           {/* <View style={styles.rateCard}>
             <View style={styles.rateIcon}>
@@ -449,6 +461,24 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   noteText: { flex: 1, fontFamily: FONTS.Regular, fontSize: 12.5, color: COLORS.info, lineHeight: 18 },
+  deductionNotice: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+    backgroundColor: COLORS.dangerSoft,
+    borderRadius: RADIUS.md,
+    padding: 12,
+    marginTop: 12,
+  },
+  deductionIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: COLORS.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deductionText: { flex: 1, fontFamily: FONTS.Medium, fontSize: 12.5, color: COLORS.danger, lineHeight: 18 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 22 },
   sectionTitle: { fontFamily: FONTS.Bold, fontSize: 16, color: COLORS.text },
   filterButton: {
