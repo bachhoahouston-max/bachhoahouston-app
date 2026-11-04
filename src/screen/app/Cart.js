@@ -2113,7 +2113,7 @@ console.log(result)
                       if (couponCode.trim() === '') {
                         Toast.show({
                           type: 'error',
-                          text1: t('Please enter a coupon code'),
+                          text1: t('Please enter a coupon or referral code'),
                         });
                         return;
                       }
@@ -2147,6 +2147,9 @@ console.log(result)
                             .reduce((sum, item) => sum + (Number(item?.total) || Number(item?.offer || item?.price || 0) * Number(item?.qty || 0)), 0);
                           const discountRate = Number(referralResponse?.data?.customerDiscountRate || 0);
                           setAffiliateCode(normalizedCode);
+                          setCoupon(false);
+                          setCouponDiscount(0);
+                          setDiscountCode('');
                           setAffiliateDiscount(Number(((eligibleAmount * discountRate) / 100).toFixed(2)));
                           setCouponCode('');
                           await AsyncStorage.setItem('affiliateReferralCode', normalizedCode);
@@ -2197,6 +2200,9 @@ console.log(result)
                         );
 
                         if (response.status) {
+                          setAffiliateCode('');
+                          setAffiliateDiscount(0);
+                          await AsyncStorage.removeItem('affiliateReferralCode');
                           setCoupon(true);
                           setCouponDiscount(response.data.discount);
                           setDiscountCode(couponCode);
@@ -2302,6 +2308,17 @@ console.log(result)
                       <Text style={[styles.boxtxt, { fontFamily: FONTS.Medium }]}>
                         - {Currency}
                         {(Number(couponDiscount) || 0).toFixed(2)}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+                {affiliateDiscount > 0 && (
+                  <View style={styles.total}>
+                    <Text style={styles.boxtxt}>{t('Referral Discount')}</Text>
+                    <View style={styles.amount}>
+                      <Text style={[styles.boxtxt, { fontFamily: FONTS.Medium }]}>
+                        - {Currency}
+                        {(Number(affiliateDiscount) || 0).toFixed(2)}
                       </Text>
                     </View>
                   </View>
@@ -2689,11 +2706,11 @@ console.log(result)
                   alignItems: 'center',
                   paddingHorizontal: 30,
                 }}>
-                <Text style={styles.modalText2}>{t('Enter Coupon Code')}</Text>
+                <Text style={styles.modalText2}>{t('Enter Coupon or Referral Code')}</Text>
                 <TextInput
                   value={couponCode}
                   onChangeText={text => setCouponCode(text)}
-                  placeholder={t('Coupon Code')}
+                  placeholder={t('Coupon or referral code')}
                   placeholderTextColor={Constants.customgrey}
                   style={styles.input2}
                 />
@@ -2713,7 +2730,7 @@ console.log(result)
                       if (couponCode.trim() === '') {
                         Toast.show({
                           type: 'error',
-                          text1: t('Please enter a coupon code'),
+                          text1: t('Please enter a coupon or referral code'),
                         });
                         return;
                       }
