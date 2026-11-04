@@ -25,9 +25,6 @@ import { Card, EmptyState, StatusPill } from './components/ui';
 import { COLORS, FONTS, RADIUS } from './theme';
 import { PAYMENT_METHOD_LABELS, PAYOUT_STATUS, TZ, buildAttributedOrders, money, openUrl, shortDate } from './utils';
 
-// Commission status tabs. "Pending" is earned but not paid yet, "Approved"
-// is inside an old payout request (tab hidden when empty), "Processing" is an
-// order that has not been completed yet (no commission amount so far).
 const STATUS_TABS = [
   { value: 'all', label: 'All', match: () => true },
   { value: 'pending', label: 'Unpaid', match: item => item.commissionStatus === 'Pending' },
