@@ -22,10 +22,13 @@ export const CommissionHistoryHeader = () => {
 const CommissionHistoryRow = ({item, last, fallbackRate}) => {
   const {t} = useTranslation();
   const reversed = item.commissionStatus === 'Reversed';
+  const deducted = item.deductionAmount > 0;
   const rate = item.rate ?? fallbackRate;
   const pill = item.pending
     ? {label: t('Pending'), ...orderPill('pending')}
-    : {label: t(item.orderStatus), ...orderPill(item.orderStatus)};
+    : deducted
+      ? {label: t('Reversed'), ...orderPill('Return')}
+      : {label: t(item.orderStatus), ...orderPill(item.orderStatus)};
 
   return (
     <View style={[styles.row, !last && styles.divider]}>

@@ -14,10 +14,13 @@ import {StatusPill} from './ui';
 const AttributedOrderRow = ({item, last, showCommissionStatus = false}) => {
   const {t} = useTranslation();
   const reversed = item.commissionStatus === 'Reversed';
+  const deducted = item.deductionAmount > 0;
 
   let pill = {label: t(item.orderStatus), ...orderPill(item.orderStatus)};
   if (item.pending) {
     pill = {label: t('Pending'), ...orderPill('pending')};
+  } else if (deducted) {
+    pill = {label: t('Reversed'), ...orderPill('Return')};
   } else if (showCommissionStatus && COMMISSION_STATUS[item.commissionStatus]) {
     const config = COMMISSION_STATUS[item.commissionStatus];
     pill = {label: t(config.label), color: config.color, bg: config.bg};
@@ -41,6 +44,11 @@ const AttributedOrderRow = ({item, last, showCommissionStatus = false}) => {
         <Text style={[styles.value, reversed && styles.reversed]}>
           {item.commission == null ? '—' : money(item.commission)}
         </Text>
+        {item.deductionAmount > 0 && (
+          <Text style={styles.deduction} numberOfLines={1}>
+            {t('Deducted {{amount}}', {amount: money(item.deductionAmount)})}
+          </Text>
+        )}
       </View>
       <View style={styles.pillCol}>
         <StatusPill {...pill} />
@@ -65,6 +73,7 @@ const styles = StyleSheet.create({
   label: {fontFamily: FONTS.Regular, fontSize: 10, color: COLORS.muted},
   value: {fontFamily: FONTS.SemiBold, fontSize: 13, color: COLORS.text, marginTop: 2},
   reversed: {color: COLORS.muted, textDecorationLine: 'line-through'},
+  deduction: {fontFamily: FONTS.Medium, fontSize: 10, color: COLORS.danger, marginTop: 2},
   pillCol: {width: 74, alignItems: 'flex-end'},
 });
 
