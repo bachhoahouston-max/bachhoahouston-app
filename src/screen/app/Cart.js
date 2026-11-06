@@ -25,6 +25,7 @@ import {
   MinusIcon,
   Plus2Icon,
 } from '../../../Theme';
+import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import {
   AddressContext,
   CartContext,
@@ -126,6 +127,9 @@ const Cart = ({ route }) => {
   const [showStripePayment, setShowStripePayment] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [affiliateCode, setAffiliateCode] = useState('');
+  const [appliedReferralDiscountRate, setAppliedReferralDiscountRate] = useState(0);
+  const [appliedReferralProductIds, setAppliedReferralProductIds] = useState([]);
+  const [showAppliedReferralProducts, setShowAppliedReferralProducts] = useState(false);
   const [isOnce, setIsOnce] = useState(false);
   const [orderID, setOrderID] = useState('')
   const [cancelModel, setCancelModel] = useState(false)
@@ -298,6 +302,20 @@ const Cart = ({ route }) => {
     useCallback(() => {
       setIsPriceChanged(false)
     }, []),
+  );
+
+  const resetAppliedReferral = () => {
+    setAffiliateCode('');
+    setAffiliateDiscount(0);
+    setAppliedReferralDiscountRate(0);
+    setAppliedReferralProductIds([]);
+    setShowAppliedReferralProducts(false);
+  };
+
+  const appliedReferralProducts = cartdetail.filter(
+    item =>
+      !isRewardItem(item) &&
+      appliedReferralProductIds.some(id => String(id) === String(item?.productid)),
   );
 
   useEffect(() => {
@@ -1024,8 +1042,7 @@ const Cart = ({ route }) => {
     AsyncStorage.removeItem('pickupDate');
     AsyncStorage.removeItem('couponDiscount')
     AsyncStorage.removeItem('affiliateReferralCode');
-    setAffiliateCode('');
-    setAffiliateDiscount(0);
+    resetAppliedReferral();
     setcartdetail([]);
     // Clear the synced cart immediately rather than waiting on the generic
     // debounced sync — if the app gets backgrounded/killed right after
@@ -1370,11 +1387,11 @@ console.log(result)
                           {isProductUnavailable(item) && (
                             <Text style={styles.stockIssueStatus}>{t('Product Unavailable')}</Text>
                           )}
-                          {!isRewardItem(item) && !!(affiliateCode || lineReferralCode(item)) && (
+                          {/* {!isRewardItem(item) && !!(affiliateCode || lineReferralCode(item)) && (
                             <View style={styles.referralBadge}>
                               <Text style={styles.referralBadgeTxt}>{t('Referral code applied')}</Text>
                             </View>
-                          )}
+                          )} */}
                           <View
                             style={{
                               flexDirection: 'row',
@@ -2147,6 +2164,17 @@ console.log(result)
                             .reduce((sum, item) => sum + (Number(item?.total) || Number(item?.offer || item?.price || 0) * Number(item?.qty || 0)), 0);
                           const discountRate = Number(referralResponse?.data?.customerDiscountRate || 0);
                           setAffiliateCode(normalizedCode);
+                          setAppliedReferralDiscountRate(discountRate);
+                          setAppliedReferralProductIds(
+                            cartdetail
+                              .filter(item =>
+                                !isRewardItem(item) &&
+                                (!Array.isArray(eligibleProducts) ||
+                                  eligibleProducts.some(id => String(id) === String(item?.productid))),
+                              )
+                              .map(item => item.productid),
+                          );
+                          setShowAppliedReferralProducts(false);
                           setCoupon(false);
                           setCouponDiscount(0);
                           setDiscountCode('');
@@ -2200,8 +2228,7 @@ console.log(result)
                         );
 
                         if (response.status) {
-                          setAffiliateCode('');
-                          setAffiliateDiscount(0);
+                          resetAppliedReferral();
                           await AsyncStorage.removeItem('affiliateReferralCode');
                           setCoupon(true);
                           setCouponDiscount(response.data.discount);
@@ -2243,16 +2270,6 @@ console.log(result)
                     <Text style={[styles.boxtxt, { color: Constants.green }]}>
                       {t('Referral code applied')}: {affiliateCode}
                     </Text>
-                    <Pressable
-                      onPress={async () => {
-                        setAffiliateCode('');
-                        setAffiliateDiscount(0);
-                        await AsyncStorage.removeItem('affiliateReferralCode');
-                      }}>
-                      <Text style={[styles.boxtxt, { color: Constants.red }]}>
-                        {t('Remove')}
-                      </Text>
-                    </Pressable>
                   </View>
                 )}
                 {coupon && couponDiscount > 0 && (
@@ -2260,17 +2277,6 @@ console.log(result)
                     <Text style={[styles.boxtxt, { color: Constants.green }]}>
                       {t('Coupon applied')}: {discountCode}
                     </Text>
-                    <Pressable
-                      onPress={() => {
-                        setCoupon(false);
-                        setCouponDiscount(0);
-                        setCouponCode('');
-                        setDiscountCode('');
-                      }}>
-                      <Text style={[styles.boxtxt, { color: Constants.red }]}>
-                        {t('Remove')}
-                      </Text>
-                    </Pressable>
                   </View>
                 )}
               </View>}
@@ -2303,7 +2309,7 @@ console.log(result)
                 {/* Coupon already shown above */}
                 {coupon && couponDiscount > 0 && (
                   <View style={styles.total}>
-                    <Text style={styles.boxtxt}>{t('Coupon Discount')}</Text>
+                    <Text style={styles.boxtxt}>{t('Discount amount')}</Text>
                     <View style={styles.amount}>
                       <Text style={[styles.boxtxt, { fontFamily: FONTS.Medium }]}>
                         - {Currency}
@@ -2314,13 +2320,49 @@ console.log(result)
                 )}
                 {affiliateDiscount > 0 && (
                   <View style={styles.total}>
-                    <Text style={styles.boxtxt}>{t('Referral Discount')}</Text>
+                    <Text style={styles.boxtxt}>{t('Discount amount')}</Text>
                     <View style={styles.amount}>
                       <Text style={[styles.boxtxt, { fontFamily: FONTS.Medium }]}>
                         - {Currency}
                         {(Number(affiliateDiscount) || 0).toFixed(2)}
                       </Text>
                     </View>
+                  </View>
+                )}
+                {!!affiliateCode && appliedReferralProducts.length > 0 && (
+                  <View style={{ marginTop: 8 }}>
+                    <TouchableOpacity
+                      style={styles.discountSummaryBtn}
+                      onPress={() => setShowAppliedReferralProducts(isOpen => !isOpen)}>
+                      <Text style={styles.discountSummaryBtnTxt}>{t('Discount summary')}</Text>
+                      {showAppliedReferralProducts ? (
+                        <ChevronUp color={Constants.green} size={18} />
+                      ) : (
+                        <ChevronDown color={Constants.green} size={18} />
+                      )}
+                    </TouchableOpacity>
+                    {showAppliedReferralProducts && (
+                      <View style={styles.discountSummaryList}>
+                        {appliedReferralProducts.map((item, index) => {
+                          const amount =
+                            Number(item?.total) ||
+                            Number(item?.offer || item?.price || 0) * Number(item?.qty || 0);
+                          return (
+                            <View key={`${item?.productid}-${index}`} style={styles.discountSummaryRow}>
+                              <Text style={styles.discountSummaryName} numberOfLines={1}>
+                                {i18n.language === 'vi'
+                                  ? item?.vietnamiesName || item?.productname
+                                  : item?.productname || item?.vietnamiesName}
+                              </Text>
+                              <Text style={styles.discountSummaryAmt}>
+                                - {Currency}
+                                {((amount * appliedReferralDiscountRate) / 100).toFixed(2)}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                    )}
                   </View>
                 )}
                 {/* Delivery Tip */}
@@ -3007,6 +3049,47 @@ const styles = StyleSheet.create({
     color: '#15803D',
     fontSize: 11,
     fontFamily: FONTS.SemiBold,
+  },
+  discountSummaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#DCFCE7',
+    borderColor: '#BBF7D0',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  discountSummaryBtnTxt: {
+    color: Constants.green,
+    fontSize: 14,
+    fontFamily: FONTS.Medium,
+  },
+  discountSummaryList: {
+    marginTop: 8,
+    backgroundColor: '#F0FDF4',
+    borderColor: '#DCFCE7',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  discountSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  discountSummaryName: {
+    flex: 1,
+    color: Constants.customgrey,
+    fontSize: 14,
+    fontFamily: FONTS.Regular,
+  },
+  discountSummaryAmt: {
+    color: Constants.customgrey,
+    fontSize: 14,
+    fontFamily: FONTS.Regular,
   },
   rewardStrike: {
     color: Constants.customgrey2,
