@@ -92,9 +92,8 @@ export default function AlarmBadge({ currentSale, endDateTime }) {
             )} */}
             <View style={styles.container}>
 
-
                 <Animated.Text style={[styles.icon, { transform: [{ rotate }] }]}>
-                    <AlarmClock size={25} color={'#F2D27A'} />
+                    <AlarmClock size={18} color={'#F2D27A'} />
                 </Animated.Text>
                 <View style={styles.textGroup}>
                     <Text style={styles.label}>FLASH DEAL</Text>
@@ -116,7 +115,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
 
         paddingHorizontal: 10,
-        paddingVertical: 6,
+        paddingVertical: 3,
         // borderTopRadius: 20,
         borderTopStartRadius: 20,
         borderTopEndRadius: 10,
@@ -126,7 +125,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 3,
         borderBottomColor: '#D4AF37',
         // borderColor: '#D4AF37',
-        gap: 8,
+        gap: 6,
         overflow: 'hidden',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -146,19 +145,19 @@ const styles = StyleSheet.create({
     },
     textGroup: {
         flexDirection: 'column',
-        gap: 1,
+        gap: 0.5,
     },
     label: {
         color: '#D4AF37',
-        fontSize: 9,
+        fontSize: 8,
         fontWeight: '800',
         letterSpacing: 1.5,
         textTransform: 'uppercase',
     },
     countdown: {
         color: '#FFFFFF',
-        fontSize: 14,
-        fontWeight: '800',
+        fontSize: 11,
+        fontWeight: '600',
         letterSpacing: 0.5,
     },
     endDate: {

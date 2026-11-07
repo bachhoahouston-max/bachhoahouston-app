@@ -26,6 +26,7 @@ import {
   OrderIcon,
   PrivacyIcon,
   RightarrowIcon,
+  LogoutIcon,
 } from '../../../Theme';
 import { useTranslation } from 'react-i18next';
 import InAppBrowser from 'react-native-inappbrowser-reborn';
@@ -369,7 +370,7 @@ const Account = props => {
             }}>
             <View style={styles.btmboxfirpart}>
               <View style={styles.iconcov}>
-                <DeleteIcon height={20} width={20} color={Constants.white} />
+                <LogoutIcon height={20} width={20} color={Constants.white} />
               </View>
               <Text style={styles.protxt}>{t('Log Out')}</Text>
             </View>

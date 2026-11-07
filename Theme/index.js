@@ -48,3 +48,4 @@ export { default as PrivacyIcon } from '../src/Assets/Icon/privacy.svg';
 export { default as InfoIcon } from '../src/Assets/Icon/info.svg';
 export { default as LanguageIcon } from '../src/Assets/Icon/language.svg';
 export { default as FilterIcon } from '../src/Assets/Icon/filter.svg';
+export { default as LogoutIcon } from '../src/Assets/Icon/logout.svg';
