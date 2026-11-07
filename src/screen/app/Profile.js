@@ -8,6 +8,7 @@ import {
   Image,
   ScrollView,
   Pressable,
+  StatusBar,
 } from 'react-native';
 import React, { createRef, useContext, useEffect, useState } from 'react';
 import Constants, { FONTS } from '../../Assets/Helpers/constant';
@@ -246,31 +247,27 @@ const Profile = props => {
   };
   return (
     <SafeAreaView
-      style={[styles.container, { backgroundColor: Constants.white }]}>
+      style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1F5F24" />
       <View style={styles.toppart}>
         <BackIcon color={Constants.white} onPress={() => goBack()} />
         <Text style={styles.carttxt}>{t('Profile')}</Text>
-        {edit ? <Text style={styles.addbtn} onPress={submit}>{t('Update Profile')}</Text> :
-          <Text style={styles.addbtn} onPress={() => {
-            setEdit(true);
-          }}>{t('Edit Profile')}</Text>}
+        <TouchableOpacity
+          style={styles.addbtn}
+          onPress={edit ? submit : () => setEdit(true)}>
+          <Text style={styles.addbtnText}>{edit ? t('Update Profile') : t('Edit Profile')}</Text>
+        </TouchableOpacity>
       </View>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scroll}>
         {/* <Spinner color={'#fff'} visible={loading} /> */}
-        <View
-          style={{
-            height: 120,
-            width: 120,
-            alignSelf: 'center',
-            position: 'relative',
-            zIndex: 9,
-            marginBottom: 20,
-          }}>
+        <View style={styles.identity}>
           {edit && (
             <Pressable
               style={styles.editiconcov}
               onPress={() => cameraRef.current.show()}>
-              <EditIcon height={15} color={Constants.white} />
+              <EditIcon height={14} color={Constants.white} />
             </Pressable>
           )}
           <Image
@@ -284,15 +281,15 @@ const Profile = props => {
             }
             style={styles.logo}
           />
+          <Text style={styles.accountLabel}>{t('USER ACCOUNT')}</Text>
         </View>
         <View
           style={[
             styles.card,
-            styles.shadowProp,
+            styles.detailsCard,
             { backgroundColor: Constants.white },
-            { shadowColor: Constants.black },
           ]}>
-          <View style={[styles.textInput, { borderColor: Constants.customgrey }]}>
+          <View style={styles.textInput}>
             <TextInput
               style={[styles.input, { color: Constants.black }]}
               placeholder={t('Enter Name')}
@@ -316,7 +313,7 @@ const Profile = props => {
           {submitted && userDetail.username === '' && (
             <Text style={{ color: 'red' }}>{t('Name is required')}</Text>
           )}
-          <View style={[styles.textInput, { borderColor: Constants.customgrey }]}>
+          <View style={styles.textInput}>
             <TextInput
               style={[styles.input, { color: Constants.black }]}
               placeholder={t('Enter Phone Number')}
@@ -338,7 +335,7 @@ const Profile = props => {
           {submitted && userDetail.number === '' && (
             <Text style={{ color: 'red' }}>{t('Number is required')}</Text>
           )}
-          <View style={[styles.textInput, { borderColor: Constants.customgrey }]}>
+          <View style={styles.textInput}>
             <TextInput
               style={[styles.input, { color: Constants.black }]}
               placeholder={t("Enter email")}
@@ -362,8 +359,7 @@ const Profile = props => {
           )}
 
           {otpfield && (
-            <View
-              style={[styles.textInput, { borderColor: Constants.customgrey }]}>
+            <View style={styles.textInput}>
               <TextInput
                 style={[styles.input, { color: Constants.black }]}
                 placeholder={t("Enter otp")}
@@ -456,7 +452,7 @@ const Profile = props => {
                     key={`${item.platform}-${index}`}
                     style={[styles.socialRow, index < socialLinks.length - 1 && styles.socialDivider]}
                     onPress={() => openUrl(item.url)}>
-                    <View style={styles.socialIcon}>
+                    <View style={[styles.socialIcon, { borderColor: platform.color }]}>
                       <Ionicons name={platform.icon} size={18} color={platform.color} />
                     </View>
                     <View style={styles.flex}>
@@ -501,33 +497,46 @@ export default Profile;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // backgroundColor: Constants.white,
-    // padding: 20,
+    backgroundColor: '#F5F8F5',
+  },
+  scroll: {
+    paddingHorizontal: 14,
+    paddingBottom: 24,
+  },
+  identity: {
+    alignItems: 'center',
+    paddingTop: 20,
+    paddingBottom: 14,
+  },
+  accountLabel: {
+    fontFamily: FONTS.SemiBold,
+    fontSize: 10,
+    letterSpacing: 0.6,
+    color: '#7890B5',
+    marginTop: 8,
   },
   logo: {
-    height: 120,
-    width: 120,
-    alignSelf: 'center',
-    borderRadius: 60,
-    marginTop: 20,
+    height: 84,
+    width: 84,
+    borderRadius: 42,
+    borderWidth: 3,
+    borderColor: Constants.white,
+    backgroundColor: '#111827',
   },
   textInput: {
-    // borderColor: Constants.customgrey,
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 7,
-    // width: 370,
-    height: 60,
-    marginTop: 40,
+    borderColor: '#CBD6E5',
+    borderRadius: 9,
+    paddingHorizontal: 13,
+    height: 58,
     flexDirection: 'row',
+    alignItems: 'center',
   },
   input: {
-    marginLeft: 10,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '400',
     fontFamily: FONTS.Medium,
     textAlign: 'left',
-    // color: Constants.black,
     flex: 1,
   },
   signInbtn: {
@@ -542,30 +551,27 @@ const styles = StyleSheet.create({
   },
   mylivejobtitle: {
     position: 'absolute',
-    // backgroundColor: Constants.white,
-    paddingHorizontal: 5,
-    top: -13,
-    left: 30,
+    paddingHorizontal: 4,
+    top: -7,
+    left: 10,
   },
   jobtitle: {
-    // color: Constants.black,
-    fontSize: 13,
-    fontFamily: FONTS.SemiBold,
+    fontSize: 10,
+    fontFamily: FONTS.Regular,
     textAlign: 'center',
-    fontWeight: '500',
+    color: '#71829B',
   },
   editiconcov: {
-    height: 30,
-    width: 30,
-    borderRadius: 15,
+    height: 24,
+    width: 24,
+    borderRadius: 12,
     backgroundColor: Constants.customblue,
+    position: 'absolute',
+    top: 78,
+    marginLeft: 52,
+    zIndex: 9,
     justifyContent: 'center',
     alignItems: 'center',
-    position: 'absolute',
-    // marginTop: 115,
-    right: -5,
-    bottom: 0,
-    zIndex: 9,
   },
   shadowProp: {
     // shadowColor: Constants.black,
@@ -575,14 +581,11 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   card: {
-    // backgroundColor: Constants.white,
     borderRadius: 10,
-    paddingTop: 15,
-    paddingBottom: 45,
-    paddingHorizontal: 15,
-    // width: '90%',
-    marginVertical: 20,
-    // alignSelf: 'center',
+  },
+  detailsCard: {
+    padding: 14,
+    gap: 14,
   },
   buttontxt: {
     color: Constants.white,
@@ -590,42 +593,42 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.SemiBold,
   },
   toppart: {
-    backgroundColor: Constants.greennew,
-    paddingTop: 5,
-    // paddingBottom: 20,
+    backgroundColor: '#1F5F24',
+    height: 64,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 10,
+    paddingHorizontal: 16,
   },
   addbtn: {
-    backgroundColor: Constants.pink,
-    color: Constants.white,
-    paddingHorizontal: 25,
-    paddingVertical: 7,
-    borderRadius: 15,
-    fontSize: 16,
-    fontFamily: FONTS.Bold,
-    marginTop: 5,
     borderWidth: 1,
     borderColor: Constants.white,
+    borderRadius: 18,
+    paddingHorizontal: 13,
+    paddingVertical: 6,
+  },
+  addbtnText: {
+    color: Constants.white,
+    fontSize: 10,
+    fontFamily: FONTS.SemiBold,
   },
   carttxt: {
+    flex: 1,
     color: Constants.white,
-    fontSize: 18,
-    fontFamily: FONTS.Bold,
-    marginLeft: 10,
+    fontSize: 15,
+    fontFamily: FONTS.SemiBold,
+    textAlign: 'center',
   },
   flex: { flex: 1 },
   socialCard: {
-    marginTop: 0,
-    paddingBottom: 15,
+    marginTop: 12,
+    padding: 16,
   },
   sectionTitle: {
     color: Constants.black,
-    fontSize: 16,
+    fontSize: 12,
     fontFamily: FONTS.SemiBold,
-    marginBottom: 5,
+    marginBottom: 12,
   },
   socialRow: {
     flexDirection: 'row',
@@ -638,22 +641,23 @@ const styles = StyleSheet.create({
     borderBottomColor: '#EEEEEE',
   },
   socialIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F2F2F2',
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
   socialName: {
     color: Constants.black,
-    fontSize: 14,
+    fontSize: 11.5,
     fontFamily: FONTS.SemiBold,
   },
   socialUrl: {
     color: Constants.customgrey,
-    fontSize: 12,
+    fontSize: 10,
     fontFamily: FONTS.Regular,
+    marginTop: 2,
   },
   socialEditRow: {
     flexDirection: 'row',
