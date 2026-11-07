@@ -245,6 +245,14 @@ const Profile = props => {
   const editUpdate = () => {
     setEdit(true);
   };
+
+  const initials = String(userDetail.username || '?')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase())
+    .join('');
+
   return (
     <SafeAreaView
       style={styles.container}>
@@ -270,18 +278,17 @@ const Profile = props => {
               <EditIcon height={14} color={Constants.white} />
             </Pressable>
           )}
-          <Image
-            // source={require('../../Assets/Images/profile.png')}
-            source={
-              userDetail?.img
-                ? {
-                  uri: `${userDetail.img}`,
-                }
-                : require('../../Assets/Images/profile.png')
-            }
-            style={styles.logo}
-          />
-          <Text style={styles.accountLabel}>{t('USER ACCOUNT')}</Text>
+          {userDetail?.img ? (
+            <Image
+              source={{ uri: userDetail.img }}
+              style={styles.logo}
+            />
+          ) : (
+            <View style={[styles.logo, styles.logoFallback]}>
+              <Text style={styles.logoInitial}>{initials.charAt(0)}</Text>
+            </View>
+          )}
+          <Text style={styles.accountLabel}>{t('Your Profile')}</Text>
         </View>
         <View
           style={[
@@ -521,7 +528,16 @@ const styles = StyleSheet.create({
     borderRadius: 42,
     borderWidth: 3,
     borderColor: Constants.white,
-    backgroundColor: '#111827',
+    backgroundColor: Constants.green,
+  },
+  logoFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoInitial: {
+    color: Constants.white,
+    fontSize: 32,
+    fontFamily: FONTS.Bold,
   },
   textInput: {
     borderWidth: 1,
