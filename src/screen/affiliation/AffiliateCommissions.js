@@ -19,7 +19,7 @@ import {
 } from 'lucide-react-native';
 import { useAffiliate } from './AffiliateContext';
 import AffiliateHeader from './components/AffiliateHeader';
-import CommissionHistoryRow, { CommissionHistoryHeader } from './components/CommissionHistoryRow';
+import CommissionHistoryRow from './components/CommissionHistoryRow';
 import { TAB_BAR_SPACE } from './components/AffiliateTabBar';
 import { Card, EmptyState, StatusPill } from './components/ui';
 import { COLORS, FONTS, RADIUS } from './theme';
@@ -279,7 +279,7 @@ const AffiliateCommissions = ({ route }) => {
             })}
           </ScrollView>
 
-          <Card style={styles.tableCard}>
+          <View style={styles.historyList}>
             {visibleOrders.length === 0 ? (
               <EmptyState
                 icon={ShoppingBag}
@@ -287,19 +287,16 @@ const AffiliateCommissions = ({ route }) => {
                 text={tab === 'all' && !range ? t('No commission yet. Share your link to get started.') : t('No orders match this filter.')}
               />
             ) : (
-              <>
-                <CommissionHistoryHeader />
-                {visibleOrders.map((item, index) => (
-                  <CommissionHistoryRow
-                    key={item.key}
-                    item={item}
-                    fallbackRate={item.pending ? rate : undefined}
-                    last={index === visibleOrders.length - 1}
-                  />
-                ))}
-              </>
+              visibleOrders.map((item, index) => (
+                <CommissionHistoryRow
+                  key={item.key}
+                  item={item}
+                  fallbackRate={item.pending ? rate : undefined}
+                  last={index === visibleOrders.length - 1}
+                />
+              ))
             )}
-          </Card>
+          </View>
 
           <View onLayout={e => (payoutsY.current = e.nativeEvent.layout.y)}>
             <Text style={[styles.sectionTitle, styles.payoutsTitle]}>{t('Payout history')}</Text>
@@ -518,7 +515,7 @@ const styles = StyleSheet.create({
   tabActive: { backgroundColor: COLORS.primaryDark },
   tabText: { fontFamily: FONTS.Medium, fontSize: 12.5, color: COLORS.textSecondary },
   tabTextActive: { fontFamily: FONTS.SemiBold, color: COLORS.white },
-  tableCard: { marginTop: 12, paddingHorizontal: 10, paddingVertical: 8 },
+  historyList: { marginTop: 12 },
   payoutsTitle: { marginTop: 22, marginBottom: 10 },
   listCard: { paddingVertical: 2 },
   payoutRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14 },

@@ -8,7 +8,7 @@ import AffiliateHeader from './components/AffiliateHeader';
 import AttributedOrderRow from './components/AttributedOrderRow';
 import ReferralCard from './components/ReferralCard';
 import {TAB_BAR_SPACE} from './components/AffiliateTabBar';
-import {Card, EmptyState, SectionHeader, StatCard} from './components/ui';
+import {EmptyState, SectionHeader, StatCard} from './components/ui';
 import {COLORS, FONTS, RADIUS} from './theme';
 import {APPLICATION_STATUS, buildAttributedOrders, money} from './utils';
 
@@ -71,7 +71,7 @@ const AffiliateHome = ({navigation}) => {
             onAction={() => navigation.navigate('AffiliateCommissions', {segment: 'orders'})}
             style={styles.sectionGap}
           />
-          <Card style={styles.ordersCard}>
+          <View style={styles.ordersList}>
             {orders.length === 0 ? (
               <EmptyState
                 icon={ShoppingBag}
@@ -85,7 +85,7 @@ const AffiliateHome = ({navigation}) => {
                   <AttributedOrderRow key={item.key} item={item} last={index === list.length - 1} />
                 ))
             )}
-          </Card>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   stats: {flexDirection: 'row', gap: 8},
   referralCard: {marginTop: 14},
   sectionGap: {marginTop: 22},
-  ordersCard: {paddingVertical: 2},
+  ordersList: {marginTop: 12},
 });
 
 export default AffiliateHome;
