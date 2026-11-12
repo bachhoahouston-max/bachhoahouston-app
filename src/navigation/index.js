@@ -60,9 +60,23 @@ const AuthNavigate = () => {
 };
 
 export default function Navigation(props) {
+  const backgroundColor = props.backgroundColor || '#2E7D32';
   return (
     // <NavigationContainer>
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer
+      ref={navigationRef}
+      theme={{
+        dark: false,
+        colors: {
+          primary: '#2E7D32',
+          background: backgroundColor,
+          card: backgroundColor,
+          text: '#000000',
+          border: backgroundColor,
+          notification: '#2E7D32',
+        },
+      }}
+    >
       <Stack.Navigator
         screenOptions={{ headerShown: false }}
         initialRouteName={props.initial}

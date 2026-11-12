@@ -94,6 +94,7 @@ const normalizeForApp = items =>
 
 const App = () => {
     const [initial, setInitial] = useState('');
+    const [appBackgroundColor, setAppBackgroundColor] = useState(Constants.greennew);
     const [toast, setToast] = useState('');
     const isInitialized = useRef(false);
     // A notification tap can fire the OneSignal 'click' event mid cold-start,
@@ -128,6 +129,17 @@ const App = () => {
         couponDiscount: 0,
     });
     const [language, setLanguage] = useState('vi');
+
+    useEffect(() => {
+        GetApi('getsetting', {}).then(res => {
+            const color = res?.setting?.[0]?.appBackgroundColor;
+            if (typeof color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(color)) {
+                setAppBackgroundColor(color.toUpperCase());
+            }
+        }).catch(error => {
+            console.log('Unable to load app background setting', error);
+        });
+    }, []);
 
     useEffect(() => {
         const saveReferralFromUrl = async url => {
@@ -764,9 +776,9 @@ const App = () => {
                                                         <Spinner color={'#fff'} visible={loading} />
                                                         <StatusBar
                                                             barStyle='light-content'
-                                                            backgroundColor={Constants.greennew}
+                                                            backgroundColor={appBackgroundColor}
                                                         />
-                                                        {initial !== '' && <Navigation initial={initial} />}
+                                                        {initial !== '' && <Navigation initial={initial} backgroundColor={appBackgroundColor} />}
                                                         <PickupAlertModal />
                                                     </SafeAreaView>
                                                 </StripeProvider>
