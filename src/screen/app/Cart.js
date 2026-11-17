@@ -25,7 +25,7 @@ import {
   MinusIcon,
   Plus2Icon,
 } from '../../../Theme';
-import { ChevronDown, ChevronUp } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Package } from 'lucide-react-native';
 import {
   AddressContext,
   AppBackgroundContext,
@@ -289,11 +289,11 @@ const Cart = ({ route }) => {
     const next = cartdetail.map(line =>
       line === item
         ? {
-            ...line,
-            qty: Math.min(Number(quantity), keepableQty),
-            total: Number(line?.price || line?.offer || 0) * Math.min(Number(quantity), keepableQty),
-            stockStatus: 'AVAILABLE',
-          }
+          ...line,
+          qty: Math.min(Number(quantity), keepableQty),
+          total: Number(line?.price || line?.offer || 0) * Math.min(Number(quantity), keepableQty),
+          stockStatus: 'AVAILABLE',
+        }
         : line,
     );
     setcartdetail(next);
@@ -1051,7 +1051,7 @@ const Cart = ({ route }) => {
     // ordering, a pending debounce here can be lost, leaving the pre-order
     // cart on the server to reappear on next open.
     if (user?._id && user?.token) {
-      saveSyncedCart([]).catch(() => {});
+      saveSyncedCart([]).catch(() => { });
     }
     setPickupType(null);
     setPickupDate(null);
@@ -1106,7 +1106,7 @@ const Cart = ({ route }) => {
   };
   const extractProductObjects = (cartData) => {
     let result = [];
-console.log(cartData)
+    console.log(cartData)
     cartData.forEach((item) => {
       const source = item?.productSource || "NORMAL";
       // Reward prices are always $0 and are validated server-side at order time
@@ -1126,26 +1126,26 @@ console.log(cartData)
           .map((freeItem) => freeItem?.product?._id)
           .filter(Boolean);
       }
-console.log('kjsaikosadad>',obj)
+      console.log('kjsaikosadad>', obj)
       if (mainId) {
         result.push(obj);
       }
     });
-console.log(result)
+    console.log(result)
     return result;
   };
 
   const updateCartWithLatestData = (cartData, latestData) => {
     //  let cData = cartdetail;
     //  console.log()
-    const updatedCart = cartData.map((item,i) => {
+    const updatedCart = cartData.map((item, i) => {
       if (isRewardItem(item)) return item;
       const match = latestData.find(
         (p) => String(p.productId) === String(item?._id || item?.product?._id || item?.productid),
       );
       if (!match) return item;
       let updatedItem = { ...item };
- console.log(item)
+      console.log(item)
       if (item.productSource === "SALE") {
         if (item.offer !== match.price) {
           Alert.alert(
@@ -1175,14 +1175,14 @@ console.log(result)
 
       updatedItem.productSource = match.productSource;
       //  shaloowarray[i].seletype = item.productSource;
-  
+
 
       return updatedItem;
     });
-  //  setcartdetail([...shaloowarray])
-  //  setTimeout(() => {
+    //  setcartdetail([...shaloowarray])
+    //  setTimeout(() => {
     return updatedCart;
-  //  }, 500);
+    //  }, 500);
   };
 
   const redeemReward = async (item, index) => {
@@ -1256,11 +1256,11 @@ console.log(result)
       const updatedCart = updateCartWithLatestData(cartData, latestData);
       const isChanged = updatedCart.find(f => f.seletype !== f.productSource)
       console.log(isChanged)
-// console.log(updatedCart);
-// console.log(cartData);
-//       const isChanged =
-//         JSON.stringify(cartData) !== JSON.stringify(updatedCart);
-// console.log(isChanged)
+      // console.log(updatedCart);
+      // console.log(cartData);
+      //       const isChanged =
+      //         JSON.stringify(cartData) !== JSON.stringify(updatedCart);
+      // console.log(isChanged)
       if (isChanged?.seletype) {
         setcartdetail(updatedCart);
         await AsyncStorage.setItem("cartdata", JSON.stringify(updatedCart));
@@ -1285,7 +1285,7 @@ console.log(result)
 
   return (
     <>
-      <View style={[styles.container, {backgroundColor}]}>
+      <View style={[styles.container, { backgroundColor }]}>
         <DriverHeader
           item={`${t('Cart')} (${cartdetail.length})`}
           showback={true}
@@ -1294,7 +1294,7 @@ console.log(result)
           onEmptyCart={() => setModalVisible(true)}
         />
         {cartdetail && cartdetail.length > 0 ? (
-          <ScrollView showsVerticalScrollIndicator={false} style={{backgroundColor}}>
+          <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor }}>
             <View style={{ backgroundColor }}>
               {stockIssues.length > 0 && (
                 <View style={styles.stockIssuePanel}>
@@ -1326,8 +1326,8 @@ console.log(result)
                             {isUnavailable
                               ? t('Product Unavailable')
                               : isLimited
-                              ? `${t('Available quantity')}: ${item?.availableQty}`
-                              : t('Out of stock')}
+                                ? `${t('Available quantity')}: ${item?.availableQty}`
+                                : t('Out of stock')}
                           </Text>
                           {isLimited && keepableQty > 0 && (
                             <TouchableOpacity onPress={() => setStockIssueQuantity(item, keepableQty)}>
@@ -1560,7 +1560,7 @@ console.log(result)
                                   );
                                   setCoupon(false);
                                   setCouponDiscount(0);
-                                        setIsPriceChanged(false)
+                                  setIsPriceChanged(false)
                                 }}>
                                 <Plus2Icon
                                   color={Constants.white}
@@ -1670,7 +1670,17 @@ console.log(result)
                 )
               ))}
             </View>
-            <View style={[styles.btombg, { marginHorizontal: 10 }]}>
+            <View style={[styles.btombg, styles.pickupOptionsContainer]}>
+              <View style={styles.pickupOptionsTitle}>
+                <Package
+                  color={Constants.custom_black}
+                  size={18}
+                  strokeWidth={2}
+                />
+                <Text style={styles.pickupOptionsTitleText}>
+                  {t('Choose how to receive')}
+                </Text>
+              </View>
               {/* <Text style={styles.deliveloctxt}>{'Payment Options'}</Text> */}
               <RadioButton.Group
                 onValueChange={type => {
@@ -1726,17 +1736,15 @@ console.log(result)
                       <View style={{ flex: 1, marginRight: 10, flexDirection: 'row', alignItems: 'center' }}>
                         <Image
                           source={option.image}
-                          style={{ width: 64, height: 48, marginRight: 10 }}
+                          style={{ width: 48, height: 40, marginRight: 10 }}
                           resizeMode="contain"
                         />
                         <View style={{ flex: 1 }}>
                           <Text
                             style={{
                               color:
-                                PickupType === option.value
-                                  ? Constants.saffron
-                                  : Constants.black,
-                              fontSize: 16,
+                                Constants.saffron,
+                              fontSize: 14,
                               fontWeight: '700',
                             }}>
                             {t(option.label)}
@@ -1744,7 +1752,7 @@ console.log(result)
                           <Text
                             style={{
                               color: Constants.customgrey2,
-                              fontSize: 14,
+                              fontSize: 12,
                               marginTop: 2,
                             }}>
                             {t(option.description)}
@@ -2726,7 +2734,7 @@ console.log(result)
                       setPickupDate(null);
                       setPickupType(null);
                       if (user?._id && user?.token) {
-                        saveSyncedCart([]).catch(() => {});
+                        saveSyncedCart([]).catch(() => { });
                       }
                     }}>
                     <Text style={styles.modalText}>{t('Yes, Clear')}</Text>
@@ -3358,10 +3366,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   btombg: {
-    // backgroundColor: Constants.lightgreen,
-    // flex: 1,
     paddingBottom: 70,
-
+  },
+  pickupOptionsContainer: {
+    backgroundColor: Constants.lightgreen,
+    borderRadius: 8,
+    marginHorizontal: 10,
+    paddingHorizontal: 8,
+    paddingTop: 10,
+    paddingBottom: 14,
+  },
+  pickupOptionsTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    paddingHorizontal: 4,
+  },
+  pickupOptionsTitleText: {
+    color: Constants.custom_black,
+    fontSize: 16,
+    fontFamily: FONTS.Bold,
+    marginLeft: 6,
   },
   totalcov: {
     backgroundColor: Constants.white,
@@ -3598,22 +3623,18 @@ const styles = StyleSheet.create({
   },
   radioView: {
     marginVertical: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: 7,
+    paddingHorizontal: 8,
     marginHorizontal: 5,
-    borderRadius: 20,
+    borderRadius: 8,
     backgroundColor: Constants.white,
     borderWidth: 1,
     borderColor: Constants.customgrey3,
-
-
-    elevation: 6,
-
-
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
   },
 
 
