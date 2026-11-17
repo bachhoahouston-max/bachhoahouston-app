@@ -44,6 +44,7 @@ import OrderSuccessScreen from '../screen/app/OrderSuccessScreen';
 import Welcome from '../screen/app/Welcome';
 import BuyItAgain from '../screen/app/BuyItAgain';
 import { Affiliatetab } from './AffiliateTab';
+import Constants from '../Assets/Helpers/constant';
 
 const Stack = createNativeStackNavigator();
 const AuthStack = createNativeStackNavigator();
@@ -60,7 +61,7 @@ const AuthNavigate = () => {
 };
 
 export default function Navigation(props) {
-  const backgroundColor = props.backgroundColor || '#2E7D32';
+  const backgroundColor = props.backgroundColor || Constants.lightgreen;
   return (
     // <NavigationContainer>
     <NavigationContainer

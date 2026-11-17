@@ -67,7 +67,7 @@ export const AddressContext = React.createContext('');
 export const UserContext = React.createContext('');
 export const CheckoutContext = React.createContext();
 export const LanguageContext = React.createContext();
-export const AppBackgroundContext = React.createContext(Constants.greennew);
+export const AppBackgroundContext = React.createContext(Constants.lightgreen);
 // export const Context = React.createContext<any>('');
 
 // Cart items added on the web use web's field names (id/name/price/
@@ -95,7 +95,7 @@ const normalizeForApp = items =>
 
 const App = () => {
     const [initial, setInitial] = useState('');
-    const [appBackgroundColor, setAppBackgroundColor] = useState(Constants.greennew);
+    const [appBackgroundColor, setAppBackgroundColor] = useState(Constants.lightgreen);
     const [toast, setToast] = useState('');
     const isInitialized = useRef(false);
     // A notification tap can fire the OneSignal 'click' event mid cold-start,
@@ -802,7 +802,7 @@ const App = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: Constants.greennew,
+        backgroundColor: Constants.lightgreen,
         // paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0
     },
     toastManager: {
