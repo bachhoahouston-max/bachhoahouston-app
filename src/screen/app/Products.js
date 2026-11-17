@@ -15,7 +15,7 @@ import {
 import React, { useContext, useEffect, useState } from 'react';
 import Constants, { Currency, FONTS } from '../../Assets/Helpers/constant';
 import { MinusIcon, Plus2Icon, PlusIcon } from '../../../Theme';
-import { CartContext, LoadContext, ToastContext } from '../../../App';
+import { AppBackgroundContext, CartContext, LoadContext, ToastContext } from '../../../App';
 import { GetApi, Post } from '../../Assets/Helpers/Service';
 import { navigate } from '../../../navigationRef';
 import { useIsFocused } from '@react-navigation/native';
@@ -30,6 +30,7 @@ const Products = props => {
   const [cartdetail, setcartdetail] = useContext(CartContext);
   const [toast, setToast] = useContext(ToastContext);
   const [loading, setLoading] = useContext(LoadContext);
+  const backgroundColor = useContext(AppBackgroundContext);
   const [productlist, setproductlist] = useState([]);
   const [page, setPage] = useState(1);
   const [curentData, setCurrentData] = useState([]);
@@ -178,14 +179,14 @@ const Products = props => {
     }
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, {backgroundColor}]}>
       <DriverHeader item={t('Products')} showback={true} />
       <Text style={styles.headtxt}>{catname}</Text>
      <FlatList
   data={productlist}
   numColumns={2}
   keyExtractor={(item, index) => item._id || index.toString()}
-  contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 100 }}
+  contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 100, backgroundColor }}
   columnWrapperStyle={{ justifyContent: 'space-between' }}
   showsVerticalScrollIndicator={false}
   ListEmptyComponent={() => (

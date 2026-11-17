@@ -67,6 +67,7 @@ export const AddressContext = React.createContext('');
 export const UserContext = React.createContext('');
 export const CheckoutContext = React.createContext();
 export const LanguageContext = React.createContext();
+export const AppBackgroundContext = React.createContext(Constants.greennew);
 // export const Context = React.createContext<any>('');
 
 // Cart items added on the web use web's field names (id/name/price/
@@ -766,6 +767,7 @@ const App = () => {
                         <ToastContext.Provider value={[toast, setToast]}>
                             <LoadContext.Provider value={[loading, setLoading]}>
                                 <UserContext.Provider value={[user, setuser]}>
+                                    <AppBackgroundContext.Provider value={appBackgroundColor}>
                                     <CartContext.Provider value={[cartdetail, setcartdetail]}>
                                         <CheckoutContext.Provider value={[checkoutData, setCheckoutData]}>
                                             <AddressContext.Provider value={[locationadd, setlocationadd]}>
@@ -776,7 +778,7 @@ const App = () => {
                                                         <Spinner color={'#fff'} visible={loading} />
                                                         <StatusBar
                                                             barStyle='light-content'
-                                                            backgroundColor={appBackgroundColor}
+                                                            backgroundColor={Constants.greennew}
                                                         />
                                                         {initial !== '' && <Navigation initial={initial} backgroundColor={appBackgroundColor} />}
                                                         <PickupAlertModal />
@@ -785,6 +787,7 @@ const App = () => {
                                             </AddressContext.Provider>
                                         </CheckoutContext.Provider>
                                     </CartContext.Provider>
+                                    </AppBackgroundContext.Provider>
                                 </UserContext.Provider>
                             </LoadContext.Provider>
                         </ToastContext.Provider>

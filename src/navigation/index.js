@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { navigationRef } from '../../navigationRef';
 import { TabNav } from './TabScreen';
@@ -66,8 +66,10 @@ export default function Navigation(props) {
     <NavigationContainer
       ref={navigationRef}
       theme={{
+        ...DefaultTheme,
         dark: false,
         colors: {
+          ...DefaultTheme.colors,
           primary: '#2E7D32',
           background: backgroundColor,
           card: backgroundColor,

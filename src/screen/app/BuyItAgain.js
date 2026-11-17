@@ -12,7 +12,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import {useTranslation} from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {CartContext, LoadContext, UserContext} from '../../../App';
+import {AppBackgroundContext, CartContext, LoadContext, UserContext} from '../../../App';
 import {
   getBuyItAgainCategoryProducts,
   getPurchasedProducts,
@@ -23,6 +23,7 @@ import DriverHeader from '../../Assets/Component/DriverHeader';
 import ProductCard from './ProductCard';
 
 const BuyItAgain = () => {
+  const backgroundColor = useContext(AppBackgroundContext);
   const {t} = useTranslation();
   const [user] = useContext(UserContext);
   const [cartdetail, setcartdetail] = useContext(CartContext);
@@ -121,13 +122,13 @@ const BuyItAgain = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, {backgroundColor}]}>
       <DriverHeader item={t('Buy it again')} showback={true} showCart={true} />
       <FlatList
         data={products}
         numColumns={2}
         keyExtractor={item => String(item._id)}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, {backgroundColor}]}
         columnWrapperStyle={styles.row}
         ListEmptyComponent={
           <View style={styles.empty}>

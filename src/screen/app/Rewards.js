@@ -23,7 +23,7 @@ import { DatePickerModal } from 'react-native-paper-dates';
 import { Upload, Calendar, ChevronRight, Camera, CheckCircle2, Pencil, Store, ReceiptText } from 'lucide-react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
-import { CartContext, LoadContext, UserContext } from '../../../App';
+import { AppBackgroundContext, CartContext, LoadContext, UserContext } from '../../../App';
 import { ApiFormData, GetApi, Post } from '../../Assets/Helpers/Service';
 import { FONTS } from '../../Assets/Helpers/constant';
 import { navigate } from '../../../navigationRef';
@@ -91,6 +91,7 @@ const Rewards = () => {
   const [user] = useContext(UserContext);
   const [cartdetail, setcartdetail] = useContext(CartContext);
   const [, setLoading] = useContext(LoadContext);
+  const backgroundColor = useContext(AppBackgroundContext);
   const isLoggedIn = !!(user?._id && user?.token);
   const isVi = i18n.language === 'vi';
 
@@ -214,9 +215,9 @@ const Rewards = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {backgroundColor}]}>
       <DriverHeader item={t('Rewards')} showCart={true} />
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120, backgroundColor }}>
         {/* Tabs */}
         <View style={styles.tabs}>
           {TABS.map(x => (

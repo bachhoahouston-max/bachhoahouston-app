@@ -33,7 +33,7 @@ import {
 // import LinearGradient from 'react-native-linear-gradient';
 import { navigate } from '../../../navigationRef';
 import { GetApi } from '../../Assets/Helpers/Service';
-import { CartContext, LoadContext, ToastContext } from '../../../App';
+import { AppBackgroundContext, CartContext, LoadContext, ToastContext } from '../../../App';
 import Header from '../../Assets/Component/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SwiperFlatList from 'react-native-swiper-flatlist';
@@ -69,6 +69,7 @@ const Home = () => {
   const [cartdetail, setcartdetail] = useContext(CartContext);
   const [toast, setToast] = useContext(ToastContext);
   const [loading, setLoading] = useContext(LoadContext);
+  const backgroundColor = useContext(AppBackgroundContext);
   const [categorylist, setcategorylist] = useState();
   // const [topsellinglist, settopsellinglist] = useState([]);
   const [carosalimg, setcarosalimg] = useState([]);
@@ -326,7 +327,7 @@ const Home = () => {
       {/* <FontTest /> */}
       <TouchableOpacity
         style={{
-          backgroundColor: '#2E7D32',
+          backgroundColor: Constants.greennew,
           paddingBottom: 25,
           borderBottomLeftRadius: 20,
           borderBottomRightRadius: 20
@@ -361,7 +362,7 @@ const Home = () => {
         onEndReachedThreshold={0.5}
         contentContainerStyle={{
           paddingBottom: Platform.OS === 'android' ? 70 : 40,
-          backgroundColor: "#E8F5E9"
+          backgroundColor
         }}
         ListHeaderComponent={
           <>

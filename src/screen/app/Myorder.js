@@ -22,7 +22,7 @@ import { OrderIcon, SearchIcon } from '../../../Theme';
 import { navigate } from '../../../navigationRef';
 import { useIsFocused } from '@react-navigation/native';
 import { ApiFormData, GetApi, Post } from '../../Assets/Helpers/Service';
-import { LoadContext, ToastContext, UserContext } from '../../../App';
+import { AppBackgroundContext, LoadContext, ToastContext, UserContext } from '../../../App';
 import moment from 'moment';
 import DriverHeader from '../../Assets/Component/DriverHeader';
 import { useTranslation } from 'react-i18next';
@@ -39,6 +39,7 @@ const Myorder = () => {
   const [toast, setToast] = useContext(ToastContext);
   const [loading, setLoading] = useContext(LoadContext);
   const [user, setuser] = useContext(UserContext);
+  const backgroundColor = useContext(AppBackgroundContext);
   const [page, setPage] = useState(1);
   const [alredyfavorite, setalredyfavorite] = useState(false);
   const [curentData, setCurrentData] = useState([]);
@@ -318,7 +319,7 @@ const Myorder = () => {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, {backgroundColor}]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       {/* <SafeAreaView style={styles.container}> */}
       <DriverHeader item={t('My Order')} showback={true} />
@@ -375,6 +376,8 @@ const Myorder = () => {
       <View
         style={{ paddingHorizontal: 15, flex: 1 }}>
         <FlatList
+          style={{backgroundColor}}
+          contentContainerStyle={{backgroundColor}}
           data={orderlist}
           ListEmptyComponent={() => (
             <View

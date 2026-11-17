@@ -15,7 +15,7 @@ import {
 import React, { useContext, useEffect, useState } from 'react';
 import Constants, { Currency, FONTS } from '../../Assets/Helpers/constant';
 import { CategoriesFilledIcon, CategoriesIcon, MinusIcon, Plus2Icon, PlusIcon } from '../../../Theme';
-import { CartContext, LoadContext, ToastContext } from '../../../App';
+import { AppBackgroundContext, CartContext, LoadContext, ToastContext } from '../../../App';
 import { GetApi, Post } from '../../Assets/Helpers/Service';
 import { navigate } from '../../../navigationRef';
 import { useIsFocused } from '@react-navigation/native';
@@ -34,6 +34,7 @@ const CategoryFilter = props => {
     const [cartdetail, setcartdetail] = useContext(CartContext);
     const [toast, setToast] = useContext(ToastContext);
     const [loading, setLoading] = useContext(LoadContext);
+    const backgroundColor = useContext(AppBackgroundContext);
     const [productlist, setproductlist] = useState([]);
     const [page, setPage] = useState(1);
     const [curentData, setCurrentData] = useState([]);
@@ -207,7 +208,7 @@ const CategoryFilter = props => {
         }
     };
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, {backgroundColor}]}>
             <DriverHeader item={t('Category')} showback={true} showCart={true} />
             <View>
                 {/* <Text style={styles.headtxt}>{catname}</Text> */}
@@ -252,7 +253,7 @@ const CategoryFilter = props => {
     numColumns={2}
     keyExtractor={(item, index) => item._id || index.toString()}
     columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 5 }}
-    contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 5 }}
+    contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 5, backgroundColor }}
     showsVerticalScrollIndicator={false}
     onEndReached={fetchNextPage}
     onEndReachedThreshold={0.5}

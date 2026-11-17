@@ -29,7 +29,7 @@ import {
 // import LinearGradient from 'react-native-linear-gradient';
 import { navigate } from '../../../navigationRef';
 import { GetApi } from '../../Assets/Helpers/Service';
-import { LoadContext, ToastContext } from '../../../App';
+import { AppBackgroundContext, LoadContext, ToastContext } from '../../../App';
 import Header from '../../Assets/Component/Header';
 import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
@@ -39,6 +39,7 @@ const Categories = () => {
   const { t } = useTranslation();
   const [toast, setToast] = useContext(ToastContext);
   const [loading, setLoading] = useContext(LoadContext);
+  const backgroundColor = useContext(AppBackgroundContext);
   const [categorylist, setcategorylist] = useState();
   useFocusEffect(
     useCallback(() => {
@@ -63,7 +64,7 @@ const Categories = () => {
     );
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, {backgroundColor}]}>
       <Header />
       {/* <TouchableOpacity
           style={[styles.inpcov]}
@@ -75,7 +76,7 @@ const Categories = () => {
             placeholder="Search"
             placeholderTextColor={Constants.light_black}></TextInput>
         </TouchableOpacity> */}
-      <ScrollView style={{ marginBottom: 70, }}>
+      <ScrollView style={{ marginBottom: 70, backgroundColor }}>
         <TouchableOpacity
           style={styles.buyAgain}
           onPress={() => navigate('BuyItAgain')}>

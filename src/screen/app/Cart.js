@@ -28,6 +28,7 @@ import {
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import {
   AddressContext,
+  AppBackgroundContext,
   CartContext,
   LoadContext,
   UserContext,
@@ -94,6 +95,7 @@ const Cart = ({ route }) => {
   const [locationadd, setlocationadd] = useContext(AddressContext);
   const [user, setuser] = useContext(UserContext);
   const [loading, setLoading] = useContext(LoadContext);
+  const backgroundColor = useContext(AppBackgroundContext);
   const [totalsum, settotalsum] = useState(null);
   const [totaloff, settotaloff] = useState(null);
   const [totalFinal, setTotalFinal] = useState(null);
@@ -1283,7 +1285,7 @@ console.log(result)
 
   return (
     <>
-      <View style={styles.container}>
+      <View style={[styles.container, {backgroundColor}]}>
         <DriverHeader
           item={`${t('Cart')} (${cartdetail.length})`}
           showback={true}
@@ -1292,8 +1294,8 @@ console.log(result)
           onEmptyCart={() => setModalVisible(true)}
         />
         {cartdetail && cartdetail.length > 0 ? (
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={{ backgroundColor: Constants.lightgreen }}>
+          <ScrollView showsVerticalScrollIndicator={false} style={{backgroundColor}}>
+            <View style={{ backgroundColor }}>
               {stockIssues.length > 0 && (
                 <View style={styles.stockIssuePanel}>
                   <Text style={styles.stockIssueTitle}>
