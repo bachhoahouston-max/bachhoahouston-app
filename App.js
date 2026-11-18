@@ -5,7 +5,6 @@
  * @format
  */
 /* eslint-disable react-hooks/exhaustive-deps */
-import { Root } from 'native-base';
 import React, { useEffect, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';

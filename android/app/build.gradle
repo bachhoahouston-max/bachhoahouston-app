@@ -154,3 +154,11 @@ dependencies {
 
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 
+afterEvaluate {
+    tasks.named("copyReactNativeVectorIconFonts", Copy) {
+        from("../../src/Assets/fonts") {
+            include "Poppins-*.ttf"
+        }
+    }
+}
+

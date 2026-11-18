@@ -43,6 +43,8 @@ import CategoryFilter from '../screen/app/CategoryFilter';
 import OrderSuccessScreen from '../screen/app/OrderSuccessScreen';
 import Welcome from '../screen/app/Welcome';
 import BuyItAgain from '../screen/app/BuyItAgain';
+import ExploreHouston from '../screen/app/exploreHouston/ExploreHouston';
+import ExploreHoustonStore from '../screen/app/exploreHouston/ExploreHoustonStore';
 import { Affiliatetab } from './AffiliateTab';
 import Constants from '../Assets/Helpers/constant';
 
@@ -94,6 +96,8 @@ export default function Navigation(props) {
         <Stack.Screen name="Products" component={Products} />
         <Stack.Screen name="CategoryFilter" component={CategoryFilter} />
         <Stack.Screen name="BuyItAgain" component={BuyItAgain} />
+        <Stack.Screen name="ExploreHouston" component={ExploreHouston} />
+        <Stack.Screen name="ExploreHoustonStore" component={ExploreHoustonStore} />
         <Stack.Screen name="Account" component={Account} />
         <Stack.Screen name="Affiliation" component={Affiliatetab} />
         <Stack.Screen name="Profile" component={Profile} />

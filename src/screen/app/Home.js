@@ -45,6 +45,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator } from 'react-native-paper';
 import i18n from '../../../i18n';
 import {ShoppingBag} from 'lucide-react-native';
+import ExploreHoustonBanner from './exploreHouston/ExploreHoustonBanner';
+import { isExploreHoustonVisible } from './exploreHouston/storeDirectory';
 
 const { width: windowWidth } = Dimensions.get('window');
 
@@ -81,6 +83,7 @@ const Home = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [showExploreHouston, setShowExploreHouston] = useState(false);
   // const dumydata = [
   //   {
   //     name: 'Tata Salt',
@@ -150,6 +153,16 @@ const Home = () => {
       return () => { }; // cleanup if needed
     }, [])
   );
+
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    isExploreHoustonVisible().then(visible => {
+      if (active) setShowExploreHouston(visible);
+    }).catch(() => {
+      if (active) setShowExploreHouston(false);
+    });
+    return () => { active = false; };
+  }, []));
 
   useEffect(() => {
     if (carosalimg && carosalimg.length > 1) {
@@ -462,6 +475,7 @@ const Home = () => {
                 </TouchableOpacity>
               )}
             />
+            {showExploreHouston && <ExploreHoustonBanner onPress={() => navigate('ExploreHouston')} />}
             <TouchableOpacity
               style={styles.buyAgain}
               onPress={() => navigate('BuyItAgain')}>

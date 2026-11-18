@@ -73,6 +73,16 @@ const SignIn = props => {
     }
   };
 
+  const returnToExploreStore = () => {
+    const rootNavigation = props.navigation.getParent();
+    const state = rootNavigation?.getState();
+    if (state?.routes[state.index - 1]?.name !== 'ExploreHoustonStore') {
+      return false;
+    }
+    rootNavigation.goBack();
+    return true;
+  };
+
   const submit = async () => {
     if (userDetail.username.trim() === '' || userDetail.password === '') {
       setSubmitted(true);
@@ -141,6 +151,7 @@ const SignIn = props => {
           } else {
             setLoading(false);
             const isAffiliate = affiliateSignup || res.data.isAffiliate === true;
+            if (!isAffiliate && returnToExploreStore()) return;
             reset(
               isAffiliate
                 ? 'Affiliation'
@@ -301,7 +312,9 @@ const SignIn = props => {
           </TouchableOpacity>
 
           {/* Skip Button */}
-          <TouchableOpacity onPress={() => navigate('App')}>
+          <TouchableOpacity onPress={() => {
+            if (!returnToExploreStore()) navigate('App');
+          }}>
             <Text style={newStyles.skipText}>{t('Skip')}</Text>
           </TouchableOpacity>
 
