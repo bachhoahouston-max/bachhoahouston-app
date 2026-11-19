@@ -45,11 +45,11 @@ import ComboCard from '../../Assets/Component/ComboCard';
 import { useFocusEffect } from '@react-navigation/native';
 import { ActivityIndicator } from 'react-native-paper';
 import i18n from '../../../i18n';
-import {ShoppingBag} from 'lucide-react-native';
 import ExploreHoustonBanner from './exploreHouston/ExploreHoustonBanner';
 import { isExploreHoustonVisible } from './exploreHouston/storeDirectory';
 
 const { width: windowWidth } = Dimensions.get('window');
+const buyItAgainCategory = { _id: 'buy-it-again' };
 
 // Simple component to test font
 const FontTest = () => {
@@ -452,45 +452,37 @@ const Home = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Combo Deals */}
-
-
             <FlatList
-              data={categorylist}
-              scrollEnabled={true}
+              data={[buyItAgainCategory, ...(categorylist ?? [])]}
               horizontal={true}
-              // numColumns={Dimensions.get('window').width < 500 ? 4 : 6}
               keyExtractor={(item, index) => item._id || index.toString()}
               style={{ width: '100%', gap: 5, marginVertical: 10 }}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={{ flex: 1, marginVertical: 10, width: Dimensions.get('window').width < 500 ? 100 : 120, alignItems: 'center' }}
-                  onPress={() =>
-                    navigate('CategoryFilter', { item: item._id, name: i18n.language === 'vi' ? (item.v_name || item.name) : item.name })
-                  }>
-                  <View style={styles.categorycircle}>
-                    <Image
-                      source={
-                        item?.image
-                          ? { uri: item?.image }
-                          : require('../../Assets/Images/veg.png')
-                      }
-                      style={styles.categoryimg}
-                    />
-                    <View>
-                      <Text style={styles.categorytxt2}>{i18n.language === 'vi' ? (item.v_name || item.name) : item.name}</Text>
+              renderItem={({ item }) => {
+                const isBuyItAgain = item === buyItAgainCategory;
+                const name = isBuyItAgain
+                  ? t('Buy it again')
+                  : i18n.language === 'vi' ? (item.v_name || item.name) : item.name;
+                const image = isBuyItAgain
+                  ? require('../../Assets/Images/BuyItAgain.png')
+                  : item.image ? { uri: item.image } : require('../../Assets/Images/veg.png');
+
+                return (
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    style={styles.categoryTile}
+                    onPress={() => isBuyItAgain
+                      ? navigate('BuyItAgain')
+                      : navigate('CategoryFilter', { item: item._id, name })
+                    }>
+                    <View style={styles.categorycircle}>
+                      <Image source={image} style={styles.categoryimg} />
+                      <Text style={styles.categorytxt2}>{name}</Text>
                     </View>
-                  </View>
-                </TouchableOpacity>
-              )}
+                  </TouchableOpacity>
+                );
+              }}
             />
             {showExploreHouston && <ExploreHoustonBanner onPress={() => navigate('ExploreHouston')} />}
-            <TouchableOpacity
-              style={styles.buyAgain}
-              onPress={() => navigate('BuyItAgain')}>
-              <ShoppingBag size={22} color={Constants.greennew} />
-              <Text style={styles.buyAgainText}>{t('Buy it again')}</Text>
-            </TouchableOpacity>
             <View style={{ height: 10, backgroundColor: 'transparent', marginVertical: 5 }} />
 
             {combolist.length > 0 && (
@@ -595,24 +587,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Constants.saffron,
   },
-  buyAgain: {
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: Constants.white,
-    borderColor: Constants.greennew,
-    borderRadius: 20,
-    borderWidth: 1,
-    flexDirection: 'row',
-    marginHorizontal: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  buyAgainText: {
-    color: Constants.greennew,
-    fontFamily: FONTS.Bold,
-    fontSize: 14,
-    marginLeft: 6,
-  },
   inpcov: {
     // borderWidth: 1,
     borderColor: Constants.customgrey,
@@ -713,6 +687,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginVertical: 10,
     // backgroundColor:Constants.red
+  },
+  categoryTile: {
+    alignItems: 'center',
+    flex: 1,
+    marginVertical: 10,
+    width: windowWidth < 500 ? 100 : 120,
   },
   categorycircle: {
     // height: Dimensions.get('window').width < 500 ? 120 : 150,
