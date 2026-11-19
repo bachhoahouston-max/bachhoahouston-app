@@ -206,7 +206,7 @@ export default function ExploreHouston({ navigation }) {
   });
 
   const wide = width >= 768;
-  const categoryColumns = width >= 1024 ? 6 : wide ? 4 : 3;
+  const categoryColumns = width >= 1024 ? 6 : wide ? 4 : width >= 340 ? 3 : 2;
   const storeColumns = width >= 1024 ? 2 : 1;
   const tileGap = wide ? 12 : 4;
   const contentWidth = Math.min(width, 1360) - (wide ? 80 : 32);
@@ -283,12 +283,14 @@ export default function ExploreHouston({ navigation }) {
                           <StoreImage
                             url={category.image}
                             icon={categoryIcon(category)}
-                            size={18}
+                            size={wide ? 20 : 16}
                             color={category.iconBackground ? exploreColors.green : color}
                             background={category.iconBackground || background}
                             style={[styles.tileIcon, wide && styles.wideTileIcon]}
                           />
-                          <Text style={[exploreStyles.text, styles.tileLabel, wide && styles.wideTileLabel]}>
+                          <Text
+                            android_hyphenationFrequency="normal"
+                            style={[exploreStyles.text, styles.tileLabel, wide && styles.wideTileLabel]}>
                             {localizedStoreText(category.name, category.v_name, i18n.language)}
                           </Text>
                         </Pressable>
@@ -351,23 +353,33 @@ const styles = StyleSheet.create({
   chipIcon: { width: 16, height: 16, borderRadius: 8 },
   chipLabel: { fontSize: 12, lineHeight: 16, color: exploreColors.body },
   selectedChipLabel: { color: '#fff' },
-  categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -6,
+    marginBottom: 8,
+    padding: 6,
+    borderRadius: 12,
+    backgroundColor: '#fff8ed',
+  },
   categoryTile: {
     ...exploreStyles.row,
     ...exploreStyles.shadow,
-    gap: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
+    gap: 5,
+    minHeight: 36,
+    paddingStart: 6,
+    paddingEnd: 4,
+    paddingVertical: 3,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ebe9e2',
+    borderColor: '#ece6dc',
     backgroundColor: '#fff',
   },
   pressedTile: { backgroundColor: '#efeee8' },
   wideTile: { gap: 12, padding: 12 },
-  tileIcon: { width: 36, height: 36, borderRadius: 18 },
+  tileIcon: { width: 28, height: 28, borderRadius: 14 },
   wideTileIcon: { width: 44, height: 44, borderRadius: 22 },
-  tileLabel: { flex: 1, color: '#000', fontSize: 11, lineHeight: 14 },
+  tileLabel: { flex: 1, color: exploreColors.text, fontSize: 10, lineHeight: 13 },
   wideTileLabel: { fontSize: 14, lineHeight: 18 },
   cardGrid: { gap: 12 },
   card: {
