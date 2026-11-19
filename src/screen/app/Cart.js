@@ -25,7 +25,7 @@ import {
   MinusIcon,
   Plus2Icon,
 } from '../../../Theme';
-import { ChevronDown, ChevronUp, Package } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Circle, CircleDot, Package, X } from 'lucide-react-native';
 import {
   AddressContext,
   AppBackgroundContext,
@@ -38,7 +38,6 @@ import { saveSyncedCart } from '../../Assets/Helpers/CartSync';
 import { getProductReferrals, getProductReferralDiscountRates } from '../../Assets/Helpers/affiliateReferral';
 import { navigate, reset } from '../../../navigationRef';
 import { useTranslation } from 'react-i18next';
-import { RadioButton } from 'react-native-paper';
 import Toast from 'react-native-toast-message';
 import moment from 'moment-timezone';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -76,7 +75,7 @@ const pickupOptionss = [
   {
     label: 'Next Day Local Delivery',
     value: 'localDelivery',
-    description: 'Cut off time 11.59 pm',
+    description: 'Cut off time 11:59 pm',
     image: require('../../Assets/Images/delivery-sameday.png'),
   },
   {
@@ -129,6 +128,9 @@ const Cart = ({ route }) => {
   const [showStripePayment, setShowStripePayment] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [affiliateCode, setAffiliateCode] = useState('');
+  const [isRemovingSavingsCode, setIsRemovingSavingsCode] = useState(false);
+  const appliedCouponCode = coupon ? discountCode : '';
+  const appliedSavingsCode = affiliateCode || appliedCouponCode;
   const [appliedReferralDiscountRate, setAppliedReferralDiscountRate] = useState(0);
   const [appliedReferralProductIds, setAppliedReferralProductIds] = useState([]);
   const [showAppliedReferralProducts, setShowAppliedReferralProducts] = useState(false);
@@ -312,6 +314,26 @@ const Cart = ({ route }) => {
     setAppliedReferralDiscountRate(0);
     setAppliedReferralProductIds([]);
     setShowAppliedReferralProducts(false);
+  };
+
+  const removeSavingsCode = async () => {
+    if (isRemovingSavingsCode) return;
+    setIsRemovingSavingsCode(true);
+    try {
+      if (affiliateCode) {
+        await AsyncStorage.removeItem('affiliateReferralCode');
+        resetAppliedReferral();
+      }
+      setCoupon(false);
+      setCouponDiscount(0);
+      setDiscountCode('');
+      setCouponCode('');
+    } catch (error) {
+      console.warn(error);
+      Toast.show({ type: 'error', text1: t('Failed to remove code') });
+    } finally {
+      setIsRemovingSavingsCode(false);
+    }
   };
 
   const appliedReferralProducts = cartdetail.filter(
@@ -913,7 +935,7 @@ const Cart = ({ route }) => {
         deliveryfee: deliveryFees || 0,
         discount: Number(couponvalue || 0) + Number(affiliateDiscount || 0),
         referralDiscount: affiliateDiscount,
-        discountCode: discountCode || '',
+        discountCode: appliedCouponCode,
         referralCode: referralCode || '',
         appliedReferralCode: referralCode || '',
         user: shipAdd._id,
@@ -1294,7 +1316,10 @@ const Cart = ({ route }) => {
           onEmptyCart={() => setModalVisible(true)}
         />
         {cartdetail && cartdetail.length > 0 ? (
-          <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor }}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            style={{ backgroundColor }}
+            contentContainerStyle={route?.name === 'CartTab' ? styles.cartTabContent : styles.cartContent}>
             <View style={{ backgroundColor }}>
               {stockIssues.length > 0 && (
                 <View style={styles.stockIssuePanel}>
@@ -1670,54 +1695,41 @@ const Cart = ({ route }) => {
                 )
               ))}
             </View>
-            <View style={[styles.btombg, styles.pickupOptionsContainer]}>
+            <View style={styles.pickupOptionsContainer}>
               <View style={styles.pickupOptionsTitle}>
                 <Package
                   color={Constants.custom_black}
                   size={18}
                   strokeWidth={2}
                 />
-                <Text style={styles.pickupOptionsTitleText}>
+                <Text accessibilityRole="header" style={styles.pickupOptionsTitleText}>
                   {t('Choose how to receive')}
                 </Text>
               </View>
-              {/* <Text style={styles.deliveloctxt}>{'Payment Options'}</Text> */}
-              <RadioButton.Group
-                onValueChange={type => {
-                  setPickupType(type);
-                  setCouponDiscount(0);
-                  setCoupon(false);
-                  setCouponCode('');
-                  setPickupDate(null);
-
-                }}
-                value={PickupType}>
-                {pickupOptions.map((option, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.radioView,
-                      { flexDirection: 'column' },
-                    ]}>
+              <View accessibilityRole="radiogroup" style={styles.pickupOptions}>
+                {pickupOptions.map(option => (
+                  <View key={option.value} style={[
+                    styles.pickupCard,
+                    PickupType === option.value && styles.expandedPickupCard,
+                  ]}>
                     <TouchableOpacity
-                      style={{
-                        flexDirection: 'row-reverse',
-                        alignItems: 'flex-start',
-                      }}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: PickupType === option.value }}
+                      style={styles.pickupRow}
                       onPress={() => {
                         setPickupType(option.value);
                         setPickupDate(null);
                         setDeliveryTip(0);
                         setCoupon(false);
                         setCouponDiscount(0);
+                        setCouponCode('');
                         setDiscountCode('');
                         setLocalDeliveryAddress({
                           ApartmentNo: user?.ApartmentNo || '',
                           SecurityGateCode: user?.SecurityGateCode || '',
                           zipcode: user?.zipcode || '',
                         });
-                        console.log(user)
-                        if (user.zipcode) {
+                        if (user?.zipcode) {
                           if (option.value === 'localDelivery') {
                             checkZipCodeAvailability(user.zipcode);
                           } else {
@@ -1725,40 +1737,21 @@ const Cart = ({ route }) => {
                           }
                         }
                       }}>
-                      <RadioButton.Android
-                        value={option.value}
-                        status={
-                          PickupType === option.value ? 'checked' : 'unchecked'
-                        }
-                        color={Constants.pink}
-                        uncheckedColor={Constants.black}
+                      <Image
+                        source={option.image}
+                        style={styles.pickupImage}
+                        resizeMode="contain"
                       />
-                      <View style={{ flex: 1, marginRight: 10, flexDirection: 'row', alignItems: 'center' }}>
-                        <Image
-                          source={option.image}
-                          style={{ width: 48, height: 40, marginRight: 10 }}
-                          resizeMode="contain"
-                        />
-                        <View style={{ flex: 1 }}>
-                          <Text
-                            style={{
-                              color:
-                                Constants.saffron,
-                              fontSize: 14,
-                              fontWeight: '700',
-                            }}>
-                            {t(option.label)}
-                          </Text>
-                          <Text
-                            style={{
-                              color: Constants.customgrey2,
-                              fontSize: 12,
-                              marginTop: 2,
-                            }}>
-                            {t(option.description)}
-                          </Text>
-                        </View>
+                      <View style={styles.pickupDivider} />
+                      <View style={styles.pickupCopy}>
+                        <Text style={styles.pickupLabel}>{t(option.label)}</Text>
+                        <Text style={styles.pickupDescription}>{t(option.description)}</Text>
                       </View>
+                      {PickupType === option.value ? (
+                        <CircleDot size={17} color={Constants.greennew} />
+                      ) : (
+                        <Circle size={17} strokeWidth={1.8} color={Constants.black} />
+                      )}
                     </TouchableOpacity>
 
                     {/* Details inside the box when selected */}
@@ -2112,30 +2105,37 @@ const Cart = ({ route }) => {
                     )}
                   </View>
                 ))}
-              </RadioButton.Group>
+              </View>
+            </View>
 
+            <View style={styles.checkoutDetails}>
               {/* Coupon Section - Moved below shipping options */}
               {PickupType && <View style={[styles.totalcov, { marginTop: 15 }]}>
                 <Text style={styles.boxtxtlg}>{t('Savings Corner')}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <TextInput
-                    value={couponCode}
-                    onChangeText={text => setCouponCode(text)}
-                    placeholder={t('Coupon or referral code')}
-                    placeholderTextColor={Constants.customgrey}
-                    style={{
-                      flex: 1,
-                      height: 45,
-                      borderWidth: 1,
-                      borderColor: Constants.customgrey3,
-                      borderRadius: 10,
-                      paddingHorizontal: 15,
-                      fontSize: 16,
-                      color: Constants.black,
-                      fontFamily: FONTS.Regular,
-                    }}
-                  />
+                  <View style={styles.savingsCodeField}>
+                    <TextInput
+                      accessibilityLabel={t('Coupon or referral code')}
+                      value={appliedSavingsCode || couponCode}
+                      onChangeText={setCouponCode}
+                      editable={!appliedSavingsCode && !isRemovingSavingsCode}
+                      placeholder={t('Coupon or referral code')}
+                      placeholderTextColor={Constants.customgrey}
+                      style={styles.savingsCodeInput}
+                    />
+                    {!!appliedSavingsCode && (
+                      <TouchableOpacity
+                        accessibilityRole="button"
+                        accessibilityLabel={t(affiliateCode ? 'Remove referral code' : 'Remove coupon code')}
+                        disabled={isRemovingSavingsCode}
+                        onPress={removeSavingsCode}
+                        style={styles.removeSavingsCode}>
+                        <X size={18} color={Constants.greennew} />
+                      </TouchableOpacity>
+                    )}
+                  </View>
                   <TouchableOpacity
+                    disabled={!!appliedSavingsCode || isRemovingSavingsCode}
                     onPress={async () => {
                       if (couponCode.trim() === '') {
                         Toast.show({
@@ -2229,7 +2229,7 @@ const Cart = ({ route }) => {
                         const response = await Post(
                           `ValidateCouponforUser`,
                           {
-                            code: couponCode,
+                            code: couponCode.trim(),
                             cartValue: totaloff,
                             userId: user._id,
                             option: PickupType,
@@ -2242,7 +2242,8 @@ const Cart = ({ route }) => {
                           await AsyncStorage.removeItem('affiliateReferralCode');
                           setCoupon(true);
                           setCouponDiscount(response.data.discount);
-                          setDiscountCode(couponCode);
+                          setDiscountCode(couponCode.trim());
+                          setCouponCode('');
                           Toast.show({
                             type: 'success',
                             text1: t('Coupon applied successfully'),
@@ -2282,10 +2283,10 @@ const Cart = ({ route }) => {
                     </Text>
                   </View>
                 )}
-                {coupon && couponDiscount > 0 && (
+                {!!appliedCouponCode && (
                   <View style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Text style={[styles.boxtxt, { color: Constants.green }]}>
-                      {t('Coupon applied')}: {discountCode}
+                      {t('Coupon applied')}: {appliedCouponCode}
                     </Text>
                   </View>
                 )}
@@ -2956,8 +2957,8 @@ const Cart = ({ route }) => {
             couponDiscount: Number(couponDiscount || 0) + Number(affiliateDiscount || 0),
             referralDiscount: affiliateDiscount,
             referralCode: affiliateCode,
-            couponCode: couponCode,
-            discountCode: discountCode,
+            couponCode: appliedCouponCode,
+            discountCode: appliedCouponCode,
             subtotal: totaloff,
           }}
           orderID={orderID}
@@ -3365,37 +3366,107 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  btombg: {
-    paddingBottom: 70,
+  cartContent: {
+    paddingBottom: 16,
+  },
+  cartTabContent: {
+    // Allow the summary to scroll above the floating tab bar and its bottom offset.
+    paddingBottom: Platform.OS === 'ios' ? 102 : 86,
   },
   pickupOptionsContainer: {
-    backgroundColor: Constants.lightgreen,
-    borderRadius: 8,
-    marginHorizontal: 10,
-    paddingHorizontal: 8,
-    paddingTop: 10,
-    paddingBottom: 14,
+    backgroundColor: '#D8FAE8',
+    borderRadius: 15,
+    marginHorizontal: 12,
+    padding: 14,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   pickupOptionsTitle: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
-    paddingHorizontal: 4,
+    gap: 8,
+    marginBottom: 14,
   },
   pickupOptionsTitleText: {
+    flex: 1,
     color: Constants.custom_black,
     fontSize: 16,
     fontFamily: FONTS.Bold,
-    marginLeft: 6,
+    includeFontPadding: false,
+  },
+  pickupOptions: {
+    gap: 10,
+  },
+  pickupRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    minHeight: 48,
+  },
+  pickupImage: {
+    width: 44,
+    height: 36,
+  },
+  pickupDivider: {
+    width: 1,
+    height: 34,
+    backgroundColor: '#E5E7EB',
+  },
+  pickupCopy: {
+    flex: 1,
+    paddingVertical: 5,
+  },
+  pickupLabel: {
+    color: '#D13D00',
+    fontFamily: FONTS.SemiBold,
+    fontSize: 13,
+    lineHeight: 17,
+    includeFontPadding: false,
+  },
+  pickupDescription: {
+    color: '#566B86',
+    fontFamily: FONTS.Regular,
+    fontSize: 11,
+    lineHeight: 15,
+    includeFontPadding: false,
+  },
+  checkoutDetails: {
+    marginHorizontal: 18,
+  },
+  savingsCodeField: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 45,
+    borderWidth: 1,
+    borderColor: Constants.customgrey3,
+    borderRadius: 10,
+  },
+  savingsCodeInput: {
+    flex: 1,
+    minHeight: 43,
+    paddingHorizontal: 12,
+    paddingVertical: 0,
+    fontSize: 16,
+    color: Constants.black,
+    fontFamily: FONTS.Regular,
+  },
+  removeSavingsCode: {
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   totalcov: {
     backgroundColor: Constants.white,
     // marginVertical: 10,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 30,
+    borderRadius: 15,
     marginTop: 10,
-    backgroundColor: Constants.white,
     borderWidth: 1,
     borderColor: Constants.customgrey3,
 
@@ -3621,20 +3692,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: FONTS.Bold,
   },
-  radioView: {
-    marginVertical: 5,
-    paddingVertical: 7,
+  pickupCard: {
     paddingHorizontal: 8,
-    marginHorizontal: 5,
     borderRadius: 8,
     backgroundColor: Constants.white,
     borderWidth: 1,
-    borderColor: Constants.customgrey3,
+    borderColor: '#CBD5E1',
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 3,
+  },
+  expandedPickupCard: {
+    paddingBottom: 8,
   },
 
 
