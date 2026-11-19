@@ -42,6 +42,8 @@ const DriverHeader = props => {
         }}>
         {props.showback ? (
           <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={props.backAccessibilityLabel}
             onPress={() => goBack()}
             style={{width: 20, height: 20, marginRight: 10}}>
             <BackIcon color={Constants.white} />

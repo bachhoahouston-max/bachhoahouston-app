@@ -7,8 +7,9 @@ import { Building2, Clock, Eye, Globe, Mail, MapPin, Phone, Star, Tag } from 'lu
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import { UserContext } from '../../../../App';
+import DriverHeader from '../../../Assets/Component/DriverHeader';
 import { GetApi, Post } from '../../../Assets/Helpers/Service';
-import { exploreColors, exploreStyles, StoreBackButton, StoreImage, StoreNotice } from './components';
+import { exploreColors, exploreStyles, StoreImage, StoreNotice } from './components';
 import StoreCommunity from './StoreCommunity';
 import { formatStoreHours, getStoreOpenStatus, localizedStoreText, readStoreResponse } from './storeDirectory';
 
@@ -200,12 +201,10 @@ export default function ExploreHoustonStore({ navigation, route }) {
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[styles.screen, { backgroundColor: colors.background }]}>
+      <DriverHeader item={t('Explore Houston')} showback backAccessibilityLabel={t('Back to stores')} />
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[styles.content, wide && styles.wideContent]}>
-        <View style={styles.back}>
-          <StoreBackButton label={t('Back to stores')} onPress={navigation.goBack} />
-        </View>
         {loadState === 'loading' ? <StoreNotice loading /> : loadState === 'ready' ? (
           <>
             <StoreOverview store={store} wide={wide} twoColumns={width >= 640} />
@@ -234,9 +233,8 @@ export default function ExploreHoustonStore({ navigation, route }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  content: { width: '100%', maxWidth: 1104, alignSelf: 'center', paddingHorizontal: 16, paddingVertical: 32 },
-  wideContent: { paddingHorizontal: 40, paddingVertical: 48 },
-  back: { marginBottom: 16 },
+  content: { width: '100%', maxWidth: 1104, alignSelf: 'center', paddingHorizontal: 16, paddingTop: 16, paddingBottom: 32 },
+  wideContent: { paddingHorizontal: 40, paddingTop: 24, paddingBottom: 48 },
   overview: { ...exploreStyles.shadow, borderRadius: 24, overflow: 'hidden', backgroundColor: '#fff' },
   hero: { height: 256 },
   wideHero: { height: 384 },

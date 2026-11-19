@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { ArrowLeft } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { FONTS } from '../../../Assets/Helpers/constant';
 
@@ -53,22 +52,6 @@ export function StoreImage({ url, icon: Icon, size, color = exploreColors.green,
   );
 }
 
-export function StoreBackButton({ label, onPress }) {
-  const { t } = useTranslation();
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label || t('Back')}
-      hitSlop={8}
-      onPress={onPress}
-      style={({ pressed }) => [styles.back, pressed && exploreStyles.pressed]}>
-      <ArrowLeft size={18} color={exploreColors.green} />
-      {label && <Text style={[exploreStyles.semibold, styles.backLabel]}>{label}</Text>}
-    </Pressable>
-  );
-}
-
 export function StoreNotice({ loading, title, description, onRetry }) {
   const { t } = useTranslation();
 
@@ -102,8 +85,6 @@ export function StoreButton({ label, onPress, disabled, destructive, style }) {
 const styles = StyleSheet.create({
   cover: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   image: { position: 'absolute', width: '100%', height: '100%' },
-  back: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8, paddingVertical: 8 },
-  backLabel: { color: exploreColors.green, fontSize: 14 },
   notice: {
     ...exploreStyles.shadow,
     alignItems: 'center',

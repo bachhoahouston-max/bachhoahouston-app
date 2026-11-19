@@ -11,8 +11,9 @@ import {
   Salad, Scissors, Search, Shirt, ShoppingBag, ShoppingBasket, Smartphone, Soup, Star,
   Store, Utensils, UtensilsCrossed, Wheat, Wine, Wrench, X,
 } from 'lucide-react-native';
+import DriverHeader from '../../../Assets/Component/DriverHeader';
 import { GetApi } from '../../../Assets/Helpers/Service';
-import { exploreColors, exploreStyles, StoreBackButton, StoreImage, StoreNotice } from './components';
+import { exploreColors, exploreStyles, StoreImage, StoreNotice } from './components';
 import ExploreHoustonBanner from './ExploreHoustonBanner';
 import {
   filterStores, formatStoreHours, getStoreOpenStatus, isExploreHoustonVisible,
@@ -217,104 +218,106 @@ export default function ExploreHouston({ navigation }) {
   };
 
   return (
-    <FlatList
-      key={storeColumns}
-      style={{ backgroundColor: colors.background }}
-      contentContainerStyle={[styles.content, wide && styles.wideContent]}
-      data={loadState === 'ready' ? matches : []}
-      keyExtractor={store => store._id}
-      numColumns={storeColumns}
-      columnWrapperStyle={storeColumns > 1 ? styles.cardGrid : undefined}
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="on-drag"
-      ListHeaderComponent={(
-        <>
-          <StoreBackButton onPress={navigation.goBack} />
-          <ExploreHoustonBanner />
-          {loadState !== 'hidden' && (
-            <>
-              <View style={styles.search}>
-                <Search size={19} color={exploreColors.heading} />
-                <TextInput
-                  accessibilityLabel={t('Search stores')}
-                  placeholder={t('Search stores')}
-                  placeholderTextColor={exploreColors.muted}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="search"
-                  value={search}
-                  onChangeText={setSearch}
-                  style={[exploreStyles.text, styles.searchInput]}
-                />
-                {search ? (
-                  <Pressable accessibilityRole="button" accessibilityLabel={t('Clear search')} hitSlop={8} onPress={() => setSearch('')}>
-                    <X size={18} color={exploreColors.muted} />
-                  </Pressable>
-                ) : null}
-              </View>
-              <ScrollView
-                horizontal
-                keyboardShouldPersistTaps="handled"
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.chipRow}>
-                <CategoryChip label={t('All')} selected={!categoryId} onPress={() => setCategoryId('')} />
-                {categories.map(category => (
-                  <CategoryChip
-                    key={category._id}
-                    category={category}
-                    label={localizedStoreText(category.name, category.v_name, i18n.language)}
-                    selected={categoryId === category._id}
-                    onPress={() => setCategoryId(category._id)}
+    <>
+      <DriverHeader item={t('Explore Houston')} showback />
+      <FlatList
+        key={storeColumns}
+        style={{ backgroundColor: colors.background }}
+        contentContainerStyle={[styles.content, wide && styles.wideContent]}
+        data={loadState === 'ready' ? matches : []}
+        keyExtractor={store => store._id}
+        numColumns={storeColumns}
+        columnWrapperStyle={storeColumns > 1 ? styles.cardGrid : undefined}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        ListHeaderComponent={(
+          <>
+            <ExploreHoustonBanner />
+            {loadState !== 'hidden' && (
+              <>
+                <View style={styles.search}>
+                  <Search size={19} color={exploreColors.heading} />
+                  <TextInput
+                    accessibilityLabel={t('Search stores')}
+                    placeholder={t('Search stores')}
+                    placeholderTextColor={exploreColors.muted}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="search"
+                    value={search}
+                    onChangeText={setSearch}
+                    style={[exploreStyles.text, styles.searchInput]}
                   />
-                ))}
-              </ScrollView>
-              {!categoryId && categories.length > 0 && (
-                <View style={[styles.categoryGrid, { gap: tileGap }]}>
-                  {categories.map((category, index) => {
-                    const [background, color] = categoryTones[index % categoryTones.length];
-                    return (
-                      <Pressable
-                        key={category._id}
-                        accessibilityRole="button"
-                        onPress={() => setCategoryId(category._id)}
-                        style={({ pressed }) => [styles.categoryTile, wide && styles.wideTile, { width: tileWidth }, pressed && styles.pressedTile]}>
-                        <StoreImage
-                          url={category.image}
-                          icon={categoryIcon(category)}
-                          size={18}
-                          color={category.iconBackground ? exploreColors.green : color}
-                          background={category.iconBackground || background}
-                          style={[styles.tileIcon, wide && styles.wideTileIcon]}
-                        />
-                        <Text style={[exploreStyles.text, styles.tileLabel, wide && styles.wideTileLabel]}>
-                          {localizedStoreText(category.name, category.v_name, i18n.language)}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
+                  {search ? (
+                    <Pressable accessibilityRole="button" accessibilityLabel={t('Clear search')} hitSlop={8} onPress={() => setSearch('')}>
+                      <X size={18} color={exploreColors.muted} />
+                    </Pressable>
+                  ) : null}
                 </View>
-              )}
-            </>
-          )}
-        </>
-      )}
-      renderItem={({ item }) => (
-        <StoreCard
-          store={item}
-          category={resolveStoreCategory(item, categoriesById)}
-          width={width}
-          cardWidth={cardWidth}
-          onPress={() => navigation.navigate('ExploreHoustonStore', { storeId: item._id })}
-        />
-      )}
-      ListEmptyComponent={loadState === 'loading' ? <StoreNotice loading /> : (
-        <StoreNotice
-          title={t(directoryMessages[loadState])}
-          description={loadState === 'ready' ? t('Try a different search or category') : undefined}
-          onRetry={loadState === 'error' ? onRetry : undefined}
-        />
-      )}
-    />
+                <ScrollView
+                  horizontal
+                  keyboardShouldPersistTaps="handled"
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.chipRow}>
+                  <CategoryChip label={t('All')} selected={!categoryId} onPress={() => setCategoryId('')} />
+                  {categories.map(category => (
+                    <CategoryChip
+                      key={category._id}
+                      category={category}
+                      label={localizedStoreText(category.name, category.v_name, i18n.language)}
+                      selected={categoryId === category._id}
+                      onPress={() => setCategoryId(category._id)}
+                    />
+                  ))}
+                </ScrollView>
+                {!categoryId && categories.length > 0 && (
+                  <View style={[styles.categoryGrid, { gap: tileGap }]}>
+                    {categories.map((category, index) => {
+                      const [background, color] = categoryTones[index % categoryTones.length];
+                      return (
+                        <Pressable
+                          key={category._id}
+                          accessibilityRole="button"
+                          onPress={() => setCategoryId(category._id)}
+                          style={({ pressed }) => [styles.categoryTile, wide && styles.wideTile, { width: tileWidth }, pressed && styles.pressedTile]}>
+                          <StoreImage
+                            url={category.image}
+                            icon={categoryIcon(category)}
+                            size={18}
+                            color={category.iconBackground ? exploreColors.green : color}
+                            background={category.iconBackground || background}
+                            style={[styles.tileIcon, wide && styles.wideTileIcon]}
+                          />
+                          <Text style={[exploreStyles.text, styles.tileLabel, wide && styles.wideTileLabel]}>
+                            {localizedStoreText(category.name, category.v_name, i18n.language)}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                )}
+              </>
+            )}
+          </>
+        )}
+        renderItem={({ item }) => (
+          <StoreCard
+            store={item}
+            category={resolveStoreCategory(item, categoriesById)}
+            width={width}
+            cardWidth={cardWidth}
+            onPress={() => navigation.navigate('ExploreHoustonStore', { storeId: item._id })}
+          />
+        )}
+        ListEmptyComponent={loadState === 'loading' ? <StoreNotice loading /> : (
+          <StoreNotice
+            title={t(directoryMessages[loadState])}
+            description={loadState === 'ready' ? t('Try a different search or category') : undefined}
+            onRetry={loadState === 'error' ? onRetry : undefined}
+          />
+        )}
+      />
+    </>
   );
 }
 
