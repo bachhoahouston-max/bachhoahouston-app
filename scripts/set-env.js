@@ -1,4 +1,4 @@
-// Usage: node scripts/set-env.js <staging|production>
+// Usage: node scripts/set-env.js <local|staging|production>
 // Copies env/<name>.json into src/config/env.js, which constant.js reads.
 const fs = require('fs');
 const path = require('path');
@@ -7,7 +7,7 @@ const name = process.argv[2];
 const source = path.join(__dirname, '..', 'env', `${name}.json`);
 
 if (!name || !fs.existsSync(source)) {
-  console.error('Usage: node scripts/set-env.js <staging|production>');
+  console.error('Usage: node scripts/set-env.js <local|staging|production>');
   process.exit(1);
 }
 

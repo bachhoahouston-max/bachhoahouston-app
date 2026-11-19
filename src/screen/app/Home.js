@@ -3,6 +3,7 @@
 /* eslint-disable react/self-closing-comp */
 /* eslint-disable react-native/no-inline-styles */
 import {
+  AppState,
   Dimensions,
   FlatList,
   Image,
@@ -155,13 +156,21 @@ const Home = () => {
   );
 
   useFocusEffect(useCallback(() => {
-    let active = true;
-    isExploreHoustonVisible().then(visible => {
-      if (active) setShowExploreHouston(visible);
-    }).catch(() => {
-      if (active) setShowExploreHouston(false);
+    let requestNumber = 0;
+    const refreshVisibility = async () => {
+      const currentRequest = ++requestNumber;
+      const visible = await isExploreHoustonVisible().catch(() => false);
+      if (currentRequest === requestNumber) setShowExploreHouston(visible);
+    };
+
+    refreshVisibility();
+    const subscription = AppState.addEventListener('change', state => {
+      if (state === 'active') refreshVisibility();
     });
-    return () => { active = false; };
+    return () => {
+      requestNumber += 1;
+      subscription.remove();
+    };
   }, []));
 
   useEffect(() => {
