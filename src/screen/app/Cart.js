@@ -25,7 +25,7 @@ import {
   MinusIcon,
   Plus2Icon,
 } from '../../../Theme';
-import { ChevronDown, ChevronUp, Circle, CircleDot, Package, X } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Circle, CircleDot, Package, TriangleAlert, X } from 'lucide-react-native';
 import {
   AddressContext,
   AppBackgroundContext,
@@ -87,6 +87,8 @@ const pickupOptionss = [
 ];
 
 
+const receiveOptionKey = value => value === 'shipping' ? 'ShipmentDelivery' : value;
+
 const Cart = ({ route }) => {
   const navigation = useNavigation();
   const { t } = useTranslation();
@@ -99,7 +101,14 @@ const Cart = ({ route }) => {
   const [totaloff, settotaloff] = useState(null);
   const [totalFinal, setTotalFinal] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [PickupType, setPickupType] = useState(null);
+  const [selectedPickupType, setPickupType] = useState(null);
+  const [receiveAvailability, setReceiveAvailability] = useState(null);
+  const [receiveOptionsError, setReceiveOptionsError] = useState(false);
+  const [receiveOptionsRetry, setReceiveOptionsRetry] = useState(0);
+  const hasReceiveOptions = Object.values(receiveAvailability || {}).some(Boolean);
+  const PickupType = receiveAvailability?.[receiveOptionKey(selectedPickupType)]
+    ? selectedPickupType
+    : null;
   const shaloowarray = [...cartdetail];
   const [pickupDate, setPickupDate] = useState(null);
   const [openDatePicker, setOpenDatePicker] = useState(false);
@@ -160,6 +169,37 @@ const Cart = ({ route }) => {
       getProductReferrals().then(setProductReferrals);
       getProductReferralDiscountRates().then(setProductReferralDiscountRates);
     }, []),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      setReceiveAvailability(null);
+      setReceiveOptionsError(false);
+
+      async function loadReceiveOptions() {
+        try {
+          const response = await GetApi('web-receive-options', {});
+          const availability = response?.data;
+          if (!response?.status || !pickupOptionss.every(
+            option => typeof availability?.[receiveOptionKey(option.value)] === 'boolean',
+          )) {
+            throw new Error('Receive options unavailable');
+          }
+          if (active) {
+            setReceiveAvailability(availability);
+            setPickupType(current =>
+              availability[receiveOptionKey(current)] ? current : null,
+            );
+          }
+        } catch {
+          if (active) setReceiveOptionsError(true);
+        }
+      }
+
+      loadReceiveOptions();
+      return () => { active = false; };
+    }, [receiveOptionsRetry]),
   );
 
   const lineReferralCode = item =>
@@ -973,6 +1013,15 @@ const Cart = ({ route }) => {
         const response = await Post('createProductRquest', data, {});
         setLoading(false);
         console.log('Order creation response:', response);
+        if (response?.code === 'WEB_RECEIVE_OPTION_UNAVAILABLE') {
+          setReceiveAvailability(response.availability);
+          setPickupType(null);
+          Toast.show({
+            type: 'error',
+            text1: t('Your selected receive option is currently unavailable.'),
+          });
+          return;
+        }
         if (!response.status) {
           let errorMsg = response?.message || t('Failed to create order. Please try again.');
           if (
@@ -1706,17 +1755,43 @@ const Cart = ({ route }) => {
                   {t('Choose how to receive')}
                 </Text>
               </View>
+              {receiveOptionsError ? (
+                <View style={styles.receiveOptionsStatus}>
+                  <Text style={styles.pickupDescription}>
+                    {t('Unable to load receive options.')}
+                  </Text>
+                  <Pressable
+                    accessibilityRole="button"
+                    onPress={() => setReceiveOptionsRetry(attempt => attempt + 1)}>
+                    <Text style={styles.receiveOptionsRetry}>{t('Retry')}</Text>
+                  </Pressable>
+                </View>
+              ) : !receiveAvailability ? (
+                <Text accessibilityLiveRegion="polite" style={[styles.pickupDescription, styles.receiveOptionsStatus]}>
+                  {t('Loading receive options…')}
+                </Text>
+              ) : !hasReceiveOptions ? (
+                <Text accessibilityLiveRegion="polite" style={[styles.pickupDescription, styles.receiveOptionsStatus]}>
+                  {t('All receive options are currently unavailable.')}
+                </Text>
+              ) : null}
               <View accessibilityRole="radiogroup" style={styles.pickupOptions}>
-                {pickupOptions.map(option => (
+                {pickupOptions.map(option => {
+                  const enabled = receiveAvailability?.[receiveOptionKey(option.value)] === true;
+                  const unavailable = receiveAvailability?.[receiveOptionKey(option.value)] === false;
+                  return (
                   <View key={option.value} style={[
                     styles.pickupCard,
+                    unavailable && styles.unavailablePickupCard,
                     PickupType === option.value && styles.expandedPickupCard,
                   ]}>
                     <TouchableOpacity
                       accessibilityRole="radio"
-                      accessibilityState={{ checked: PickupType === option.value }}
+                      accessibilityState={{ checked: PickupType === option.value, disabled: !enabled }}
+                      disabled={!enabled}
                       style={styles.pickupRow}
                       onPress={() => {
+                        if (!enabled) return;
                         setPickupType(option.value);
                         setPickupDate(null);
                         setDeliveryTip(0);
@@ -1744,13 +1819,23 @@ const Cart = ({ route }) => {
                       />
                       <View style={styles.pickupDivider} />
                       <View style={styles.pickupCopy}>
-                        <Text style={styles.pickupLabel}>{t(option.label)}</Text>
+                        <Text style={[styles.pickupLabel, unavailable && styles.unavailablePickupLabel]}>
+                          {t(option.label)}
+                        </Text>
                         <Text style={styles.pickupDescription}>{t(option.description)}</Text>
+                        {unavailable && (
+                          <View style={styles.unavailablePickupBadge}>
+                            <TriangleAlert accessible={false} size={12} color="#783F17" />
+                            <Text style={styles.unavailablePickupBadgeText}>
+                              {t('Currently unavailable')}
+                            </Text>
+                          </View>
+                        )}
                       </View>
                       {PickupType === option.value ? (
                         <CircleDot size={17} color={Constants.greennew} />
                       ) : (
-                        <Circle size={17} strokeWidth={1.8} color={Constants.black} />
+                        <Circle size={17} strokeWidth={1.8} color={enabled ? Constants.black : '#94A3B8'} />
                       )}
                     </TouchableOpacity>
 
@@ -2104,7 +2189,8 @@ const Cart = ({ route }) => {
                       </View>
                     )}
                   </View>
-                ))}
+                  );
+                })}
               </View>
             </View>
 
@@ -2582,7 +2668,9 @@ const Cart = ({ route }) => {
                 <View style={styles.paycov}>
 
                   <TouchableOpacity
-                    style={styles.cartbtn}
+                    style={[styles.cartbtn, !hasReceiveOptions && styles.disabledCheckout]}
+                    disabled={!hasReceiveOptions}
+                    accessibilityState={{ disabled: !hasReceiveOptions }}
                     onPress={async () => {
 
                       if (PickupType === null) {
@@ -3399,6 +3487,45 @@ const styles = StyleSheet.create({
   },
   pickupOptions: {
     gap: 10,
+  },
+  receiveOptionsStatus: {
+    marginBottom: 10,
+    gap: 4,
+  },
+  receiveOptionsRetry: {
+    color: Constants.greennew,
+    fontFamily: FONTS.SemiBold,
+    fontSize: 13,
+    textDecorationLine: 'underline',
+  },
+  unavailablePickupCard: {
+    backgroundColor: '#F8FAFC',
+  },
+  unavailablePickupLabel: {
+    color: '#334155',
+  },
+  unavailablePickupBadge: {
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E8BD8C',
+    backgroundColor: '#FFF3E3',
+  },
+  unavailablePickupBadgeText: {
+    flexShrink: 1,
+    color: '#783F17',
+    fontFamily: FONTS.SemiBold,
+    fontSize: 11,
+    includeFontPadding: false,
+  },
+  disabledCheckout: {
+    opacity: 0.5,
   },
   pickupRow: {
     flexDirection: 'row',
