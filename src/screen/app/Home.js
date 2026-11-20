@@ -34,7 +34,7 @@ import {
 // import LinearGradient from 'react-native-linear-gradient';
 import { navigate } from '../../../navigationRef';
 import { GetApi } from '../../Assets/Helpers/Service';
-import { AppBackgroundContext, CartContext, LoadContext, ToastContext } from '../../../App';
+import { AppBackgroundContext, CartContext, LoadContext, ToastContext, UserContext } from '../../../App';
 import Header from '../../Assets/Component/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import SwiperFlatList from 'react-native-swiper-flatlist';
@@ -69,6 +69,7 @@ const FontTest = () => {
 
 const Home = () => {
   const { t } = useTranslation();
+  const [user] = useContext(UserContext);
   const [cartdetail, setcartdetail] = useContext(CartContext);
   const [toast, setToast] = useContext(ToastContext);
   const [loading, setLoading] = useContext(LoadContext);
@@ -482,7 +483,15 @@ const Home = () => {
                 );
               }}
             />
-            {showExploreHouston && <ExploreHoustonBanner onPress={() => navigate('ExploreHouston')} />}
+            {showExploreHouston && (
+              <ExploreHoustonBanner onPress={() => {
+                if (user?.token) {
+                  navigate('ExploreHouston');
+                } else {
+                  navigate('Auth', { screen: 'SignIn' });
+                }
+              }} />
+            )}
             <View style={{ height: 10, backgroundColor: 'transparent', marginVertical: 5 }} />
 
             {combolist.length > 0 && (
