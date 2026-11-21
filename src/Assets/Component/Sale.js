@@ -185,7 +185,7 @@ const Sale = ({ setIsSale }) => {
 
   return (
     <>
-      <View style={{ marginBottom: 5, marginHorizontal: 13 }}>
+      <View style={{ marginBottom: 5, marginHorizontal: 14 }}>
 
         <View style={styles.covline}>
 
@@ -225,7 +225,7 @@ const Sale = ({ setIsSale }) => {
           keyExtractor={(item, index) => item._id || index.toString()}
           numColumns={2}
           scrollEnabled={false}
-          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          columnWrapperStyle={{ justifyContent: 'space-between', gap: 14 }}
           renderItem={({ item, index }) => {
             const cartItem = Array.isArray(cartdetail)
               ? cartdetail.find(it => it?.productid === item?.product?._id)
@@ -233,7 +233,7 @@ const Sale = ({ setIsSale }) => {
             const currentSale = countdown[item._id];
 
             return (
-              <View style={{ flex: 1, marginBottom: 10, marginHorizontal: 5 }}>
+              <View style={{ flex: 1, marginBottom: 10 }}>
                 <ProductCard
                   item={item.product}
                   cartItem={cartItem}

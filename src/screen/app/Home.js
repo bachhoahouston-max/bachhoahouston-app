@@ -374,7 +374,7 @@ const Home = () => {
         keyExtractor={(item, index) => item._id || index.toString()}
         showsVerticalScrollIndicator={false}
         numColumns={2}
-        columnWrapperStyle={{ paddingHorizontal: 10 }}
+        columnWrapperStyle={{ paddingHorizontal: 14, gap: 14 }}
         onEndReached={() => {
           if (hasMore && !loadingMore) {
             const nextPage = page + 1;
@@ -649,7 +649,8 @@ const styles = StyleSheet.create({
   },
   box: {
     flex: 1,
-    margin: 8,
+    marginHorizontal: 0,
+    marginBottom: 10,
 
     shadowOpacity: 0.1,
     shadowRadius: 4,

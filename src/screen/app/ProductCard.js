@@ -74,7 +74,7 @@ const ProductCard = ({
             uri: item?.varients?.[0]?.image?.[0] || '',
           }}
           style={styles.cardimg}
-          resizeMode="cover"
+          resizeMode="contain"
         />
 
         {isVendorClosed && (
@@ -283,9 +283,13 @@ const ProductCard = ({
           </View>
         </View>
 
-        <Text style={styles.proname} numberOfLines={2}>
-          {i18n.language === 'vi' ? (item?.vietnamiesName || item?.name) : item?.name}
-        </Text>
+        <View style={{ width: '100%', alignItems: 'center' }}>
+          <Text
+            style={[styles.proname, { width: '100%', textAlign: 'center', textAlignVertical: 'center' }]}
+            numberOfLines={2}>
+            {i18n.language === 'vi' ? (item?.vietnamiesName || item?.name) : item?.name}
+          </Text>
+        </View>
         {!saleVarient?.value && item?.price_slot?.[0]?.value && (
           <Text style={styles.weight}>
             {item.price_slot[0].value || ''}{' '}
@@ -316,6 +320,7 @@ const styles = StyleSheet.create({
     shadowColor: Constants.black,
     position: 'relative',
     minHeight: 220,
+    padding: 8,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -366,8 +371,8 @@ const styles = StyleSheet.create({
   cardContent: {
     flex: 1,
     flexDirection: 'column',
-    paddingHorizontal: 10,
-    paddingBottom: 10,
+    paddingHorizontal: 0,
+    paddingBottom: 0,
     paddingTop: 5,
     width: '100%',
   },
@@ -379,9 +384,11 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   proname: {
-    fontSize: 16,
-    color: Constants.black,
-    fontFamily: FONTS.Medium,
+    textAlign: 'center',
+    alignSelf: 'stretch',
+    fontSize: 13,
+    color: '#14532D',
+    fontFamily: FONTS.SemiBold,
   },
   weight: {
     fontSize: 14,

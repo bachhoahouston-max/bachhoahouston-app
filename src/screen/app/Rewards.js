@@ -21,7 +21,6 @@ import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DatePickerModal } from 'react-native-paper-dates';
 import { Upload, Calendar, ChevronRight, Camera, CheckCircle2, Pencil, Store, ReceiptText } from 'lucide-react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { AppBackgroundContext, CartContext, LoadContext, UserContext } from '../../../App';
 import { ApiFormData, GetApi, Post } from '../../Assets/Helpers/Service';
@@ -230,11 +229,13 @@ const Rewards = () => {
 
         {/* Points header */}
         <View style={{ width: '100%', paddingHorizontal: 14 }}>
-        <LinearGradient colors={['#E6F3E8', '#F4F8FC']} style={styles.header}>
+        <View style={styles.header}>
+          <View pointerEvents="none" style={[StyleSheet.absoluteFill, { overflow: 'hidden', borderRadius: 24 }]}>
           <Leaf size={72} style={{ left: -22, top: 22, opacity: 0.08, transform: [{ rotate: '-30deg' }] }} />
           <Leaf size={52} style={{ left: -8, bottom: 0, opacity: 0.06, transform: [{ rotate: '20deg' }] }} />
           <Leaf size={72} style={{ right: -22, top: 6, opacity: 0.08, transform: [{ rotate: '35deg' }] }} />
           <Leaf size={58} style={{ right: -8, bottom: 8, opacity: 0.06, transform: [{ rotate: '-15deg' }] }} />
+          </View>
           <TierCrown tier={summary?.tier} size={72} />
           <View style={styles.tierWrap}>
             <Sparkle size={18} style={{ right: -8, top: -8 }} />
@@ -268,7 +269,7 @@ const Rewards = () => {
             </>
           ) : (
             <View style={{ alignItems: 'center', marginTop: 12 }}>
-              <Text style={[styles.note, { fontSize: 14, maxWidth: 300 }]}>
+              <Text style={[styles.note, { fontSize: 14, lineHeight: 20, paddingHorizontal: 24 }]}>
                 {t('Earn 10 points for every $1 you spend. Sign in to see your points.')}
               </Text>
               <TouchableOpacity style={styles.signInBtn} onPress={() => navigate('Auth')}>
@@ -276,7 +277,7 @@ const Rewards = () => {
               </TouchableOpacity>
             </View>
           )}
-        </LinearGradient>
+        </View>
         </View>
 
         {tab === 'redeem' && (
@@ -971,10 +972,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 16,
     marginBottom: 16,
-    paddingVertical: 24,
+    paddingTop: 24,
+    paddingBottom: 24,
     paddingHorizontal: 0,
     borderRadius: 24,
-    overflow: 'hidden',
+    backgroundColor: '#EAF3F0',
     width: '100%',
   },
   tierWrap: { alignSelf: 'center', alignItems: 'center', paddingHorizontal: 20 },
@@ -985,8 +987,8 @@ const styles = StyleSheet.create({
   pill: { backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
   pillTxt: { fontFamily: FONTS.Regular, fontSize: 12, color: '#4B5563' },
   note: { fontFamily: FONTS.Regular, fontSize: 12, color: C.grey, marginTop: 4, textAlign: 'center' },
-  signInBtn: { backgroundColor: C.button, borderRadius: 30, paddingHorizontal: 32, paddingVertical: 10, marginTop: 12 },
-  signInTxt: { color: '#fff', fontFamily: FONTS.SemiBold, fontSize: 15 },
+  signInBtn: { backgroundColor: C.button, borderRadius: 30, paddingHorizontal: 32, paddingVertical: 10, marginTop: 12, minHeight: 44, minWidth: 140, alignItems: 'center', justifyContent: 'center' },
+  signInTxt: { color: '#fff', fontFamily: FONTS.SemiBold, fontSize: 15, lineHeight: 20 },
   banner: {
     borderRadius: 18,
     overflow: 'hidden',
