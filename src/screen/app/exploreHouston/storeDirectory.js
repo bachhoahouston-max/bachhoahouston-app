@@ -31,6 +31,11 @@ export function resolveStoreCategory(store, categoriesById) {
     : categoriesById.get(store.category);
 }
 
+export function getStorePhotos(store) {
+  const additionalImages = Array.isArray(store.additionalImages) ? store.additionalImages : [];
+  return [store.image, ...additionalImages].filter(url => typeof url === 'string' && url.trim());
+}
+
 function normalizeSearchText(value) {
   return String(value ?? '')
     .normalize('NFD')
@@ -42,7 +47,7 @@ function normalizeSearchText(value) {
 export function filterStores(stores, categoriesById, categoryId, search) {
   const query = normalizeSearchText(search.trim());
 
-  // getStore returns the newest listings first. Filtering keeps that order.
+  // Keep the newest-first API order within each group.
   return stores.filter(store => {
     const category = resolveStoreCategory(store, categoriesById);
     if (categoryId && categoryId !== (category?._id || store.category)) {
@@ -57,7 +62,7 @@ export function filterStores(stores, categoriesById, categoryId, search) {
       category?.name,
       category?.v_name,
     ].join(' ')).includes(query);
-  });
+  }).sort((first, second) => Number(second.isPersonal === true) - Number(first.isPersonal === true));
 }
 
 function minutesSinceMidnight(time) {

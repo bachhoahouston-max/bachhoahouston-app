@@ -11,7 +11,7 @@ import DriverHeader from '../../../Assets/Component/DriverHeader';
 import { GetApi, Post } from '../../../Assets/Helpers/Service';
 import { exploreColors, exploreStyles, StoreImage, StoreNotice } from './components';
 import StoreCommunity from './StoreCommunity';
-import { formatStoreHours, getStoreOpenStatus, localizedStoreText, readStoreResponse } from './storeDirectory';
+import { formatStoreHours, getStoreOpenStatus, getStorePhotos, localizedStoreText, readStoreResponse } from './storeDirectory';
 
 const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -94,12 +94,32 @@ function StoreOverview({ store, wide, twoColumns }) {
   const openStatus = getStoreOpenStatus(store);
   const statusColor = openStatus?.isOpen ? exploreColors.open : exploreColors.closed;
   const reviewCount = Number(store.reviewCount || 0);
+  const [activePhoto, setActivePhoto] = useState(0);
+  const photos = getStorePhotos(store);
 
   return (
     <View style={styles.overview}>
-      <StoreImage url={store.image} icon={Tag} size={88} strokeWidth={1.2} style={[styles.hero, wide && styles.wideHero]} />
+      <StoreImage url={photos[activePhoto] || photos[0]} icon={Tag} size={88} strokeWidth={1.2} style={[styles.hero, wide && styles.wideHero]} />
       {category ? <Text style={[exploreStyles.semibold, styles.category]}>{category}</Text> : null}
-      <View style={[styles.overviewContent, wide && styles.wideOverviewContent]}>
+      <View style={[styles.overviewContent, wide && styles.wideOverviewContent, photos.length > 1 && styles.overviewWithPhotos]}>
+        {photos.length > 1 && (
+          <View style={styles.thumbnails}>
+            {photos.map((url, index) => {
+              const selected = index === activePhoto;
+              return (
+                <Pressable
+                  key={url + index}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('Show photo {{number}}', { number: index + 1 })}
+                  accessibilityState={{ selected }}
+                  onPress={() => setActivePhoto(index)}
+                  style={[styles.thumbnail, wide && styles.wideThumbnail, selected && styles.selectedThumbnail]}>
+                  <StoreImage url={url} icon={Tag} size={18} style={styles.thumbnailImage} />
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
         <Text accessibilityRole="header" style={[exploreStyles.bold, styles.title, wide && styles.wideTitle]}>{title}</Text>
         {description ? <Text style={[exploreStyles.text, styles.description]}>{description}</Text> : null}
         <View style={styles.metrics}>
@@ -207,7 +227,7 @@ export default function ExploreHoustonStore({ navigation, route }) {
         contentContainerStyle={[styles.content, wide && styles.wideContent]}>
         {loadState === 'loading' ? <StoreNotice loading /> : loadState === 'ready' ? (
           <>
-            <StoreOverview store={store} wide={wide} twoColumns={width >= 640} />
+            <StoreOverview key={store._id} store={store} wide={wide} twoColumns={width >= 640} />
             <StoreCommunity
               key={store._id}
               store={store}
@@ -253,7 +273,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   overviewContent: { padding: 24 },
+
   wideOverviewContent: { padding: 40 },
+  overviewWithPhotos: { paddingTop: 16 },
+  thumbnails: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 16 },
+  thumbnail: { width: 44, height: 44, borderWidth: 2, borderColor: exploreColors.border, borderRadius: 8, padding: 1 },
+  wideThumbnail: { width: 72, height: 52 },
+  selectedThumbnail: { borderColor: exploreColors.green },
+  thumbnailImage: { flex: 1, borderRadius: 5 },
   title: { fontSize: 30, lineHeight: 36, color: exploreColors.text },
   wideTitle: { fontSize: 36, lineHeight: 40 },
   description: { marginTop: 24, maxWidth: 768, fontSize: 16, lineHeight: 28 },
