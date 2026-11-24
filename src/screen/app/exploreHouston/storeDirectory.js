@@ -56,7 +56,6 @@ function normalizeSearchText(value) {
 export function filterStores(stores, categoriesById, categoryId, search) {
   const query = normalizeSearchText(search.trim());
 
-  // Keep the newest-first API order within each group.
   return stores.filter(store => {
     const category = resolveStoreCategory(store, categoriesById);
     if (categoryId && categoryId !== (category?._id || store.category)) {
@@ -71,7 +70,14 @@ export function filterStores(stores, categoriesById, categoryId, search) {
       category?.name,
       category?.v_name,
     ].join(' ')).includes(query);
-  }).sort((first, second) => Number(second.isPersonal === true) - Number(first.isPersonal === true));
+  }).sort((first, second) => {
+    const personalOrder = Number(second.isPersonal === true) - Number(first.isPersonal === true);
+    if (personalOrder || first.isPersonal !== true) return personalOrder;
+
+    const firstMarkedAt = Date.parse(first.personalMarkedAt) || 0;
+    const secondMarkedAt = Date.parse(second.personalMarkedAt) || 0;
+    return secondMarkedAt - firstMarkedAt;
+  });
 }
 
 function minutesSinceMidnight(time) {
