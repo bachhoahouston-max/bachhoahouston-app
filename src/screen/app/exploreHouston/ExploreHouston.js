@@ -165,8 +165,10 @@ export default function ExploreHouston({ navigation }) {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const focused = useIsFocused();
-  const { bookmarks, loadBookmarks } = useStoreBookmarks();
-  const [showBookmarks, setShowBookmarks] = useState(false);
+  const { bookmarks, loadBookmarks, isLoggedIn } = useStoreBookmarks();
+  const [bookmarkFilter, setShowBookmarks] = useState(false);
+  const showBookmarks = Boolean(bookmarks) && bookmarkFilter;
+  const bookmarksDisabled = isLoggedIn && !bookmarks;
   const [stores, setStores] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
@@ -224,6 +226,10 @@ export default function ExploreHouston({ navigation }) {
   };
 
   const toggleBookmarksView = () => {
+    if (!isLoggedIn) {
+      navigation.navigate('Auth', { screen: 'SignIn' });
+      return;
+    }
     clearFilters();
     setShowBookmarks(current => !current);
   };
@@ -284,12 +290,13 @@ export default function ExploreHouston({ navigation }) {
                     ) : null}
                   </View>
                   <Pressable
-                    accessibilityRole="togglebutton"
-                    accessibilityState={{ checked: showBookmarks, disabled: !bookmarks }}
-                    disabled={!bookmarks}
+                    accessibilityRole={isLoggedIn ? 'togglebutton' : 'button'}
+                    accessibilityLabel={isLoggedIn ? undefined : t('Sign in to view bookmarks')}
+                    accessibilityState={isLoggedIn ? { checked: showBookmarks, disabled: bookmarksDisabled } : undefined}
+                    disabled={bookmarksDisabled}
                     onPress={toggleBookmarksView}
                     style={({ pressed }) => [styles.bookmarksToggle, showBookmarks && styles.activeBookmarks,
-                      (pressed || !bookmarks) && exploreStyles.pressed]}>
+                      (pressed || bookmarksDisabled) && exploreStyles.pressed]}>
                     <Bookmark size={17} color={showBookmarks ? '#fff' : exploreColors.green} fill={showBookmarks ? '#fff' : 'none'} />
                     <Text style={[exploreStyles.semibold, styles.bookmarksLabel, showBookmarks && styles.activeBookmarksLabel]}>
                       {t('Bookmarks')}

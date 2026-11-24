@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Bookmark } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
@@ -75,7 +76,7 @@ export function StoreBookmarksProvider({ token, children }) {
   };
 
   return (
-    <StoreBookmarksContext.Provider value={{ ...state, loadBookmarks, toggleBookmark }}>
+    <StoreBookmarksContext.Provider value={{ ...state, isLoggedIn: Boolean(token), loadBookmarks, toggleBookmark }}>
       {children}
     </StoreBookmarksContext.Provider>
   );
@@ -87,21 +88,29 @@ export function useStoreBookmarks() {
 
 export function StoreBookmarkButton({ storeId, storeName, showLabel, style }) {
   const { t } = useTranslation();
-  const { bookmarks, pending, toggleBookmark } = useStoreBookmarks();
+  const navigation = useNavigation();
+  const { bookmarks, pending, toggleBookmark, isLoggedIn } = useStoreBookmarks();
   const saved = bookmarks?.has(storeId) ?? false;
-  const disabled = !bookmarks || pending.has(storeId);
+  const disabled = isLoggedIn && (!bookmarks || pending.has(storeId));
+  const onPress = () => {
+    if (!isLoggedIn) {
+      navigation.navigate('Auth', { screen: 'SignIn' });
+      return;
+    }
+    toggleBookmark(storeId);
+  };
 
   return (
     <Pressable
-      accessibilityRole="togglebutton"
-      accessibilityLabel={t('Bookmark {{store}}', { store: storeName })}
-      accessibilityState={{ checked: saved, disabled }}
+      accessibilityRole={isLoggedIn ? 'togglebutton' : 'button'}
+      accessibilityLabel={t(isLoggedIn ? 'Bookmark {{store}}' : 'Sign in to bookmark {{store}}', { store: storeName })}
+      accessibilityState={isLoggedIn ? { checked: saved, disabled } : undefined}
       disabled={disabled}
-      onPress={() => toggleBookmark(storeId)}
+      onPress={onPress}
       style={({ pressed }) => [styles.button, saved && styles.saved, showLabel && styles.labeled, style,
         (pressed || disabled) && exploreStyles.pressed]}>
       <Bookmark size={18} color={exploreColors.green} fill={saved ? exploreColors.green : 'none'} />
-      {showLabel && <Text style={[exploreStyles.semibold, styles.label]}>{t('Bookmark')}</Text>}
+      {showLabel && <Text style={[exploreStyles.semibold, styles.label]}>{t(isLoggedIn ? 'Bookmark' : 'Sign in to bookmark')}</Text>}
     </Pressable>
   );
 }

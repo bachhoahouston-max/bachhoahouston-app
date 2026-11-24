@@ -3,6 +3,15 @@ import { GetApi } from '../../../Assets/Helpers/Service';
 
 const HOUSTON_TIMEZONE = 'America/Chicago';
 
+export function formatCommentTimestamp(value, language) {
+  const date = new Date(value ?? '');
+  if (!Number.isFinite(date.getTime())) return '';
+  const isVietnamese = language?.toLowerCase().startsWith('vi');
+  return moment.tz(date, HOUSTON_TIMEZONE).locale('en').format(
+    isVietnamese ? 'HH:mm DD/MM/YYYY' : 'MMM D, YYYY, h:mm A',
+  );
+}
+
 export function readStoreResponse(response) {
   if (response?.status !== true) {
     throw new Error(response?.message);

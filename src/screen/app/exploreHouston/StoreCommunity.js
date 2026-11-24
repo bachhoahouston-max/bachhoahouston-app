@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import { Delete, GetApi, Post } from '../../../Assets/Helpers/Service';
 import { exploreColors, exploreStyles, StoreButton } from './components';
-import { readStoreResponse } from './storeDirectory';
+import { formatCommentTimestamp, readStoreResponse } from './storeDirectory';
 
 function useStoreActivity(endpoint) {
   const [entries, setEntries] = useState(null);
@@ -98,7 +98,7 @@ function StoreChat({ storeId, isLoggedIn, onSignIn, wide }) {
     }
   };
 
-  const sendDisabled = posting || (isLoggedIn && !message.trim());
+  const sendDisabled = posting || !message.trim();
   return (
     <View style={[styles.section, styles.chatSection, wide && styles.wideSection]}>
       <View style={styles.headingRow}>
@@ -122,6 +122,7 @@ function StoreChat({ storeId, isLoggedIn, onSignIn, wide }) {
             style={styles.chatScroll}>
             {comments.map(item => {
               const name = authorName(item, t);
+              const timestamp = formatCommentTimestamp(item.createdAt, i18n.language);
               return (
                 <View key={item._id} style={styles.comment}>
                   <View style={styles.avatar}>
@@ -130,8 +131,12 @@ function StoreChat({ storeId, isLoggedIn, onSignIn, wide }) {
                   <View style={styles.commentBody}>
                     <View style={styles.authorRow}>
                       <Text style={[exploreStyles.semibold, styles.author]}>{name}</Text>
-                      <View style={styles.timeDot} />
-                      <Text style={[exploreStyles.text, styles.timestamp]}>{timeAgo(item.createdAt, t, i18n.language)}</Text>
+                      {timestamp ? (
+                        <>
+                          <View style={styles.timeDot} />
+                          <Text style={[exploreStyles.text, styles.timestamp]}>{timestamp}</Text>
+                        </>
+                      ) : null}
                     </View>
                     <Text style={[exploreStyles.text, styles.bubble]}>{item.comment}</Text>
                   </View>
@@ -146,29 +151,33 @@ function StoreChat({ storeId, isLoggedIn, onSignIn, wide }) {
         )}
       </View>
 
-      <View style={styles.composer}>
-        <TextInput
-          accessibilityLabel={isLoggedIn ? t('Add a comment...') : t('Sign in to live chat')}
-          placeholder={isLoggedIn ? t('Add a comment...') : t('Sign in to live chat')}
-          placeholderTextColor={exploreColors.muted}
-          maxLength={2000}
-          editable={isLoggedIn && !posting}
-          value={message}
-          onChangeText={setMessage}
-          onSubmitEditing={sendMessage}
-          returnKeyType="send"
-          style={[exploreStyles.text, styles.commentInput, !isLoggedIn && styles.guestInput]}
-        />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={isLoggedIn ? t('Send live chat') : t('Sign in to live chat')}
-          accessibilityState={{ disabled: sendDisabled }}
-          disabled={sendDisabled}
-          onPress={sendMessage}
-          style={({ pressed }) => [styles.send, (pressed || sendDisabled) && styles.disabled]}>
-          <SendHorizontal size={25} color="#fff" strokeWidth={1.8} />
-        </Pressable>
-      </View>
+      {isLoggedIn ? (
+        <View style={styles.composer}>
+          <TextInput
+            accessibilityLabel={t('Add a comment...')}
+            placeholder={t('Add a comment...')}
+            placeholderTextColor={exploreColors.muted}
+            maxLength={2000}
+            editable={!posting}
+            value={message}
+            onChangeText={setMessage}
+            onSubmitEditing={sendMessage}
+            returnKeyType="send"
+            style={[exploreStyles.text, styles.commentInput]}
+          />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('Send live chat')}
+            accessibilityState={{ disabled: sendDisabled }}
+            disabled={sendDisabled}
+            onPress={sendMessage}
+            style={({ pressed }) => [styles.send, (pressed || sendDisabled) && styles.disabled]}>
+            <SendHorizontal size={25} color="#fff" strokeWidth={1.8} />
+          </Pressable>
+        </View>
+      ) : (
+        <StoreButton label={t('Sign in to live chat')} onPress={onSignIn} style={styles.signInChat} />
+      )}
     </View>
   );
 }
@@ -178,13 +187,19 @@ function StoreReviews({ store, isLoggedIn, onSignIn, onReviewSummary, wide }) {
   const { entries: reviews, failed, reload } = useStoreActivity(`getStoreReviews/${store._id}`);
   const ownReview = isLoggedIn ? reviews?.find(review => review.isMine) : undefined;
   const [selectedRating, setSelectedRating] = useState(0);
+  const [feedback, setFeedback] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
   const reviewTitle = ownReview ? t('Edit your review') : t('Add Review');
 
   const openReview = () => {
+    if (!isLoggedIn) {
+      onSignIn();
+      return;
+    }
     setSelectedRating(ownReview?.rating || 0);
+    setFeedback(ownReview?.feedback || '');
     setModalOpen(true);
   };
 
@@ -206,7 +221,7 @@ function StoreReviews({ store, isLoggedIn, onSignIn, onReviewSummary, wide }) {
     try {
       const response = removing
         ? await Delete(`deleteStoreReview/${ownReview._id}`)
-        : await Post(`createStoreReview/${store._id}`, { rating: selectedRating });
+        : await Post(`createStoreReview/${store._id}`, { rating: selectedRating, feedback: feedback.trim() });
       const summary = readStoreResponse(response);
       onReviewSummary(summary);
       setModalOpen(false);
@@ -234,7 +249,7 @@ function StoreReviews({ store, isLoggedIn, onSignIn, onReviewSummary, wide }) {
             {Number(store.averageRating || 0).toFixed(1)} / 5 ({store.reviewCount || 0})
           </Text>
         </View>
-        <StoreButton label={reviewTitle} onPress={openReview} disabled={saving} />
+        <StoreButton label={isLoggedIn ? reviewTitle : t('Sign in to review')} onPress={openReview} disabled={saving} />
       </View>
       <View style={styles.reviewList}>
         {failed && <ActivityError label={t('Unable to load store reviews')} onRetry={reload} />}
@@ -259,7 +274,7 @@ function StoreReviews({ store, isLoggedIn, onSignIn, onReviewSummary, wide }) {
         )}
       </View>
 
-      <Modal visible={modalOpen} transparent animationType="fade" onRequestClose={closeReview}>
+      <Modal visible={isLoggedIn && modalOpen} transparent animationType="fade" onRequestClose={closeReview}>
         <View style={styles.overlay}>
           <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={closeReview} />
           <ScrollView
@@ -274,25 +289,37 @@ function StoreReviews({ store, isLoggedIn, onSignIn, onReviewSummary, wide }) {
                   <X color={exploreColors.muted} size={20} />
                 </Pressable>
               </View>
-              <Text style={[exploreStyles.medium, styles.ratePrompt]}>{isLoggedIn ? t('Rate this store') : t('Sign in to review this store')}</Text>
+              <Text style={[exploreStyles.medium, styles.ratePrompt]}>{t('Rate this store')}</Text>
               <View accessibilityRole="radiogroup" accessibilityLabel={t('Store rating')} style={styles.ratingPicker}>
                 {[1, 2, 3, 4, 5].map(rating => (
                   <Pressable
                     key={rating}
                     accessibilityRole="radio"
                     accessibilityLabel={t('{{count}} stars', { count: rating })}
-                    accessibilityState={{ checked: selectedRating === rating, disabled: saving || !isLoggedIn }}
-                    disabled={saving || !isLoggedIn}
+                    accessibilityState={{ checked: selectedRating === rating, disabled: saving }}
+                    disabled={saving}
                     onPress={() => setSelectedRating(rating)}
-                    style={[styles.ratingOption, !isLoggedIn && styles.disabled]}>
+                    style={styles.ratingOption}>
                     <Star size={32} color="#fbbf24" fill={rating <= selectedRating ? '#fbbf24' : 'none'} />
                   </Pressable>
                 ))}
               </View>
+              <Text style={[exploreStyles.medium, styles.ratePrompt]}>{t('Feedback (optional)')}</Text>
+              <TextInput
+                accessibilityLabel={t('Feedback (optional)')}
+                placeholder={t('Share your feedback')}
+                placeholderTextColor={exploreColors.muted}
+                value={feedback}
+                onChangeText={setFeedback}
+                maxLength={2000}
+                editable={!saving}
+                multiline
+                style={[exploreStyles.text, styles.commentInput, styles.feedbackInput]}
+              />
               <StoreButton
-                label={isLoggedIn ? (ownReview ? t('Update review') : t('Submit review')) : t('Sign in to review')}
+                label={ownReview ? t('Update review') : t('Submit review')}
                 onPress={() => saveReview(false)}
-                disabled={saving || (isLoggedIn && !selectedRating)}
+                disabled={saving || !selectedRating}
                 style={styles.submitReview}
               />
               {ownReview && (
@@ -380,7 +407,7 @@ const styles = StyleSheet.create({
     color: '#374151',
     backgroundColor: '#fff',
   },
-  guestInput: { backgroundColor: exploreColors.lightBorder },
+  signInChat: { alignSelf: 'flex-start', marginTop: 24 },
   send: { backgroundColor: exploreColors.green, borderRadius: 999, padding: 12 },
   disabled: { opacity: 0.5 },
   reviewHeader: { ...exploreStyles.row, flexWrap: 'wrap', gap: 8, justifyContent: 'space-between' },
@@ -407,6 +434,7 @@ const styles = StyleSheet.create({
   ratePrompt: { marginTop: 20, fontSize: 14, color: exploreColors.body },
   ratingPicker: { ...exploreStyles.row, justifyContent: 'center', gap: 4, marginTop: 12 },
   ratingOption: { alignItems: 'center', justifyContent: 'center', flexShrink: 1, padding: 4 },
+  feedbackInput: { flex: 0, minHeight: 84, marginTop: 8, textAlignVertical: 'top' },
   submitReview: { marginTop: 24, paddingVertical: 12 },
   deleteReview: { marginTop: 12, paddingVertical: 12 },
 });

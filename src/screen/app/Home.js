@@ -484,13 +484,7 @@ const Home = () => {
               }}
             />
             {showExploreHouston && (
-              <ExploreHoustonBanner onPress={() => {
-                if (user?.token) {
-                  navigate('ExploreHouston');
-                } else {
-                  navigate('Auth', { screen: 'SignIn' });
-                }
-              }} />
+              <ExploreHoustonBanner onPress={() => navigate('ExploreHouston')} />
             )}
             <View style={{ height: 10, backgroundColor: 'transparent', marginVertical: 5 }} />
 

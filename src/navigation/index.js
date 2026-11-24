@@ -1,7 +1,6 @@
-import React, { useCallback, useContext } from 'react';
-import { DefaultTheme, NavigationContainer, useFocusEffect } from '@react-navigation/native';
+import React from 'react';
+import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { UserContext } from '../../App';
 import { navigationRef } from '../../navigationRef';
 import { TabNav } from './TabScreen';
 import SignUp from '../screen/auth/SignUp';
@@ -52,19 +51,6 @@ import Constants from '../Assets/Helpers/constant';
 const Stack = createNativeStackNavigator();
 const AuthStack = createNativeStackNavigator();
 
-function RequireSignIn({ navigation, children }) {
-  const [user] = useContext(UserContext);
-  const isSignedIn = Boolean(user?.token);
-
-  useFocusEffect(useCallback(() => {
-    if (!isSignedIn) {
-      navigation.replace('Auth', { screen: 'SignIn' });
-    }
-  }, [isSignedIn, navigation]));
-
-  return isSignedIn ? children : null;
-}
-
 const AuthNavigate = () => {
   return (
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
@@ -110,20 +96,8 @@ export default function Navigation(props) {
         <Stack.Screen name="Products" component={Products} />
         <Stack.Screen name="CategoryFilter" component={CategoryFilter} />
         <Stack.Screen name="BuyItAgain" component={BuyItAgain} />
-        <Stack.Screen name="ExploreHouston">
-          {screenProps => (
-            <RequireSignIn navigation={screenProps.navigation}>
-              <ExploreHouston {...screenProps} />
-            </RequireSignIn>
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="ExploreHoustonStore">
-          {screenProps => (
-            <RequireSignIn navigation={screenProps.navigation}>
-              <ExploreHoustonStore {...screenProps} />
-            </RequireSignIn>
-          )}
-        </Stack.Screen>
+        <Stack.Screen name="ExploreHouston" component={ExploreHouston} />
+        <Stack.Screen name="ExploreHoustonStore" component={ExploreHoustonStore} />
         <Stack.Screen name="Account" component={Account} />
         <Stack.Screen name="Affiliation" component={Affiliatetab} />
         <Stack.Screen name="Profile" component={Profile} />

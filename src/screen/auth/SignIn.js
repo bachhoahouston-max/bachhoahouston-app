@@ -73,10 +73,11 @@ const SignIn = props => {
     }
   };
 
-  const returnToExploreStore = () => {
+  const returnToExploreHouston = () => {
     const rootNavigation = props.navigation.getParent();
     const state = rootNavigation?.getState();
-    if (state?.routes[state.index - 1]?.name !== 'ExploreHoustonStore') {
+    const previousScreen = state?.routes[state.index - 1]?.name;
+    if (previousScreen !== 'ExploreHouston' && previousScreen !== 'ExploreHoustonStore') {
       return false;
     }
     rootNavigation.goBack();
@@ -151,7 +152,7 @@ const SignIn = props => {
           } else {
             setLoading(false);
             const isAffiliate = affiliateSignup || res.data.isAffiliate === true;
-            if (!isAffiliate && returnToExploreStore()) return;
+            if (!isAffiliate && returnToExploreHouston()) return;
             reset(
               isAffiliate
                 ? 'Affiliation'
@@ -313,7 +314,7 @@ const SignIn = props => {
 
           {/* Skip Button */}
           <TouchableOpacity onPress={() => {
-            if (!returnToExploreStore()) navigate('App');
+            if (!returnToExploreHouston()) navigate('App');
           }}>
             <Text style={newStyles.skipText}>{t('Skip')}</Text>
           </TouchableOpacity>
