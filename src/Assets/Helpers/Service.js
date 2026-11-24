@@ -238,9 +238,12 @@ const Put = async (url, data, props) => {
         if (connected) {
           const user = await AsyncStorage.getItem('userDetail');
           let userDetail = JSON.parse(user);
+          if (props?.expectedToken !== undefined && userDetail?.token !== props.expectedToken) {
+            reject(new Error('The active account has changed'));
+            return;
+          }
           const commonHeaders = await getCommonHeaders();
           console.log(Constants.baseUrl + url);
-          console.log(`jwt ${userDetail?.token}`);
           axios
             .put(Constants.baseUrl + url, data, {
               headers: {
@@ -254,9 +257,12 @@ const Put = async (url, data, props) => {
             })
             .catch(async err => {
               if (err.response) {
-                if (err?.response?.status === 401) {
-                  await AsyncStorage.removeItem('userDetail');
-                  reset('Auth')
+                if (err.response.status === 401) {
+                  const currentUser = props?.expectedToken ? await AsyncStorage.getItem('userDetail') : user;
+                  if (currentUser === user) {
+                    await AsyncStorage.removeItem('userDetail');
+                    reset('Auth');
+                  }
                 }
                 resolve(err.response.data);
               } else {

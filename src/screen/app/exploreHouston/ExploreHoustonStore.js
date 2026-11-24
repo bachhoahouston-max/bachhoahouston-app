@@ -1,15 +1,16 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { Building2, Clock, Eye, Globe, Mail, MapPin, Phone, Star, Tag } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import { UserContext } from '../../../../App';
 import DriverHeader from '../../../Assets/Component/DriverHeader';
 import { GetApi, Post } from '../../../Assets/Helpers/Service';
-import { exploreColors, exploreStyles, StoreImage, StoreNotice } from './components';
+import { exploreColors, exploreStyles, StoreImage, StoreNotice, StoreSpecialty } from './components';
+import { StoreBookmarkButton, StoreBookmarksError, useStoreBookmarks } from './StoreBookmarks';
 import StoreCommunity from './StoreCommunity';
 import { formatStoreHours, getStoreOpenStatus, getStorePhotos, localizedStoreText, readStoreResponse } from './storeDirectory';
 
@@ -120,8 +121,13 @@ function StoreOverview({ store, wide, twoColumns }) {
             })}
           </View>
         )}
-        <Text accessibilityRole="header" style={[exploreStyles.bold, styles.title, wide && styles.wideTitle]}>{title}</Text>
+        <StoreBookmarksError />
+        <View style={styles.titleRow}>
+          <Text accessibilityRole="header" style={[exploreStyles.bold, styles.title, wide && styles.wideTitle]}>{title}</Text>
+          <StoreBookmarkButton storeId={store._id} storeName={title} showLabel style={styles.titleBookmark} />
+        </View>
         {description ? <Text style={[exploreStyles.text, styles.description]}>{description}</Text> : null}
+        <StoreSpecialty store={store} style={styles.specialty} />
         <View style={styles.metrics}>
           <View style={styles.metric}>
             <Eye size={18} color={exploreColors.green} />
@@ -160,6 +166,7 @@ export default function ExploreHoustonStore({ navigation, route }) {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const [user] = useContext(UserContext);
+  const { loadBookmarks } = useStoreBookmarks();
   const storeId = route.params?.storeId;
   const wide = width >= 768;
   const [store, setStore] = useState(null);
@@ -212,6 +219,10 @@ export default function ExploreHoustonStore({ navigation, route }) {
     return () => { active = false; };
   }, [storeId, retry]);
 
+  useFocusEffect(useCallback(() => {
+    if (loadState === 'ready') loadBookmarks();
+  }, [loadState, loadBookmarks]));
+
   const refresh = () => {
     setLoadState('loading');
     setRetry(previous => previous + 1);
@@ -229,7 +240,7 @@ export default function ExploreHoustonStore({ navigation, route }) {
           <>
             <StoreOverview key={store._id} store={store} wide={wide} twoColumns={width >= 640} />
             <StoreCommunity
-              key={store._id}
+              key={`community-${store._id}`}
               store={store}
               isLoggedIn={Boolean(user?.token)}
               onSignIn={() => navigation.navigate('Auth', { screen: 'SignIn' })}
@@ -281,7 +292,10 @@ const styles = StyleSheet.create({
   wideThumbnail: { width: 72, height: 52 },
   selectedThumbnail: { borderColor: exploreColors.green },
   thumbnailImage: { flex: 1, borderRadius: 5 },
-  title: { fontSize: 30, lineHeight: 36, color: exploreColors.text },
+  titleRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
+  title: { fontSize: 30, lineHeight: 36, color: exploreColors.text, flexShrink: 1 },
+  titleBookmark: { maxWidth: '100%' },
+  specialty: { marginTop: 12, fontSize: 14, lineHeight: 20 },
   wideTitle: { fontSize: 36, lineHeight: 40 },
   description: { marginTop: 24, maxWidth: 768, fontSize: 16, lineHeight: 28 },
   metrics: { ...exploreStyles.row, flexWrap: 'wrap', columnGap: 20, rowGap: 8, marginTop: 20 },

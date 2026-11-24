@@ -9,6 +9,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Navigation from './src/navigation';
+import { StoreBookmarksProvider } from './src/screen/app/exploreHouston/StoreBookmarks';
 import { GetApi, Post } from './src/Assets/Helpers/Service';
 import { getSyncedCart, saveSyncedCart } from './src/Assets/Helpers/CartSync';
 import { getProductSlugFromUrl, saveProductReferral } from './src/Assets/Helpers/affiliateReferral';
@@ -779,7 +780,11 @@ const App = () => {
                                                             barStyle='light-content'
                                                             backgroundColor={Constants.greennew}
                                                         />
-                                                        {initial !== '' && <Navigation initial={initial} backgroundColor={appBackgroundColor} />}
+                                                        {initial !== '' && (
+                                                            <StoreBookmarksProvider token={user?.token}>
+                                                                <Navigation initial={initial} backgroundColor={appBackgroundColor} />
+                                                            </StoreBookmarksProvider>
+                                                        )}
                                                         <PickupAlertModal />
                                                     </SafeAreaView>
                                                 </StripeProvider>

@@ -5,7 +5,7 @@ import {
 import { useFocusEffect, useIsFocused, usePreventRemove, useTheme } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
-  Apple, Beef, BookOpen, Building2, CakeSlice, Camera, Car, Carrot, Clock, Coffee,
+  Apple, Beef, BookOpen, Bookmark, Building2, CakeSlice, Camera, Car, Carrot, Clock, Coffee,
   Cookie, Dumbbell, Egg, Eye, Fish, Flower2, Fuel, Hospital, Hotel, IceCreamBowl,
   Landmark, Leaf, MapPin, MessageCircle, Milk, Package, PawPrint, Phone, Pill, Pizza,
   Salad, Scissors, Search, Shirt, ShoppingBag, ShoppingBasket, Smartphone, Soup, Star,
@@ -13,7 +13,8 @@ import {
 } from 'lucide-react-native';
 import DriverHeader from '../../../Assets/Component/DriverHeader';
 import { GetApi } from '../../../Assets/Helpers/Service';
-import { exploreColors, exploreStyles, StoreImage, StoreNotice } from './components';
+import { exploreColors, exploreStyles, StoreImage, StoreNotice, StoreSpecialty } from './components';
+import { StoreBookmarkButton, StoreBookmarksError, useStoreBookmarks } from './StoreBookmarks';
 import ExploreHoustonBanner from './ExploreHoustonBanner';
 import {
   filterStores, formatStoreHours, getStoreOpenStatus, isExploreHoustonVisible,
@@ -84,26 +85,36 @@ function StoreCard({ store, category, width, cardWidth, onPress }) {
   const wide = width >= 640;
 
   return (
-    <Pressable
-      accessibilityRole="link"
-      accessibilityLabel={t('View details for {{store}}', { store: title })}
-      onPress={onPress}
-      style={({ pressed }) => [styles.card, cardWidth && { width: cardWidth }, pressed && exploreStyles.pressed]}>
-      <StoreImage
-        url={store.image}
-        icon={categoryIcon(category)}
-        size={64}
-        strokeWidth={1.3}
-        background={category?.iconBackground}
-        style={[styles.cardImage, wide && styles.wideImage, width >= 1024 && styles.gridImage]}
-      />
-      <View style={[styles.cardContent, wide && styles.wideCardContent]}>
+    <View style={[styles.card, cardWidth && { width: cardWidth }]}>
+      <View style={[styles.cardImage, wide && styles.wideImage, width >= 1024 && styles.gridImage]}>
+        <Pressable
+          accessible={false}
+          importantForAccessibility="no"
+          onPress={onPress}
+          style={({ pressed }) => [StyleSheet.absoluteFill, pressed && exploreStyles.pressed]}>
+          <StoreImage
+            url={store.image}
+            icon={categoryIcon(category)}
+            size={64}
+            strokeWidth={1.3}
+            background={category?.iconBackground}
+            style={styles.photo}
+          />
+        </Pressable>
+        <StoreBookmarkButton storeId={store._id} storeName={title} style={styles.cardBookmark} />
+      </View>
+      <Pressable
+        accessibilityRole="link"
+        accessibilityHint={t('View details for {{store}}', { store: title })}
+        onPress={onPress}
+        style={({ pressed }) => [styles.cardContent, wide && styles.wideCardContent, pressed && exploreStyles.pressed]}>
         <View style={styles.cardTitleRow}>
           <Text numberOfLines={1} style={[exploreStyles.bold, styles.cardTitle, wide && styles.wideCardTitle]}>
             {title}
           </Text>
           {categoryName && <Text style={[exploreStyles.semibold, styles.categoryPill]}>{categoryName}</Text>}
         </View>
+        <StoreSpecialty store={store} style={styles.cardSpecialty} />
 
         <View style={styles.metrics}>
           <View style={styles.metric}>
@@ -144,8 +155,8 @@ function StoreCard({ store, category, width, cardWidth, onPress }) {
             </View>
           )}
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   );
 }
 
@@ -154,6 +165,8 @@ export default function ExploreHouston({ navigation }) {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const focused = useIsFocused();
+  const { bookmarks, loadBookmarks } = useStoreBookmarks();
+  const [showBookmarks, setShowBookmarks] = useState(false);
   const [stores, setStores] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
@@ -183,13 +196,14 @@ export default function ExploreHouston({ navigation }) {
       if (currentRequest === requestNumber.current) {
         setStores(Array.isArray(data) ? data : []);
         setLoadState('ready');
+        loadBookmarks();
       }
     } catch (error) {
       if (currentRequest === requestNumber.current) {
         setLoadState(error?.message === 'Store module not found.' ? 'hidden' : 'error');
       }
     }
-  }, []);
+  }, [loadBookmarks]);
 
   useFocusEffect(useCallback(() => {
     loadDirectory();
@@ -197,12 +211,26 @@ export default function ExploreHouston({ navigation }) {
   }, [loadDirectory]));
 
   const categoriesById = useMemo(() => new Map(categories.map(category => [category._id, category])), [categories]);
-  const matches = useMemo(() => filterStores(stores, categoriesById, categoryId, search), [stores, categoriesById, categoryId, search]);
+  const visibleStores = useMemo(() => showBookmarks
+    ? stores.filter(store => bookmarks?.has(store._id))
+    : stores, [bookmarks, showBookmarks, stores]);
+  const matches = useMemo(() => filterStores(visibleStores, categoriesById, categoryId, search), [visibleStores, categoriesById, categoryId, search]);
   const hasFilters = Boolean(categoryId || search.trim());
+  const emptyBookmarks = showBookmarks && visibleStores.length === 0;
 
-  usePreventRemove(focused && loadState !== 'hidden' && hasFilters, () => {
+  const clearFilters = () => {
     setCategoryId('');
     setSearch('');
+  };
+
+  const toggleBookmarksView = () => {
+    clearFilters();
+    setShowBookmarks(current => !current);
+  };
+
+  usePreventRemove(focused && loadState !== 'hidden' && (hasFilters || showBookmarks), () => {
+    if (hasFilters) clearFilters();
+    else setShowBookmarks(false);
   });
 
   const wide = width >= 768;
@@ -235,26 +263,42 @@ export default function ExploreHouston({ navigation }) {
             <ExploreHoustonBanner />
             {loadState !== 'hidden' && (
               <>
-                <View style={styles.search}>
-                  <Search size={19} color={exploreColors.heading} />
-                  <TextInput
-                    accessibilityLabel={t('Search stores')}
-                    placeholder={t('Search stores')}
-                    placeholderTextColor={exploreColors.muted}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    returnKeyType="search"
-                    value={search}
-                    onChangeText={setSearch}
-                    style={[exploreStyles.text, styles.searchInput]}
-                  />
-                  {search ? (
-                    <Pressable accessibilityRole="button" accessibilityLabel={t('Clear search')} hitSlop={8} onPress={() => setSearch('')}>
-                      <X size={18} color={exploreColors.muted} />
-                    </Pressable>
-                  ) : null}
+                <View style={styles.searchRow}>
+                  <View style={styles.search}>
+                    <Search size={19} color={exploreColors.heading} />
+                    <TextInput
+                      accessibilityLabel={t('Search stores')}
+                      placeholder={t('Search stores')}
+                      placeholderTextColor={exploreColors.muted}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="search"
+                      value={search}
+                      onChangeText={setSearch}
+                      style={[exploreStyles.text, styles.searchInput]}
+                    />
+                    {search ? (
+                      <Pressable accessibilityRole="button" accessibilityLabel={t('Clear search')} hitSlop={8} onPress={() => setSearch('')}>
+                        <X size={18} color={exploreColors.muted} />
+                      </Pressable>
+                    ) : null}
+                  </View>
+                  <Pressable
+                    accessibilityRole="togglebutton"
+                    accessibilityState={{ checked: showBookmarks, disabled: !bookmarks }}
+                    disabled={!bookmarks}
+                    onPress={toggleBookmarksView}
+                    style={({ pressed }) => [styles.bookmarksToggle, showBookmarks && styles.activeBookmarks,
+                      (pressed || !bookmarks) && exploreStyles.pressed]}>
+                    <Bookmark size={17} color={showBookmarks ? '#fff' : exploreColors.green} fill={showBookmarks ? '#fff' : 'none'} />
+                    <Text style={[exploreStyles.semibold, styles.bookmarksLabel, showBookmarks && styles.activeBookmarksLabel]}>
+                      {t('Bookmarks')}
+                    </Text>
+                  </Pressable>
                 </View>
+                <StoreBookmarksError />
                 <ScrollView
+                  style={showBookmarks && styles.hidden}
                   horizontal
                   keyboardShouldPersistTaps="handled"
                   showsHorizontalScrollIndicator={false}
@@ -270,7 +314,7 @@ export default function ExploreHouston({ navigation }) {
                     />
                   ))}
                 </ScrollView>
-                {!categoryId && categories.length > 0 && (
+                {!showBookmarks && !categoryId && categories.length > 0 && (
                   <View style={[styles.categoryGrid, { gap: tileGap }]}>
                     {categories.map((category, index) => {
                       const [background, color] = categoryTones[index % categoryTones.length];
@@ -313,8 +357,10 @@ export default function ExploreHouston({ navigation }) {
         )}
         ListEmptyComponent={loadState === 'loading' ? <StoreNotice loading /> : (
           <StoreNotice
-            title={t(directoryMessages[loadState])}
-            description={loadState === 'ready' ? t('Try a different search or category') : undefined}
+            title={t(loadState === 'ready' && emptyBookmarks ? 'No bookmarked stores yet' : directoryMessages[loadState])}
+            description={loadState === 'ready'
+              ? t(emptyBookmarks ? 'Bookmark stores to find them here.' : 'Try a different search or category')
+              : undefined}
             onRetry={loadState === 'error' ? onRetry : undefined}
           />
         )}
@@ -326,10 +372,11 @@ export default function ExploreHouston({ navigation }) {
 const styles = StyleSheet.create({
   content: { width: '100%', maxWidth: 1360, alignSelf: 'center', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 32 },
   wideContent: { paddingHorizontal: 40, paddingTop: 24, paddingBottom: 48 },
+  searchRow: { ...exploreStyles.row, gap: 8, marginTop: 16, marginBottom: 12 },
   search: {
     ...exploreStyles.row,
-    marginTop: 16,
-    marginBottom: 12,
+    flex: 1,
+    minWidth: 0,
     minHeight: 48,
     gap: 8,
     paddingHorizontal: 12,
@@ -337,7 +384,24 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: exploreColors.green,
   },
-  searchInput: { flex: 1, paddingVertical: 8, fontSize: 14, color: exploreColors.muted },
+  searchInput: { flex: 1, minWidth: 0, paddingVertical: 8, fontSize: 14, color: exploreColors.muted },
+  bookmarksToggle: {
+    ...exploreStyles.row,
+    justifyContent: 'center',
+    gap: 5,
+    minHeight: 48,
+    maxWidth: '46%',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: exploreColors.green,
+    backgroundColor: '#fff',
+  },
+  activeBookmarks: { backgroundColor: exploreColors.green },
+  bookmarksLabel: { color: exploreColors.green, fontSize: 12, flexShrink: 1 },
+  activeBookmarksLabel: { color: '#fff' },
+  hidden: { display: 'none' },
   chipRow: { gap: 8, paddingTop: 4, paddingBottom: 8, marginBottom: 8 },
   chip: {
     ...exploreStyles.row,
@@ -393,6 +457,8 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   cardImage: { minHeight: 150, width: '46%', minWidth: 140, borderRadius: 12, alignSelf: 'stretch' },
+  photo: { flex: 1, borderRadius: 12 },
+  cardBookmark: { position: 'absolute', top: 6, right: 6 },
   wideImage: { width: 340, minHeight: 190 },
   gridImage: { width: 250 },
   cardContent: { flex: 1, minWidth: 0, paddingHorizontal: 12, paddingVertical: 8 },
@@ -410,6 +476,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     overflow: 'hidden',
   },
+  cardSpecialty: { marginTop: 6 },
   metrics: { ...exploreStyles.row, flexWrap: 'wrap', columnGap: 12, rowGap: 4, marginTop: 6 },
   metric: { ...exploreStyles.row, gap: 4 },
   metricText: { color: exploreColors.muted, fontSize: 12, lineHeight: 16 },

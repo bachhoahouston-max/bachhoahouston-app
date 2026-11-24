@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { FONTS } from '../../../Assets/Helpers/constant';
+import { localizedStoreText } from './storeDirectory';
 
 export const exploreColors = {
   green: '#206b3a',
@@ -52,6 +53,18 @@ export function StoreImage({ url, icon: Icon, size, color = exploreColors.green,
   );
 }
 
+export function StoreSpecialty({ store, style }) {
+  const { t, i18n } = useTranslation();
+  const specialty = localizedStoreText(store.specialty?.trim(), store.specialty_v?.trim(), i18n.language);
+  if (!specialty) return null;
+
+  return (
+    <Text style={[exploreStyles.text, styles.specialty, style]}>
+      <Text style={exploreStyles.semibold}>{t('Specialty')}:</Text> {specialty}
+    </Text>
+  );
+}
+
 export function StoreNotice({ loading, title, description, onRetry }) {
   const { t } = useTranslation();
 
@@ -85,6 +98,18 @@ export function StoreButton({ label, onPress, disabled, destructive, style }) {
 const styles = StyleSheet.create({
   cover: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   image: { position: 'absolute', width: '100%', height: '100%' },
+  specialty: {
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    overflow: 'hidden',
+    backgroundColor: '#fef3c7',
+    color: '#451a03',
+    fontSize: 12,
+    lineHeight: 17,
+  },
   notice: {
     ...exploreStyles.shadow,
     alignItems: 'center',
