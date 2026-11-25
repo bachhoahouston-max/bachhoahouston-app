@@ -19,13 +19,17 @@ export function readStoreResponse(response) {
   return response.data;
 }
 
-export async function isExploreHoustonVisible() {
+export async function getExploreHoustonSettings() {
   const data = readStoreResponse(await GetApi('storeModuleVisibility'));
   const visible = data?.isVisibleOnMobile ?? data?.isVisible;
   if (typeof visible !== 'boolean') {
     throw new Error('Invalid store module visibility');
   }
-  return visible;
+  return { visible, listingNotice: data.listingNotice };
+}
+
+export async function isExploreHoustonVisible() {
+  return (await getExploreHoustonSettings()).visible;
 }
 
 export function localizedStoreText(english, vietnamese, language) {

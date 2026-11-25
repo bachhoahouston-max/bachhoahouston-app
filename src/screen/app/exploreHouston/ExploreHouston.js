@@ -17,7 +17,7 @@ import { exploreColors, exploreStyles, StoreImage, StoreNotice, StoreSpecialty }
 import { StoreBookmarkButton, StoreBookmarksError, useStoreBookmarks } from './StoreBookmarks';
 import ExploreHoustonBanner from './ExploreHoustonBanner';
 import {
-  filterStores, formatStoreHours, getStoreOpenStatus, isExploreHoustonVisible,
+  filterStores, formatStoreHours, getExploreHoustonSettings, getStoreOpenStatus,
   localizedStoreText, readStoreResponse, resolveStoreCategory,
 } from './storeDirectory';
 
@@ -171,6 +171,7 @@ export default function ExploreHouston({ navigation }) {
   const bookmarksDisabled = isLoggedIn && !bookmarks;
   const [stores, setStores] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [listingNotice, setListingNotice] = useState(null);
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [loadState, setLoadState] = useState('loading');
@@ -179,12 +180,13 @@ export default function ExploreHouston({ navigation }) {
   const loadDirectory = useCallback(async () => {
     const currentRequest = ++requestNumber.current;
     try {
-      const visible = await isExploreHoustonVisible();
+      const { visible, listingNotice: notice } = await getExploreHoustonSettings();
       if (currentRequest !== requestNumber.current) return;
       if (!visible) {
         setLoadState('hidden');
         return;
       }
+      setListingNotice(notice);
 
       GetApi('getStoreCategories').then(readStoreResponse).then(data => {
         if (currentRequest === requestNumber.current && Array.isArray(data)) {
@@ -239,6 +241,8 @@ export default function ExploreHouston({ navigation }) {
     else setShowBookmarks(false);
   });
 
+  const noticeLanguage = i18n.language?.toLowerCase().startsWith('vi') ? 'vi' : 'en';
+  const noticeText = listingNotice?.[noticeLanguage];
   const wide = width >= 768;
   const categoryColumns = width >= 1024 ? 6 : wide ? 4 : width >= 340 ? 3 : 2;
   const storeColumns = width >= 1024 ? 2 : 1;
@@ -371,6 +375,13 @@ export default function ExploreHouston({ navigation }) {
             onRetry={loadState === 'error' ? onRetry : undefined}
           />
         )}
+        ListFooterComponent={loadState === 'ready' && typeof noticeText === 'string' && noticeText.trim() ? (
+          <View style={styles.listingNotice}>
+            <Text accessibilityLanguage={noticeLanguage} style={[exploreStyles.text, styles.listingNoticeText]}>
+              {noticeText}
+            </Text>
+          </View>
+        ) : null}
       />
     </>
   );
@@ -452,6 +463,16 @@ const styles = StyleSheet.create({
   wideTileIcon: { width: 44, height: 44, borderRadius: 22 },
   tileLabel: { flex: 1, color: exploreColors.text, fontSize: 10, lineHeight: 13 },
   wideTileLabel: { fontSize: 14, lineHeight: 18 },
+  listingNotice: {
+    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#86efac',
+    backgroundColor: exploreColors.imageBackground,
+  },
+  listingNoticeText: { color: exploreColors.text, fontSize: 13, lineHeight: 19 },
   cardGrid: { gap: 12 },
   card: {
     ...exploreStyles.shadow,

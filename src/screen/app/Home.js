@@ -401,7 +401,7 @@ const Home = () => {
             </LinearGradient> */}
 
             {/* Carousel */}
-            <View style={{ marginVertical: 20, overflow: 'hidden' }}>
+            <View style={{ marginTop: 20, marginBottom: 4, overflow: 'hidden' }}>
               <SwiperFlatList
                 autoplay
                 autoplayDelay={2}
