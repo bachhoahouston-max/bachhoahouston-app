@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { SendHorizontal, Star, X } from 'lucide-react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import Toast from 'react-native-toast-message';
 import { Delete, GetApi, Post } from '../../../Assets/Helpers/Service';
@@ -100,84 +101,100 @@ function StoreChat({ storeId, isLoggedIn, onSignIn, wide }) {
 
   const sendDisabled = posting || !message.trim();
   return (
-    <View style={[styles.section, styles.chatSection, wide && styles.wideSection]}>
-      <View style={styles.headingRow}>
-        <Text accessibilityRole="header" style={[exploreStyles.bold, styles.heading, wide && styles.wideHeading]}>{t('Live chat')}</Text>
-        <View style={styles.liveBadge}>
-          <View style={styles.liveDot} />
-          <Text style={[exploreStyles.bold, styles.liveLabel]}>{t('Live')}</Text>
+    <View style={styles.chatSection}>
+      <LinearGradient
+        colors={['#163a20', '#24502a']}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={[styles.chatHeader, wide && styles.wideChatHeader]}>
+        <View pointerEvents="none" style={styles.chatHeaderArc} />
+        <View style={styles.chatHeadingRow}>
+          <Text accessibilityRole="header" style={[exploreStyles.bold, styles.chatHeading, wide && styles.wideHeading]}>{t('Live chat')}</Text>
+          <View style={styles.chatStatus}>
+            <View style={styles.liveBadge}>
+              <View style={styles.liveDot} />
+              <Text style={[exploreStyles.bold, styles.liveLabel]}>{t('Live')}</Text>
+            </View>
+            <Text style={[exploreStyles.text, styles.chatCount]}>({comments?.length || 0})</Text>
+          </View>
         </View>
-        <Text style={[exploreStyles.text, styles.muted]}>({comments?.length || 0})</Text>
-      </View>
-      <Text style={[exploreStyles.medium, styles.conversation]}>{t('Join the Conversation')}</Text>
+      </LinearGradient>
+      <View style={[styles.chatBody, wide && styles.wideChatBody]}>
+        <Text style={[exploreStyles.medium, styles.conversation]}>{t('Join the Conversation')}</Text>
 
-      <View style={styles.chatList}>
-        {failed && <ActivityError label={t('Unable to load live chat')} onRetry={reload} />}
-        {comments?.length ? (
-          <ScrollView
-            ref={chatList}
-            nestedScrollEnabled
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.chatMessages}
-            style={styles.chatScroll}>
-            {comments.map(item => {
-              const name = authorName(item, t);
-              const timestamp = formatCommentTimestamp(item.createdAt, i18n.language);
-              return (
-                <View key={item._id} style={styles.comment}>
-                  <View style={styles.avatar}>
-                    <Text style={[exploreStyles.semibold, styles.initial]}>{name.charAt(0).toUpperCase()}</Text>
-                  </View>
-                  <View style={styles.commentBody}>
-                    <View style={styles.authorRow}>
-                      <Text style={[exploreStyles.semibold, styles.author]}>{name}</Text>
-                      {timestamp ? (
-                        <>
-                          <View style={styles.timeDot} />
-                          <Text style={[exploreStyles.text, styles.timestamp]}>{timestamp}</Text>
-                        </>
-                      ) : null}
+        <View style={styles.chatList}>
+          {failed && <ActivityError label={t('Unable to load live chat')} onRetry={reload} />}
+          {comments?.length ? (
+            <ScrollView
+              ref={chatList}
+              nestedScrollEnabled
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.chatMessages}
+              style={styles.chatScroll}>
+              {comments.map(item => {
+                const name = authorName(item, t);
+                const timestamp = formatCommentTimestamp(item.createdAt, i18n.language);
+                return (
+                  <View key={item._id} style={styles.comment}>
+                    <LinearGradient
+                      accessible={false}
+                      importantForAccessibility="no-hide-descendants"
+                      accessibilityElementsHidden
+                      colors={['#2f7846', '#194b2b']}
+                      style={[styles.avatar, wide && styles.wideAvatar]}>
+                      <Text style={[exploreStyles.semibold, styles.initial]}>{name.charAt(0).toUpperCase()}</Text>
+                    </LinearGradient>
+                    <View style={styles.commentBody}>
+                      <Text style={[exploreStyles.semibold, styles.author, wide && styles.wideCommentText]}>{name}</Text>
+                      {timestamp ? <Text style={[exploreStyles.text, styles.chatTimestamp]}>{timestamp}</Text> : null}
+                      <View style={styles.bubble}>
+                        <Text style={[exploreStyles.text, styles.bubbleText, wide && styles.wideCommentText]}>{item.comment}</Text>
+                      </View>
                     </View>
-                    <Text style={[exploreStyles.text, styles.bubble]}>{item.comment}</Text>
                   </View>
-                </View>
-              );
-            })}
-          </ScrollView>
-        ) : !failed && (
-          <Text style={[exploreStyles.text, styles.muted, comments && styles.emptyChat]}>
-            {comments ? t('No messages yet') : t('Loading live chat...')}
-          </Text>
+                );
+              })}
+            </ScrollView>
+          ) : !failed && (
+            <Text style={[exploreStyles.text, styles.muted, comments && styles.emptyChat]}>
+              {comments ? t('No messages yet') : t('Loading live chat...')}
+            </Text>
+          )}
+        </View>
+
+        {isLoggedIn ? (
+          <View style={styles.composer}>
+            <TextInput
+              accessibilityLabel={t('Add a comment...')}
+              placeholder={t('Add a comment...')}
+              placeholderTextColor={exploreColors.muted}
+              maxLength={2000}
+              editable={!posting}
+              value={message}
+              onChangeText={setMessage}
+              onSubmitEditing={sendMessage}
+              returnKeyType="send"
+              style={[exploreStyles.text, styles.commentInput, styles.chatInput, wide && styles.wideChatInput]}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('Send live chat')}
+              accessibilityState={{ disabled: sendDisabled }}
+              disabled={sendDisabled}
+              onPress={sendMessage}
+              style={({ pressed }) => [
+                styles.send,
+                wide && styles.wideSend,
+                pressed && styles.sendPressed,
+                sendDisabled && styles.sendDisabled,
+              ]}>
+              <SendHorizontal size={25} color="#fff" strokeWidth={1.8} />
+            </Pressable>
+          </View>
+        ) : (
+          <StoreButton label={t('Sign in to live chat')} onPress={onSignIn} style={styles.signInChat} />
         )}
       </View>
-
-      {isLoggedIn ? (
-        <View style={styles.composer}>
-          <TextInput
-            accessibilityLabel={t('Add a comment...')}
-            placeholder={t('Add a comment...')}
-            placeholderTextColor={exploreColors.muted}
-            maxLength={2000}
-            editable={!posting}
-            value={message}
-            onChangeText={setMessage}
-            onSubmitEditing={sendMessage}
-            returnKeyType="send"
-            style={[exploreStyles.text, styles.commentInput]}
-          />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('Send live chat')}
-            accessibilityState={{ disabled: sendDisabled }}
-            disabled={sendDisabled}
-            onPress={sendMessage}
-            style={({ pressed }) => [styles.send, (pressed || sendDisabled) && styles.disabled]}>
-            <SendHorizontal size={25} color="#fff" strokeWidth={1.8} />
-          </Pressable>
-        </View>
-      ) : (
-        <StoreButton label={t('Sign in to live chat')} onPress={onSignIn} style={styles.signInChat} />
-      )}
     </View>
   );
 }
@@ -345,7 +362,40 @@ export default function StoreCommunity({ store, isLoggedIn, onSignIn, onReviewSu
 const styles = StyleSheet.create({
   section: { ...exploreStyles.shadow, borderRadius: 24, backgroundColor: '#fff', padding: 24 },
   wideSection: { padding: 40 },
-  chatSection: { marginTop: 24 },
+  chatSection: {
+    ...exploreStyles.shadow,
+    marginTop: 24,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#b7c8ae',
+    backgroundColor: '#fffcf6',
+  },
+  chatHeader: {
+    borderTopLeftRadius: 23,
+    borderTopRightRadius: 23,
+    backgroundColor: '#163a20',
+    overflow: 'hidden',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  wideChatHeader: { paddingHorizontal: 40, paddingVertical: 20 },
+  chatHeaderArc: {
+    position: 'absolute',
+    right: -40,
+    bottom: -48,
+    width: 176,
+    height: 80,
+    borderRadius: 40,
+    borderTopWidth: 7,
+    borderColor: 'rgba(180, 207, 100, 0.35)',
+    transform: [{ rotate: '-18deg' }],
+  },
+  chatHeadingRow: { ...exploreStyles.row, flexWrap: 'wrap', columnGap: 12, rowGap: 8 },
+  chatHeading: { flexShrink: 1, fontSize: 24, lineHeight: 30, color: '#fff' },
+  chatStatus: { ...exploreStyles.row, flexShrink: 1, gap: 10 },
+  chatCount: { color: '#ffffffe6', fontSize: 14 },
+  chatBody: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20 },
+  wideChatBody: { paddingHorizontal: 40, paddingBottom: 28 },
   reviewSection: { marginTop: 4 },
   headingRow: { ...exploreStyles.row, flexWrap: 'wrap', columnGap: 12, rowGap: 4 },
   heading: { fontSize: 30, lineHeight: 36, color: exploreColors.heading },
@@ -353,49 +403,58 @@ const styles = StyleSheet.create({
   liveBadge: {
     ...exploreStyles.row,
     gap: 6,
-    borderRadius: 6,
-    paddingHorizontal: 12,
+    flexShrink: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: '#dff1df',
+    backgroundColor: '#ffdc8d',
   },
-  liveDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: exploreColors.green },
-  liveLabel: { fontSize: 14, color: exploreColors.green, textTransform: 'uppercase', letterSpacing: 0.35 },
-  conversation: { color: exploreColors.muted, fontSize: 16 },
+  liveDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#173c23' },
+  liveLabel: { flexShrink: 1, fontSize: 12, color: '#173c23', textTransform: 'uppercase', letterSpacing: 0.35 },
+  conversation: { color: exploreColors.body, fontSize: 16 },
   muted: { color: exploreColors.muted, fontSize: 14 },
-  chatList: { marginTop: 20 },
+  chatList: { marginTop: 16 },
   chatScroll: { maxHeight: 420 },
-  chatMessages: { gap: 12, paddingRight: 4 },
+  chatMessages: { gap: 16, paddingRight: 4 },
   comment: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: exploreColors.green,
   },
+  wideAvatar: { width: 48, height: 48, borderRadius: 24 },
   initial: { color: '#fff', fontSize: 16 },
   commentBody: { flex: 1 },
   authorRow: { ...exploreStyles.row, flexShrink: 1, flexWrap: 'wrap', columnGap: 8, rowGap: 2 },
   author: { fontSize: 14, color: exploreColors.heading },
-  timeDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: exploreColors.subtle },
+  chatTimestamp: { color: exploreColors.body, fontSize: 12, lineHeight: 16 },
   timestamp: { color: exploreColors.subtle, fontSize: 12, lineHeight: 16 },
   bubble: {
     alignSelf: 'flex-start',
-    marginTop: 2,
-    borderRadius: 8,
-    overflow: 'hidden',
-    paddingHorizontal: 16,
-    paddingVertical: 2,
-    fontSize: 14,
-    lineHeight: 20,
-    backgroundColor: '#f0fdf4',
-    color: '#1f2937',
+    maxWidth: '100%',
+    marginTop: 4,
+    borderRadius: 16,
+    borderTopLeftRadius: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    backgroundColor: '#e9f5e8',
   },
-  emptyChat: { padding: 20, borderWidth: 1, borderStyle: 'dashed', borderColor: exploreColors.border, borderRadius: 12, textAlign: 'center' },
+  bubbleText: { fontSize: 14, color: '#203729' },
+  wideCommentText: { fontSize: 16 },
+  emptyChat: {
+    padding: 20,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#c8d8c2',
+    borderRadius: 12,
+    backgroundColor: '#f3f8ee',
+    textAlign: 'center',
+  },
   activityError: { gap: 6, alignItems: 'flex-start', paddingVertical: 8 },
   retry: { color: exploreColors.green, fontSize: 14 },
-  composer: { ...exploreStyles.row, gap: 12, marginTop: 24 },
+  composer: { ...exploreStyles.row, gap: 10, marginTop: 20 },
   commentInput: {
     flex: 1,
     borderRadius: 16,
@@ -407,9 +466,28 @@ const styles = StyleSheet.create({
     color: '#374151',
     backgroundColor: '#fff',
   },
-  signInChat: { alignSelf: 'flex-start', marginTop: 24 },
-  send: { backgroundColor: exploreColors.green, borderRadius: 999, padding: 12 },
-  disabled: { opacity: 0.5 },
+  chatInput: {
+    ...exploreStyles.shadow,
+    minWidth: 0,
+    minHeight: 48,
+    borderColor: '#d1d5db',
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  wideChatInput: { minHeight: 56 },
+  signInChat: { alignSelf: 'flex-start', marginTop: 20, backgroundColor: '#194b2b' },
+  send: {
+    ...exploreStyles.shadow,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#194b2b',
+  },
+  wideSend: { width: 56, height: 56, borderRadius: 28 },
+  sendPressed: { backgroundColor: exploreColors.green },
+  sendDisabled: { backgroundColor: '#4d7056' },
   reviewHeader: { ...exploreStyles.row, flexWrap: 'wrap', gap: 8, justifyContent: 'space-between' },
   rating: { fontSize: 14, color: exploreColors.amber },
   reviewList: { marginTop: 8, gap: 4 },
