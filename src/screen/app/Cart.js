@@ -88,6 +88,8 @@ const pickupOptionss = [
 
 
 const receiveOptionKey = value => value === 'shipping' ? 'ShipmentDelivery' : value;
+const dateFormat = 'YYYY-MM-DD';
+const storeTimeZone = 'America/Chicago';
 
 const Cart = ({ route }) => {
   const navigation = useNavigation();
@@ -103,6 +105,7 @@ const Cart = ({ route }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPickupType, setPickupType] = useState(null);
   const [receiveAvailability, setReceiveAvailability] = useState(null);
+  const [receiveSchedule, setReceiveSchedule] = useState(null);
   const [receiveOptionsError, setReceiveOptionsError] = useState(false);
   const [receiveOptionsRetry, setReceiveOptionsRetry] = useState(0);
   const hasReceiveOptions = Object.values(receiveAvailability || {}).some(Boolean);
@@ -131,7 +134,6 @@ const Cart = ({ route }) => {
   const [couponCode, setCouponCode] = useState('');
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [affiliateDiscount, setAffiliateDiscount] = useState(0);
-  const [minDate, setMinDate] = useState(new Date());
   const [totalTax, setTotalTax] = useState(0);
   const [availableZipCodes, setAvailableZipCodes] = useState([]);
   const [showStripePayment, setShowStripePayment] = useState(false);
@@ -150,7 +152,6 @@ const Cart = ({ route }) => {
   const [serviceFee, setServiceFee] = useState(0);
   const [pickupOptions, setPickupOptions] = useState(pickupOptionss)
   const [deliveryType, setDeliveryType] = useState('');
-  const [closureDates, setClosureDates] = useState([]);
   const [extraFees, setExtrafees] = useState(0);
   const [ExtraFeesObj, setExtraFeesObj] = useState({})
   const [waiting, setWaiting] = useState(false);
@@ -176,20 +177,35 @@ const Cart = ({ route }) => {
       let active = true;
       setReceiveAvailability(null);
       setReceiveOptionsError(false);
+      setOpenDatePicker(false);
 
       async function loadReceiveOptions() {
         try {
-          const response = await GetApi('web-receive-options', {});
+          const [response, scheduleResponse] = await Promise.all([
+            GetApi('web-receive-options', {}),
+            GetApi('receive-option-schedule', {}),
+          ]);
           const availability = response?.data;
+          const schedule = scheduleResponse?.data;
           if (!response?.status || !pickupOptionss.every(
             option => typeof availability?.[receiveOptionKey(option.value)] === 'boolean',
-          )) {
+          ) || !scheduleResponse?.status ||
+            typeof schedule?.today !== 'string' || !Array.isArray(schedule?.dates)) {
             throw new Error('Receive options unavailable');
           }
+
+          const effectiveAvailability = {
+            ...availability,
+            ShipmentDelivery: availability.ShipmentDelivery && !schedule.dates.some(
+              ({ date, unavailableOptions }) =>
+                date === schedule.today && unavailableOptions.includes('ShipmentDelivery'),
+            ),
+          };
           if (active) {
-            setReceiveAvailability(availability);
+            setReceiveSchedule(schedule);
+            setReceiveAvailability(effectiveAvailability);
             setPickupType(current =>
-              availability[receiveOptionKey(current)] ? current : null,
+              effectiveAvailability[receiveOptionKey(current)] ? current : null,
             );
           }
         } catch {
@@ -398,13 +414,7 @@ const Cart = ({ route }) => {
     zip => String(zip.pincode) === String(localDeliveryAddress.zipcode),
   );
 
-  const isAfter12PM = () => {
-    const now = new Date(); // local timezone
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-
-    return hours > 12 || (hours === 12 && minutes > 0);
-  };
+  const isAfter12PM = () => moment.tz(storeTimeZone).hour() >= 12;
 
   const fetchZipCodes = async () => {
     setLoading(true);
@@ -460,30 +470,11 @@ const Cart = ({ route }) => {
     );
   };
 
-  const getClosureDate = () => {
-    setLoading(true);
-    GetApi(`getClosureDates`, {}).then(
-      async res => {
-        setLoading(false);
-        console.log('closuredates===========>', res);
-        if (res.status) {
-          // setClosureDates(res.data);
-          setClosureDates(res.data.map(d => new Date(d.closureDate)));
-        }
-      },
-      err => {
-        setLoading(false);
-        console.log(err);
-      },
-    );
-  };
-
   useFocusEffect(
     useCallback(() => {
       setCoupon(false);
       setCouponDiscount(0);
       fetchZipCodes();
-      getClosureDate();
       const isAfterNoon = isAfter12PM();
       pickupOptionss.forEach(option => {
         if (option.value === 'localDelivery') {
@@ -506,63 +497,38 @@ const Cart = ({ route }) => {
   const handleDatePickerOpen = () => setOpenDatePicker(true);
   const handleDatePickerClose = () => setOpenDatePicker(false);
 
+  const blockedDateKeys = useMemo(() => new Set(
+    (receiveSchedule?.dates || [])
+      .filter(({ unavailableOptions }) => unavailableOptions.includes(receiveOptionKey(PickupType)))
+      .map(({ date }) => date),
+  ), [receiveSchedule, PickupType]);
+
+  const disabledDates = useMemo(
+    () => Array.from(blockedDateKeys, day => moment(day, dateFormat, true).toDate()),
+    [blockedDateKeys],
+  );
+
+  const minDate = useMemo(() => {
+    const now = moment.tz(storeTimeZone);
+    const cutoffHour = PickupType === 'localDelivery' ? 12 : 17;
+    if (now.hour() >= cutoffHour) now.add(1, 'day');
+    while (blockedDateKeys.has(now.format(dateFormat))) now.add(1, 'day');
+    return moment(now.format(dateFormat), dateFormat, true).toDate();
+  }, [blockedDateKeys, PickupType]);
+
   useEffect(() => {
-    const updateMinDate = () => {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const minDate = new Date();
-
-      if (currentHour >= 17) {
-        // After 5 PM, set min date to tomorrow
-        minDate.setDate(now.getDate() + 1);
-      } else {
-        // Before 5 PM, min date is today
-        minDate.setDate(now.getDate());
-      }
-
-      checkAvailabilityAndAddToCart(minDate);
-
-      AsyncStorage.setItem(
-        'pickupDate',
-        moment(new Date(minDate)).format('YYYY-MM-DD'))
-    };
-
-    const updateLocalMinDate = () => {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const minDate = new Date();
-
-      if (currentHour >= 12) {
-        // Before 8 PM, set min date to tomorrow
-        minDate.setDate(now.getDate() + 1);
-      }
-      checkAvailabilityAndAddToCart(minDate);
-
-      AsyncStorage.setItem(
-        'pickupDate',
-        moment(new Date(minDate)).format('YYYY-MM-DD'))
-    };
-
-    if (PickupType === 'orderPickup' || PickupType === 'driveUp') {
-      updateMinDate();
-    } else if (PickupType === 'localDelivery' || PickupType === 'shipping') {
-      updateLocalMinDate();
+    if (!PickupType) return;
+    if (PickupType === 'shipping') {
+      setPickupDate(null);
+      return;
     }
-  }, [PickupType]);
 
-  const checkAvailabilityAndAddToCart = async (mdate) => {
-    let cDate = moment(new Date(mdate)).format('YYYY-MM-DD');
-    const fdate = closureDates.find((e) => cDate.toString() === moment(new Date(e)).format('YYYY-MM-DD'))
-    if (fdate) {
-      const cdate = new Date(mdate);
-      cdate.setDate(mdate.getDate() + 1);
-      checkAvailabilityAndAddToCart(cdate)
-    } else {
-      mdate.setHours(0, 0, 0, 0);
-      setPickupDate(mdate)
-      setMinDate(mdate);
-    }
-  }
+    setPickupDate(current => (
+      current && current >= minDate && !blockedDateKeys.has(moment(current).format(dateFormat))
+        ? current
+        : minDate
+    ));
+  }, [PickupType, blockedDateKeys, minDate]);
 
   useEffect(() => {
     // Calculate cart total (original prices)
@@ -690,9 +656,6 @@ const Cart = ({ route }) => {
       isDriveUp,
       isShipmentDelivery,
     });
-
-    const dateString = pickupDate;
-    const formattedDate = moment(dateString, 'DD/MM/YYYY', true);
 
     const unavailableShippingProducts = newarr.filter(
       item => item.isShipmentAvailable === false,
@@ -905,8 +868,6 @@ const Cart = ({ route }) => {
 
 
   const submitCheckoutWithStripeData = async stripePaymentResult => {
-    const type = await AsyncStorage.getItem('pickupType');
-    const date = await AsyncStorage.getItem('pickupDate');
     const couponvalue = await AsyncStorage.getItem('couponDiscount')
     let shipAdd = {}
     const shipAdds = await AsyncStorage.getItem('userDetail');
@@ -957,8 +918,8 @@ const Cart = ({ route }) => {
       // timezone handling leak into that instant is what caused delivery
       // dates on iOS to land on the wrong day; the backend re-anchors this
       // string to the store's fixed timezone.
-      const formattedDate = pickupDate
-        ? moment(pickupDate).format('YYYY-MM-DD')
+      const formattedDate = !isShipmentDelivery && pickupDate
+        ? moment(pickupDate).format(dateFormat)
         : null;
 
       console.log('Formatted Date:', formattedDate);
@@ -1014,11 +975,20 @@ const Cart = ({ route }) => {
         setLoading(false);
         console.log('Order creation response:', response);
         if (response?.code === 'WEB_RECEIVE_OPTION_UNAVAILABLE') {
-          setReceiveAvailability(response.availability);
+          setReceiveOptionsRetry(attempt => attempt + 1);
           setPickupType(null);
           Toast.show({
             type: 'error',
             text1: t('Your selected receive option is currently unavailable.'),
+          });
+          return;
+        }
+        if (response?.code === 'RECEIVE_OPTION_DATE_UNAVAILABLE') {
+          setPickupDate(null);
+          setReceiveOptionsRetry(attempt => attempt + 1);
+          Toast.show({
+            type: 'error',
+            text1: t('Your selected receive option is unavailable on this date.'),
           });
           return;
         }
@@ -1155,14 +1125,13 @@ const Cart = ({ route }) => {
     setCouponCode('');
   }, [open]);
 
-  const onConfirmSingle = React.useCallback(
-    (params) => {
-      setOpenDatePicker(false);
-      console.log('Selected date:', params);
-      setPickupDate(params.date);
-    },
-    [setOpenDatePicker, setPickupDate]
-  );
+  const onConfirmSingle = ({ date: selectedDate }) => {
+    setOpenDatePicker(false);
+    if (selectedDate && selectedDate >= minDate &&
+      !blockedDateKeys.has(moment(selectedDate).format(dateFormat))) {
+      setPickupDate(selectedDate);
+    }
+  };
 
 
   const checkQuantity = async (items) => {
@@ -1791,7 +1760,7 @@ const Cart = ({ route }) => {
                       disabled={!enabled}
                       style={styles.pickupRow}
                       onPress={() => {
-                        if (!enabled) return;
+                        if (!enabled || PickupType === option.value) return;
                         setPickupType(option.value);
                         setPickupDate(null);
                         setDeliveryTip(0);
@@ -3091,12 +3060,11 @@ const Cart = ({ route }) => {
         mode="single"
         visible={openDatePicker}
         onDismiss={handleDatePickerClose}
-        date={new Date(pickupDate)}
+        date={pickupDate || minDate}
         onConfirm={onConfirmSingle}
         validRange={{
-          startDate: new Date(minDate),
-          // endDate: new Date(2026, 11, 31),
-          disabledDates: closureDates
+          startDate: minDate,
+          disabledDates,
         }}
         presentationStyle="pageSheet"
       />
@@ -3109,15 +3077,6 @@ const Cart = ({ route }) => {
 
 
 };
-
-const blockedDates = ["2026-01-13", "2026-01-20"];
-
-const disabledDates = (date) => {
-  console.log(date)
-  return false;
-
-};
-
 
 export default Cart;
 

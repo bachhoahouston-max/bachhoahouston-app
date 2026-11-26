@@ -37,6 +37,7 @@
     "Loading receive options…": "Đang tải các phương thức nhận hàng…",
     "Retry": "Thử lại",
     "Your selected receive option is currently unavailable.": "Phương thức nhận hàng bạn chọn hiện không khả dụng.",
+    "Your selected receive option is unavailable on this date.": "Phương thức nhận hàng bạn chọn không khả dụng vào ngày này.",
     "Are you sure you want to empty your cart?": "Bạn có chắc chắn muốn xóa toàn bộ giỏ hàng không?",
     "Empty Cart": "Xóa Giỏ hàng",
     "Order Pickup": "Nhận tại cửa hàng",
