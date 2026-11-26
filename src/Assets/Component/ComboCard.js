@@ -1,83 +1,35 @@
-/* eslint-disable no-undef */
-/* eslint-disable react-native/no-inline-styles */
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-  Animated,
-  Easing,
-} from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import { AlarmClock, ArrowBigRight, Plus, Zap } from 'lucide-react-native';
 import Constants, { Currency, FONTS } from '../Helpers/constant';
-import AlarmBadge from './AlarmBadge';
-import { MinusIcon, Plus2Icon, PlusIcon } from '../../../Theme';
+import { MinusIcon, Plus2Icon } from '../../../Theme';
 import { GetApi } from '../Helpers/Service';
 import { CartContext, ToastContext } from '../../../App';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const saleGreen = '#216831';
+const saleGold = '#F6E27A';
+
 const getCountdown = endDateTime => {
-  const now = new Date();
-  const end = new Date(endDateTime);
-  const diff = end - now;
-  if (diff <= 0) return {
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-    expired: true,
-    endDateTime,
-  };
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-  return { days, hours, minutes, seconds, expired: false, endDateTime };
+  const remaining = new Date(endDateTime).getTime() - Date.now();
+  const totalMinutes = Math.max(0, Math.floor((remaining || 0) / 60000));
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor(totalMinutes / 60) % 24;
+  const minutes = String(totalMinutes % 60).padStart(2, '0');
+  return `${days}d : ${hours}h : ${minutes}m`;
 };
 
-const ComboCard = ({ combo, onAddCombo, }) => {
+const ComboCard = ({ combo }) => {
   const { t } = useTranslation();
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const [countdown, setCountdown] = useState(() => getCountdown(combo?.endDateTime));
+  const endDateTime = combo?.endDateTime;
+  const [countdown, setCountdown] = useState(() => getCountdown(endDateTime));
   const [cartdetail, setcartdetail] = useContext(CartContext);
-  const [cartItem, setCartItem] = useState(undefined);
-  const [toast, setToast] = useContext(ToastContext);
-
-  // console.log('Rendering ComboCard for combo:', combo);
-
-  useEffect(() => {
-    const items = Array.isArray(cartdetail)
-      ? cartdetail.find(it => it?.combo_id === combo?._id)
-      : undefined;
-    setCartItem(items);
-  }, [cartdetail])
-
-
-  // const cartItem = Array.isArray(cartdetail)
-  //   ? cartdetail.find(it => it?.combo_id === combo?._id)
-  //   : undefined;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(scaleAnim, {
-          toValue: 1.05,
-          duration: 500,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 500,
-          easing: Easing.in(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
-
+  const [, setToast] = useContext(ToastContext);
+  const cartItem = Array.isArray(cartdetail)
+    ? cartdetail.find(item => item?.combo_id === combo?._id)
+    : undefined;
 
   const checkQuantity = async (item) => {
     console.log('Checking quantity for item:', item._id);
@@ -92,95 +44,25 @@ const ComboCard = ({ combo, onAddCombo, }) => {
   };
 
   useEffect(() => {
-    if (!combo?.endDateTime) return;
+    setCountdown(getCountdown(endDateTime));
+    if (!endDateTime || !(new Date(endDateTime).getTime() > Date.now())) return;
+
     const timer = setInterval(() => {
-      const cd = getCountdown(combo.endDateTime);
-      setCountdown(cd);
-      if (cd.expired) clearInterval(timer);
+      setCountdown(getCountdown(endDateTime));
+      if (new Date(endDateTime).getTime() <= Date.now()) clearInterval(timer);
     }, 1000);
     return () => clearInterval(timer);
-  }, [combo?.endDateTime]);
+  }, [endDateTime]);
 
   if (!combo) return null;
 
   const { price, promo_text, main_product, free_product, main_price_slot } = combo;
-
   const mainImage = main_product?.varients?.[0]?.image?.[0];
-  const mainUnit = main_price_slot?.unit ?? '';
-  const mainValue = main_price_slot?.value ?? '';
-  const originalPrice = main_price_slot?.our_price ?? 0;
-
   const freeItem = free_product?.[0];
   const freeImage = freeItem?.product?.varients?.[0]?.image?.[0];
-  const freeUnit = freeItem?.slot?.unit ?? '';
-  const freeValue = freeItem?.slot?.value ?? '';
+  const originalPrice = main_price_slot?.our_price ?? 0;
   const freeOriginalPrice = freeItem?.slot?.our_price ?? 0;
   const totalOriginalPrice = originalPrice + freeOriginalPrice;
-
-  const saveAmt = freeOriginalPrice > 0 ? freeOriginalPrice : (originalPrice - price);
-
-  const calculateTimeLeft = distance => {
-    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(
-      (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
-    );
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-    return { days, hours, minutes, seconds };
-  };
-
-  // useEffect(() => {
-  //   const calculateCountdown = () => {
-  //     const now = new Date().getTime();
-  //     const newCountdown = {};
-
-  //     // saleData.forEach(sale => {
-  //       const startDate = new Date(sale.startDateTime).getTime();
-  //       const endDate = new Date(sale.endDateTime).getTime();
-
-  //       if (now < startDate) {
-  //         const distance = startDate - now;
-  //         newCountdown[sale._id] = {
-  //           ...calculateTimeLeft(distance),
-  //           status: 'upcoming',
-  //           message: 'Sale starts in',
-  //         };
-  //       } else if (now >= startDate && now < endDate) {
-  //         const distance = endDate - now;
-  //         newCountdown[sale._id] = {
-  //           ...calculateTimeLeft(distance),
-  //           status: 'active',
-  //           message: 'Sale ends in',
-  //         };
-  //       } else {
-  //         newCountdown[sale._id] = {
-  //           status: 'expired',
-  //           message: 'Sale has ended',
-  //         };
-  //       }
-  //     // });
-
-  //     setCountdown(newCountdown);
-  //   };
-
-  //   const calculateTimeLeft = distance => {
-  //     const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-  //     const hours = Math.floor(
-  //       (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
-  //     );
-  //     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-  //     const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-  //     return { days, hours, minutes, seconds };
-  //   };
-
-  //   if (saleData.length > 0) {
-  //     calculateCountdown();
-  //     const interval = setInterval(calculateCountdown, 1000);
-  //     return () => clearInterval(interval);
-  //   }
-  // }, [combo]);
 
   const addCombo = async () => {
     console.log('Available quantity:', combo.main_product._id === combo.free_product?.[0]?.product._id, combo.main_product._id, combo.free_product?.[0]?.product._id);
@@ -195,7 +77,7 @@ const ComboCard = ({ combo, onAddCombo, }) => {
         return
       }
 
-      if (2 > (quantityResult.qty ?? 0)) {
+      if ((quantityResult.qty ?? 0) < 2) {
         setToast(t('Main product is not available in this quantity in stock. Please choose a different item.'));
         return
       }
@@ -260,57 +142,61 @@ const ComboCard = ({ combo, onAddCombo, }) => {
     const updatedCart = [...cartdetail, newProduct];
     setcartdetail(updatedCart);
     await AsyncStorage.setItem('cartdata', JSON.stringify(updatedCart));
-    console.log('Added to cart', cartdata);
-
-  }
+  };
 
   return (
     <View style={styles.card}>
+      <LinearGradient
+        colors={['#0F3D2E', '#256C32']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.banner}>
+        <View style={styles.bannerTitle}>
+          <Zap size={23} color={saleGold} fill={saleGold} />
+          <Text accessibilityRole="header" style={styles.bannerTitleText}>
+            {t('Flash sale')}
+          </Text>
+        </View>
+        <View style={styles.timerPill}>
+          <View style={styles.timerContent}>
+            <AlarmClock size={13} color="#342717" />
+            <Text style={styles.timerText}>{countdown}</Text>
+          </View>
+        </View>
+        <Text style={styles.bannerNote}>{t('Limited time only!')}</Text>
+      </LinearGradient>
 
-      <View style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}>
-        <AlarmBadge currentSale={countdown} />
-      </View>
-
-
-      {/* Products Row */}
       <View style={styles.productsRow}>
-        {/* Buy Product */}
         <View style={styles.productBox}>
-          {/* <View style={styles.qtyBadge}>
-            <Text style={styles.qtyBadgeText}>X {mainValue} {mainUnit}</Text>
-          </View> */}
           <Image
-            source={{ uri: mainImage }}
+            source={mainImage ? { uri: mainImage } : undefined}
             style={styles.productImage}
             resizeMode="contain"
           />
           <View style={styles.buyLabel}>
-            <Text style={styles.buyLabelText}>BUY</Text>
+            <Text style={styles.buyLabelText}>{t('Buy')}</Text>
           </View>
         </View>
 
-        {/* Arrow */}
-        <View style={styles.arrowContainer}>
-          <Text style={styles.arrowText}>→</Text>
-        </View>
+        <ArrowBigRight
+          size={29}
+          fill={saleGreen}
+          color={saleGreen}
+          style={styles.arrow}
+        />
 
-        {/* Free Product */}
         <View style={styles.productBox}>
-          {/* <View style={styles.qtyBadge}>
-            <Text style={styles.qtyBadgeText}>X {freeValue} {freeUnit}</Text>
-          </View> */}
           <Image
-            source={{ uri: freeImage }}
+            source={freeImage ? { uri: freeImage } : undefined}
             style={styles.productImage}
             resizeMode="contain"
           />
           <View style={[styles.buyLabel, styles.freeLabel]}>
-            <Text style={[styles.buyLabelText, styles.freeLabelText]}>FREE</Text>
+            <Text style={[styles.buyLabelText, styles.freeLabelText]}>{t('Free')}</Text>
           </View>
         </View>
       </View>
 
-      {/* Price Row */}
       <View style={styles.priceRow}>
         <Text style={styles.salePrice}>{Currency}{(price ?? 0).toFixed(2)}</Text>
         {originalPrice > 0 && (
@@ -318,26 +204,21 @@ const ComboCard = ({ combo, onAddCombo, }) => {
         )}
         {freeOriginalPrice > 0 && (
           <View style={styles.saveBadge}>
-            <Text style={styles.saveText}>Save {Currency}{freeOriginalPrice.toFixed(2)}</Text>
+            <Text style={styles.saveText}>
+              {t('Save {{amount}}', { amount: Currency + freeOriginalPrice.toFixed(2) })}
+            </Text>
           </View>
         )}
       </View>
 
-      {/* Promo text */}
-      {promo_text ? (
-        <Text style={styles.description}>{promo_text}</Text>
-      ) : null}
+      {promo_text ? <Text style={styles.description}>{promo_text}</Text> : null}
 
-      {/* Add Combo Button */}
-      {/* <View style={{ marginTop: 'auto', position: 'relative', flex: 1 }}> */}
       {cartItem ? (
-        <View
-          style={[
-            styles.addcov,
-            // { width: 90, height: 30, alignItems: 'center' },
-          ]}>
+        <View style={styles.quantityControl}>
           <TouchableOpacity
-            style={styles.minus}
+            style={styles.quantityButton}
+            accessibilityRole="button"
+            accessibilityLabel={t('Decrease quantity')}
             onPress={() => {
               const updatedCart = cartdetail
                 .map(_i =>
@@ -359,9 +240,11 @@ const ComboCard = ({ combo, onAddCombo, }) => {
           <Text style={styles.qtyText}>{cartItem.qty}</Text>
 
           <TouchableOpacity
-            style={styles.plus3}
+            style={styles.quantityButton}
+            accessibilityRole="button"
+            accessibilityLabel={t('Increase quantity')}
             onPress={async () => {
-              const existingCartItem = cartdetail.find((cartItem) => cartItem.combo_id === combo._id);
+              const existingCartItem = cartItem;
               console.log('Existing cart item:', existingCartItem);
               if (combo.main_product._id === combo.free_product?.[0]?.product._id) {
                 const quantityResult = await checkQuantity(combo.main_product)
@@ -421,235 +304,201 @@ const ComboCard = ({ combo, onAddCombo, }) => {
         </View>
       ) : (
         <TouchableOpacity
+          accessibilityRole="button"
           style={styles.addButton}
           onPress={addCombo}
           activeOpacity={0.85}>
-          <Text style={styles.addButtonText}>+ Add Combo Now</Text>
+          <Plus size={19} color={saleGreen} />
+          <Text style={styles.addButtonText}>{t('Add Combo Now')}</Text>
         </TouchableOpacity>
-      )
-      }
-      {/* </View> */}
-
-    </View >
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Constants.white,
+    borderColor: '#EEE4DE',
+    borderWidth: 1,
     borderRadius: 16,
-    padding: 14,
-    marginHorizontal: 8,
-    width: 260,
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    shadowColor: Constants.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+    overflow: 'hidden',
+    paddingBottom: 6,
   },
-  timerRow: {
+  banner: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    gap: 6,
-  },
-  timerIcon: {
-    fontSize: 18,
-  },
-  endingLabel: {
-    fontSize: 13,
-    color: Constants.black,
-    fontFamily: FONTS.Medium,
-  },
-  timerBadge: {
-    backgroundColor: '#ef4444',
-    paddingHorizontal: 10,
+    gap: 4,
+    paddingHorizontal: 6,
     paddingVertical: 4,
-    borderRadius: 999,
+    minHeight: 35,
+    borderBottomColor: '#DCBE62',
+    borderBottomWidth: 2,
   },
-  timerText: {
+  bannerTitle: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  bannerTitleText: {
+    flexShrink: 1,
     color: Constants.white,
     fontFamily: FONTS.Bold,
-    fontSize: 13,
+    fontSize: 10,
+    textTransform: 'uppercase',
+  },
+  timerPill: {
+    borderRadius: 99,
+    borderColor: '#F2D27A',
+    borderWidth: 1,
+    padding: 1,
+  },
+  timerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#F2D27A',
+    borderRadius: 99,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  timerText: {
+    color: '#342717',
+    fontFamily: FONTS.Bold,
+    fontVariant: ['tabular-nums'],
+    fontSize: 10,
+  },
+  bannerNote: {
+    flex: 1,
+    color: Constants.white,
+    fontFamily: FONTS.Bold,
+    fontSize: 9,
+    textAlign: 'right',
   },
   productsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-    marginTop: 10
+    justifyContent: 'center',
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingTop: 2,
   },
   productBox: {
     flex: 1,
+    maxWidth: 215,
     alignItems: 'center',
   },
-  qtyBadge: {
-    backgroundColor: '#2E7D32',
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginBottom: 4,
-    alignSelf: 'center',
+  productImage: {
+    width: '100%',
+    aspectRatio: 0.78,
   },
-  qtyBadgeText: {
+  arrow: {
+    marginBottom: 14,
+  },
+  buyLabel: {
+    backgroundColor: saleGold,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    marginTop: -12,
+  },
+  buyLabelText: {
+    color: saleGreen,
+    fontFamily: FONTS.Bold,
+    fontSize: 14,
+    textTransform: 'uppercase',
+  },
+  freeLabel: {
+    backgroundColor: '#08783D',
+  },
+  freeLabelText: {
+    color: Constants.white,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginHorizontal: 14,
+    marginTop: 4,
+  },
+  salePrice: {
+    fontSize: 20,
+    color: '#C9232E',
+    fontFamily: FONTS.Bold,
+  },
+  originalPrice: {
+    fontSize: 11,
+    color: '#656870',
+    fontFamily: FONTS.Medium,
+    textDecorationLine: 'line-through',
+  },
+  saveBadge: {
+    alignSelf: 'center',
+    backgroundColor: '#D91F32',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  saveText: {
     color: Constants.white,
     fontSize: 11,
     fontFamily: FONTS.Bold,
   },
-  productImage: {
-    width: 90,
-    height: 90,
-  },
-  buyLabel: {
-    backgroundColor: '#F6E27A',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 4,
-    marginTop: 6,
-  },
-  buyLabelText: {
-    color: '#2E7D32',
-    fontFamily: FONTS.Bold,
-    fontSize: 14,
-    fontWeight: '900',
-  },
-  freeLabel: {
-    backgroundColor: '#2E7D32',
-  },
-  freeLabelText: {
-    color: Constants.white,
-    fontWeight: '900',
-  },
-  arrowContainer: {
-    paddingHorizontal: 4,
-  },
-  arrowText: {
-    fontSize: 24,
-    color: Constants.customgrey,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-    flexWrap: 'wrap',
-  },
-  salePrice: {
-    fontSize: 14,
-    color: '#FF0000',
-    fontFamily: FONTS.Bold,
-    fontWeight: '900',
-  },
-  originalPrice: {
-    fontSize: 12,
-    color: '#6A7282',
-    fontFamily: FONTS.Bold,
-    textDecorationLine: 'line-through',
-  },
-  saveBadge: {
-    backgroundColor: '#FDE2E2',
-    borderRadius: 4,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-  saveText: {
-    color: '#E53935',
-    fontSize: 12,
-    fontWeight: '700',
-    fontFamily: FONTS.Bold,
-  },
   description: {
-    fontSize: 13,
-    color: Constants.customgrey,
-    fontFamily: FONTS.Regular,
-    marginBottom: 6,
-    textAlign: 'center'
+    fontSize: 11,
+    color: '#20242B',
+    fontFamily: FONTS.Bold,
+    textAlign: 'center',
+    marginHorizontal: 10,
   },
   addButton: {
-    backgroundColor: '#F6E27A',
-    borderRadius: 12,
-    // paddingVertical: 12,
+    flexDirection: 'row',
+    gap: 6,
     alignItems: 'center',
-    marginTop: 'auto',
-    height: 30,
-    width: 180,
-    paddingTop: 4,
+    justifyContent: 'center',
     alignSelf: 'center',
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.30,
-    shadowRadius: 4.65,
-
-    elevation: 8,
+    maxWidth: '95%',
+    minHeight: 32,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    marginTop: 4,
+    backgroundColor: saleGold,
+    borderBottomColor: '#CDB75B',
+    borderBottomWidth: 2,
+    borderRadius: 20,
   },
   addButtonText: {
-    color: "#2E7D32",
-    fontSize: 16,
+    flexShrink: 1,
+    color: saleGreen,
+    fontSize: 13,
     fontFamily: FONTS.Bold,
-    fontWeight: '700',
+    textAlign: 'center',
   },
-
-  // pluscov: {
-  //   position: 'absolute',
-  //   bottom: 5,
-  //   right: -6,
-  //   minWidth: 40,
-  //   minHeight: 40,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   borderRadius: 20,
-  //   backgroundColor: '#2E7D32',
-  // },
-  addcov: {
-    // position: 'absolute',
-    // bottom: 5,
-    // right: 10,
-    // right: 5,
+  quantityControl: {
     flexDirection: 'row',
-    height: 30,
-    borderRadius: 7,
+    minHeight: 32,
+    borderRadius: 20,
     overflow: 'hidden',
-    alignSelf: 'flex-end',
-    // width: 200
+    alignSelf: 'center',
+    marginTop: 4,
   },
-  minus: {
-    backgroundColor: '#2E7D32',
-    width: 30,
-    height: '100%',
+  quantityButton: {
+    backgroundColor: saleGreen,
+    width: 36,
     justifyContent: 'center',
     alignItems: 'center',
   },
   qtyText: {
     backgroundColor: '#F3F3F3',
-    width: 30,
-    height: '100%',
-    alignContent: 'center',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 4,
-    // paddingTop: 5,
+    minWidth: 32,
+    paddingHorizontal: 3,
+    paddingVertical: 4,
     textAlign: 'center',
-    // textAlignVertical: 'center',
     fontSize: 16,
     color: Constants.black,
-    fontFamily: FONTS.Black,
-    // justifyContent: 'center',
-    // alignItems: 'center',
-    // alignSelf: 'center'
-  },
-  plus3: {
-    backgroundColor: '#2E7D32',
-    width: 30,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderTopRightRadius: 7,
-    borderBottomRightRadius: 7,
+    fontFamily: FONTS.Bold,
   },
 });
 

@@ -15,6 +15,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 
 } from 'react-native';
@@ -69,6 +70,7 @@ const FontTest = () => {
 
 const Home = () => {
   const { t } = useTranslation();
+  const { width: comboPageWidth } = useWindowDimensions();
   const [user] = useContext(UserContext);
   const [cartdetail, setcartdetail] = useContext(CartContext);
   const [toast, setToast] = useContext(ToastContext);
@@ -486,29 +488,22 @@ const Home = () => {
             {showExploreHouston && (
               <ExploreHoustonBanner onPress={() => navigate('ExploreHouston')} />
             )}
-            <View style={{ height: 10, backgroundColor: 'transparent', marginVertical: 5 }} />
-
-            {combolist.length > 0 && (
-              <>
-                <View style={styles.covline}>
-                  <Text style={styles.categorytxt}>{t('Combo Deals')}</Text>
-                </View>
-                <FlatList
-                  data={combolist}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  keyExtractor={(item, index) => item._id || index.toString()}
-                  contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 10 }}
-                  renderItem={({ item }) => (
-                    <ComboCard
-                      combo={item}
-                      onAddCombo={combo => {
-                        console.log('Add combo to cart', combo);
-                      }}
-                    />
-                  )}
-                />
-              </>
+            {combolist.length > 0 ? (
+              <FlatList
+                data={combolist}
+                horizontal
+                pagingEnabled
+                scrollEnabled={combolist.length > 1}
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item, index) => item._id || index.toString()}
+                renderItem={({ item }) => (
+                  <View style={[styles.comboPage, { width: comboPageWidth }]}>
+                    <ComboCard combo={item} />
+                  </View>
+                )}
+              />
+            ) : (
+              <View style={styles.comboSpacing} />
             )}
 
             <Sale setIsSale={setIsSale} />
@@ -586,6 +581,13 @@ const Home = () => {
 export default Home;
 
 const styles = StyleSheet.create({
+  comboPage: {
+    paddingHorizontal: 16,
+    paddingBottom: 6,
+  },
+  comboSpacing: {
+    height: 20,
+  },
   container: {
     flex: 1,
     backgroundColor: Constants.saffron,
