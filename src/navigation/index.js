@@ -38,6 +38,9 @@ import InvoiceGenerator from '../screen/app/Invoice';
 import Language from '../screen/app/Language';
 import posterDetail from '../screen/app/posterDetail';
 import { ProductForm } from '../screen/Employee/ProductForm';
+import StoreForm from '../screen/Employee/stores/StoreForm';
+import StoreDetails from '../screen/Employee/stores/StoreDetails';
+import StoreCategories from '../screen/Employee/stores/StoreCategories';
 import TestMap from '../screen/driver/TestMap';
 import CategoryFilter from '../screen/app/CategoryFilter';
 import OrderSuccessScreen from '../screen/app/OrderSuccessScreen';
@@ -126,6 +129,9 @@ export default function Navigation(props) {
         <Stack.Screen name="Language" component={Language} />
         <Stack.Screen name="posterDetail" component={posterDetail} />
         <Stack.Screen name="AddProduct" component={ProductForm} />
+        <Stack.Screen name="ManageStoreDetails" component={StoreDetails} />
+        <Stack.Screen name="ManageStoreForm" component={StoreForm} />
+        <Stack.Screen name="ManageStoreCategories" component={StoreCategories} />
         <Stack.Screen
           name="OrderSuccess"
           component={OrderSuccessScreen}

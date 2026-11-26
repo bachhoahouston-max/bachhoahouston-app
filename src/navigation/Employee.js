@@ -10,12 +10,13 @@ import {
 } from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {useNavigationState, useIsFocused} from '@react-navigation/native';
-import {ClipboardList, History as HistoryIcon, Package} from 'lucide-react-native';
+import {ClipboardList, History as HistoryIcon, Package, Store} from 'lucide-react-native';
 import Constants, {FONTS} from '../Assets/Helpers/constant';
 import {useTranslation} from 'react-i18next';
 import Orders from '../screen/Employee/Order';
 import History from '../screen/Employee/History';
 import Products from '../screen/Employee/Products';
+import Stores from '../screen/Employee/stores/Stores';
 
 const Tab = createBottomTabNavigator();
 
@@ -40,6 +41,12 @@ export const Employeetab = () => {
       routeName: 'Products',
       name: 'Products',
     },
+    {
+      icon: Store,
+      component: Stores,
+      routeName: 'ManageStores',
+      name: 'Store',
+    },
   ];
 
   const TabButton = ({onPress, onclick, item, index}) => {
@@ -51,6 +58,9 @@ export const Employeetab = () => {
         <View style={styles.iconContainer}>
           <TouchableOpacity
             onPress={onclick ? onclick : onPress}
+            accessibilityRole="tab"
+            accessibilityLabel={t(item.name)}
+            accessibilityState={{selected: isFocused}}
             activeOpacity={0.7}
             style={[
               styles.tabBtn,

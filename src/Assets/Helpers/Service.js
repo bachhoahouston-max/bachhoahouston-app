@@ -368,7 +368,7 @@ const Delete = async (url, data, props) => {
 };
 
 
-const ApiFormData = async (img) => {
+const ApiFormData = async (img, {authenticated = false} = {}) => {
   console.log('Starting file upload:', img);
   const user = await AsyncStorage.getItem('userDetail');
   let userDetail = JSON.parse(user);
@@ -381,9 +381,13 @@ const ApiFormData = async (img) => {
         reject(new Error('Invalid image data provided'));
         return;
       }
+      if (authenticated && !userDetail?.token) {
+        reject(new Error('Please log in to continue'));
+        return;
+      }
 
       // Check if file exists and is accessible
-      const fileUri = Platform.OS === 'android' ? img.uri : img.uri.replace('file:///', '');
+      const fileUri = Platform.OS === 'android' ? img.uri : img.uri.replace(/^file:\/\//, '');
       console.log('File URI to upload:', fileUri);
 
       const uploadPromise = RNFetchBlob.fetch(
@@ -392,7 +396,7 @@ const ApiFormData = async (img) => {
         {
           'Content-Type': 'multipart/form-data',
           ...commonHeaders,
-          // Authorization: `jwt ${userDetail.token}`,
+          ...(authenticated && {Authorization: `jwt ${userDetail.token}`}),
         },
         [
           {
