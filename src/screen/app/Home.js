@@ -438,7 +438,7 @@ const Home = () => {
 
 
 
-            <View style={styles.covline}>
+            <View style={[styles.covline, styles.categoryHeading]}>
               <Text style={styles.categorytxt}>
                 {t('Explore By Categories')}
               </Text>
@@ -459,7 +459,7 @@ const Home = () => {
               data={[buyItAgainCategory, ...(categorylist ?? [])]}
               horizontal={true}
               keyExtractor={(item, index) => item._id || index.toString()}
-              style={{ width: '100%', gap: 5, marginVertical: 10 }}
+              style={{ width: '100%', gap: 5, marginBottom: 4 }}
               renderItem={({ item }) => {
                 const isBuyItAgain = item === buyItAgainCategory;
                 const name = isBuyItAgain
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   comboSpacing: {
-    height: 20,
+    height: 8,
   },
   container: {
     flex: 1,
@@ -694,10 +694,13 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     // backgroundColor:Constants.red
   },
+  categoryHeading: {
+    marginBottom: 6,
+  },
   categoryTile: {
     alignItems: 'center',
     flex: 1,
-    marginVertical: 10,
+    marginVertical: 2,
     width: windowWidth < 500 ? 100 : 120,
   },
   categorycircle: {
@@ -721,7 +724,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.Regular,
     fontWeight: '500',
     textAlign: 'center',
-    marginVertical: 5,
+    marginTop: 5,
     // textTransform: 'capitalize',
     // 
     paddingHorizontal: 2,

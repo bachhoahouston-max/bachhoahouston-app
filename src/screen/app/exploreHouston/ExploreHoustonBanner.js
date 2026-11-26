@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
   },
   home: {
     marginHorizontal: 16,
-    marginVertical: 8,
+    marginVertical: 4,
     minHeight: 72,
     gap: 8,
     paddingHorizontal: 10,
