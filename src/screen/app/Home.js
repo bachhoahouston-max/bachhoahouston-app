@@ -48,6 +48,7 @@ import { ActivityIndicator } from 'react-native-paper';
 import i18n from '../../../i18n';
 import ExploreHoustonBanner from './exploreHouston/ExploreHoustonBanner';
 import { isExploreHoustonVisible } from './exploreHouston/storeDirectory';
+import { CategoryVisibilityContext } from '../../Assets/Helpers/categoryVisibility';
 
 const { width: windowWidth } = Dimensions.get('window');
 const buyItAgainCategory = { _id: 'buy-it-again' };
@@ -76,6 +77,7 @@ const Home = () => {
   const [toast, setToast] = useContext(ToastContext);
   const [loading, setLoading] = useContext(LoadContext);
   const backgroundColor = useContext(AppBackgroundContext);
+  const categoriesVisible = useContext(CategoryVisibilityContext);
   const [categorylist, setcategorylist] = useState();
   // const [topsellinglist, settopsellinglist] = useState([]);
   const [carosalimg, setcarosalimg] = useState([]);
@@ -168,7 +170,10 @@ const Home = () => {
 
     refreshVisibility();
     const subscription = AppState.addEventListener('change', state => {
-      if (state === 'active') refreshVisibility();
+      if (state === 'active') {
+        refreshVisibility();
+        getCategory();
+      }
     });
     return () => {
       requestNumber += 1;
@@ -438,53 +443,57 @@ const Home = () => {
 
 
 
-            <View style={[styles.covline, styles.categoryHeading]}>
-              <Text style={styles.categorytxt}>
-                {t('Explore By Categories')}
-              </Text>
-              <TouchableOpacity
-                style={{ flexDirection: 'row' }}
-                onPress={() => navigate('CategoryFilter', { item: 'All', name: 'All Categories' })}>
-                <Text style={styles.seealltxt}>{t('See all')}</Text>
-                {/* <RightarrowIcon
-                  height={17}
-                  width={17}
-                  style={{ alignSelf: 'center' }}
-                  color={'#2E7D32'}
-                /> */}
-              </TouchableOpacity>
-            </View>
-
-            <FlatList
-              data={[buyItAgainCategory, ...(categorylist ?? [])]}
-              horizontal={true}
-              keyExtractor={(item, index) => item._id || index.toString()}
-              style={{ width: '100%', gap: 5, marginBottom: 4 }}
-              renderItem={({ item }) => {
-                const isBuyItAgain = item === buyItAgainCategory;
-                const name = isBuyItAgain
-                  ? t('Buy it again')
-                  : i18n.language === 'vi' ? (item.v_name || item.name) : item.name;
-                const image = isBuyItAgain
-                  ? require('../../Assets/Images/BuyItAgain.png')
-                  : item.image ? { uri: item.image } : require('../../Assets/Images/veg.png');
-
-                return (
+            {categoriesVisible && (
+              <>
+                <View style={[styles.covline, styles.categoryHeading]}>
+                  <Text style={styles.categorytxt}>
+                    {t('Explore By Categories')}
+                  </Text>
                   <TouchableOpacity
-                    accessibilityRole="button"
-                    style={styles.categoryTile}
-                    onPress={() => isBuyItAgain
-                      ? navigate('BuyItAgain')
-                      : navigate('CategoryFilter', { item: item._id, name })
-                    }>
-                    <View style={styles.categorycircle}>
-                      <Image source={image} style={styles.categoryimg} />
-                      <Text style={styles.categorytxt2}>{name}</Text>
-                    </View>
+                    style={{ flexDirection: 'row' }}
+                    onPress={() => navigate('CategoryFilter', { item: 'All', name: 'All Categories' })}>
+                    <Text style={styles.seealltxt}>{t('See all')}</Text>
+                    {/* <RightarrowIcon
+                      height={17}
+                      width={17}
+                      style={{ alignSelf: 'center' }}
+                      color={'#2E7D32'}
+                    /> */}
                   </TouchableOpacity>
-                );
-              }}
-            />
+                </View>
+
+                <FlatList
+                  data={[buyItAgainCategory, ...(categorylist ?? [])]}
+                  horizontal={true}
+                  keyExtractor={(item, index) => item._id || index.toString()}
+                  style={{ width: '100%', gap: 5, marginBottom: 4 }}
+                  renderItem={({ item }) => {
+                    const isBuyItAgain = item === buyItAgainCategory;
+                    const name = isBuyItAgain
+                      ? t('Buy it again')
+                      : i18n.language === 'vi' ? (item.v_name || item.name) : item.name;
+                    const image = isBuyItAgain
+                      ? require('../../Assets/Images/BuyItAgain.png')
+                      : item.image ? { uri: item.image } : require('../../Assets/Images/veg.png');
+
+                    return (
+                      <TouchableOpacity
+                        accessibilityRole="button"
+                        style={styles.categoryTile}
+                        onPress={() => isBuyItAgain
+                          ? navigate('BuyItAgain')
+                          : navigate('CategoryFilter', { item: item._id, name })
+                        }>
+                        <View style={styles.categorycircle}>
+                          <Image source={image} style={styles.categoryimg} />
+                          <Text style={styles.categorytxt2}>{name}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  }}
+                />
+              </>
+            )}
             {showExploreHouston && (
               <ExploreHoustonBanner onPress={() => navigate('ExploreHouston')} />
             )}

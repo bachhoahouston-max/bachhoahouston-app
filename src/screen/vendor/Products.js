@@ -127,7 +127,7 @@ const Products = () => {
 
   const getCategory = () => {
     setLoading(true);
-    GetApi(`getCategory`, {}).then(
+    GetApi('getManagedCategories', {}).then(
       async res => {
         setLoading(false);
         console.log(res);

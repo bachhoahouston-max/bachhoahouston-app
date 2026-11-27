@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import {
   Animated,
+  AppState,
   Dimensions,
   Keyboard,
   Platform,
@@ -23,6 +24,8 @@ import Payment from '../screen/app/Payment';
 import Rewards from '../screen/app/Rewards';
 import { createStackNavigator } from '@react-navigation/stack';
 import { CartContext } from '../../App';
+import { GetApi } from '../Assets/Helpers/Service';
+import { CategoryVisibilityContext } from '../Assets/Helpers/categoryVisibility';
 
 const Tab = createBottomTabNavigator();
 
@@ -68,6 +71,7 @@ const AnimatedTabBar = ({ state, navigation, tabs, cartCount, translate }) => {
   }
 
   const activeTranslateX = activeAnim.interpolate({
+    extrapolate: 'clamp',
     inputRange: tabs.map((_, index) => index),
     outputRange: tabs.map(
       (_, index) => PILL_PADDING + tabWidth * index + (tabWidth - activeSize) / 2,
@@ -176,6 +180,33 @@ const CartStack = () => (
 export const TabNav = () => {
   const { t } = useTranslation();
   const [cartdetail, setcartdetail] = useContext(CartContext);
+  const [categoriesVisible, setCategoriesVisible] = useState(null);
+
+  useEffect(() => {
+    let request = 0;
+    const refreshVisibility = async () => {
+      const current = ++request;
+      try {
+        const response = await GetApi('categoryModuleVisibility');
+        const visible = response?.data?.isVisibleOnMobile;
+        if (response?.status !== true || typeof visible !== 'boolean') {
+          throw new Error('Invalid category visibility');
+        }
+        if (current === request) setCategoriesVisible(visible);
+      } catch {
+        if (current === request) setCategoriesVisible(previous => previous ?? true);
+      }
+    };
+
+    refreshVisibility();
+    const subscription = AppState.addEventListener('change', state => {
+      if (state === 'active') refreshVisibility();
+    });
+    return () => {
+      request += 1;
+      subscription.remove();
+    };
+  }, []);
 
   const TabArr = [
     {
@@ -208,37 +239,39 @@ export const TabNav = () => {
       routeName: 'Cart',
       name: 'Cart',
     },
-  ];
+  ].filter(item => item.routeName !== 'Categories' || categoriesVisible);
 
   const cartCount =
     cartdetail?.reduce((sum, obj) => sum + (obj?.qty ?? 0), 0) || 0;
 
   return (
-    <Tab.Navigator
-      screenOptions={{
-        tabBarShowLabel: false,
-        headerShown: false,
-        tabBarHideOnKeyboard: true,
-      }}
-      tabBar={props => (
-        <AnimatedTabBar
-          {...props}
-          tabs={TabArr}
-          cartCount={cartCount}
-          translate={t}
-        />
-      )}>
-      {TabArr.map((item, index) => {
-        return (
-          <Tab.Screen
-            key={index}
-            name={item.routeName}
-            component={item.component}
-            options={{ tabBarShowLabel: false }}
+    <CategoryVisibilityContext.Provider value={categoriesVisible}>
+      <Tab.Navigator
+        screenOptions={{
+          tabBarShowLabel: false,
+          headerShown: false,
+          tabBarHideOnKeyboard: true,
+        }}
+        tabBar={props => (
+          <AnimatedTabBar
+            {...props}
+            tabs={TabArr}
+            cartCount={cartCount}
+            translate={t}
           />
-        );
-      })}
-    </Tab.Navigator>
+        )}>
+        {TabArr.map(item => {
+          return (
+            <Tab.Screen
+              key={item.routeName}
+              name={item.routeName}
+              component={item.component}
+              options={{ tabBarShowLabel: false }}
+            />
+          );
+        })}
+      </Tab.Navigator>
+    </CategoryVisibilityContext.Provider>
   );
 };
 

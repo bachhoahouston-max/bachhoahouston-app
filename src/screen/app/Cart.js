@@ -1,3 +1,4 @@
+import { CategoryVisibilityContext } from '../../Assets/Helpers/categoryVisibility';
 /* eslint-disable no-undef */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable quotes */
@@ -99,6 +100,7 @@ const Cart = ({ route }) => {
   const [user, setuser] = useContext(UserContext);
   const [loading, setLoading] = useContext(LoadContext);
   const backgroundColor = useContext(AppBackgroundContext);
+  const categoriesVisible = useContext(CategoryVisibilityContext);
   const [totalsum, settotalsum] = useState(null);
   const [totaloff, settotaloff] = useState(null);
   const [totalFinal, setTotalFinal] = useState(null);
@@ -2749,7 +2751,7 @@ const Cart = ({ route }) => {
               style={{ height: 200, width: 200, resizeMode: 'contain' }}
             />
             <Text style={styles.carttxt2}>{t('Your Cart is empty')}</Text>
-            <Text style={styles.browsprod} onPress={() => navigate('Categories')}>
+            <Text style={styles.browsprod} onPress={() => navigate(categoriesVisible ? 'Categories' : 'Home')}>
               {t('Browse Products')}
             </Text>
           </View>
