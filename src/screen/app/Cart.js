@@ -3794,6 +3794,11 @@ const styles = StyleSheet.create({
   },
   expandedPickupCard: {
     paddingBottom: 8,
+    // Selected option: thick green outline like the web. The extra 1px of
+    // border is taken out of the padding so the content doesn't shift.
+    borderWidth: 2,
+    borderColor: '#22C55E',
+    paddingHorizontal: 7,
   },
 
 

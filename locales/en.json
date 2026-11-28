@@ -1023,5 +1023,6 @@
   "Peach": "Peach",
   "Yellow": "Yellow",
   "Rose": "Rose",
-  "Gray": "Gray"
+  "Gray": "Gray",
+  "Only {{count}} left in stock": "Only {{count}} left in stock"
 }

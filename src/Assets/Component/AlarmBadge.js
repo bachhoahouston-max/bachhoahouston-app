@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 3,
         // borderTopRadius: 20,
-        borderTopStartRadius: 20,
+        borderTopStartRadius: 11,
         borderTopEndRadius: 10,
         borderBottomEndRadius: 30,
         borderRightWidth: 5,
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
 
     },
     gradentRadius: {
-        borderTopStartRadius: 20,
+        borderTopStartRadius: 11,
         borderTopEndRadius: 10,
         borderBottomEndRadius: 30,
         overflow: 'hidden',

@@ -146,11 +146,13 @@ const ComboCard = ({ combo }) => {
 
   return (
     <View style={styles.card}>
-      <LinearGradient
-        colors={['#0F3D2E', '#256C32']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.banner}>
+      <View style={styles.banner}>
+        <LinearGradient
+          colors={['#0F3D2E', '#256C32']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.bannerTitle}>
           <Zap size={23} color={saleGold} fill={saleGold} />
           <Text accessibilityRole="header" style={styles.bannerTitleText}>
@@ -163,8 +165,10 @@ const ComboCard = ({ combo }) => {
             <Text style={styles.timerText}>{countdown}</Text>
           </View>
         </View>
-        <Text style={styles.bannerNote}>{t('Limited time only!')}</Text>
-      </LinearGradient>
+        <Text style={styles.bannerNote} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
+          {t('Limited time only!')}
+        </Text>
+      </View>
 
       <View style={styles.productsRow}>
         <View style={styles.productBox}>
@@ -326,10 +330,12 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   banner: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 6,
+    gap: 6,
+    paddingHorizontal: 10,
+    overflow: 'hidden',
     paddingVertical: 4,
     minHeight: 35,
     borderBottomColor: '#DCBE62',

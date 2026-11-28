@@ -102,11 +102,14 @@ function StoreChat({ storeId, isLoggedIn, onSignIn, wide }) {
   const sendDisabled = posting || !message.trim();
   return (
     <View style={styles.chatSection}>
-      <LinearGradient
-        colors={['#163a20', '#24502a']}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={[styles.chatHeader, wide && styles.wideChatHeader]}>
+      <View style={[styles.chatHeader, wide && styles.wideChatHeader]}>
+        <LinearGradient
+          pointerEvents="none"
+          colors={['#163a20', '#24502a']}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={StyleSheet.absoluteFill}
+        />
         <View pointerEvents="none" style={styles.chatHeaderArc} />
         <View style={styles.chatHeadingRow}>
           <Text accessibilityRole="header" style={[exploreStyles.bold, styles.chatHeading, wide && styles.wideHeading]}>{t('Live chat')}</Text>
@@ -118,7 +121,7 @@ function StoreChat({ storeId, isLoggedIn, onSignIn, wide }) {
             <Text style={[exploreStyles.text, styles.chatCount]}>({comments?.length || 0})</Text>
           </View>
         </View>
-      </LinearGradient>
+      </View>
       <View style={[styles.chatBody, wide && styles.wideChatBody]}>
         <Text style={[exploreStyles.medium, styles.conversation]}>{t('Join the Conversation')}</Text>
 

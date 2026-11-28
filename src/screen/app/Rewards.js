@@ -382,7 +382,7 @@ const RedeemTab = ({ t, groups, banner, catalogLoaded, rewardName, rewardState, 
                 <View key={reward._id} style={styles.card}>
                   <Image
                     source={rewardImageSource(reward.product)}
-                    style={{ width: '100%', height: 165, borderRadius: 12 }}
+                    style={{ width: '100%', height: 200, borderRadius: 12 }}
                     resizeMode="contain"
                   />
                   <Text style={styles.cardName} numberOfLines={2}>

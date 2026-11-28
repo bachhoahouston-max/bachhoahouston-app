@@ -62,12 +62,13 @@ const ProductCard = ({
       onPress={() => navigate('Preview', item.slug)}
       style={[styles.card]}>
 
-
-      <View style={{ position: 'relative', width: '100%', overflow: 'visible' }}>
-        {currentSale && currentSale?.status !== 'expired' && (<View style={{ position: 'absolute', top: 0, left: 0, zIndex: 1 }}>
+      {currentSale && currentSale?.status !== 'expired' && (
+        <View style={{ position: 'absolute', top: 0, left: 0, zIndex: 10, elevation: 10 }}>
           <AlarmBadge currentSale={currentSale} />
         </View>
-        )}
+      )}
+
+      <View style={{ position: 'relative', width: '100%', overflow: 'visible' }}>
 
         <Image
           source={{
@@ -167,7 +168,7 @@ const ProductCard = ({
 
                 {salePrice !== null && (
                   <Text style={[styles.maintxt, { fontFamily: FONTS.Bold, color: '#E53935', textDecorationLine: 'none', backgroundColor: '#FDE2E2', padding: 2, fontSize: 12, fontWeight: '700', borderRadius: 4 }]}>
-                    {Math.round(((saleVarient?.our_price - salePrice) / saleVarient?.our_price) * 100)}% OFF
+                    {t('Save {{amount}}', { amount: Currency + Math.max(0, Number(saleVarient?.our_price || 0) - Number(salePrice || 0)).toFixed(2) })}
                   </Text>
                 )}
               </>
@@ -283,6 +284,11 @@ const ProductCard = ({
           </View>
         </View>
 
+        {!isVendorClosed && item?.Quantity > 0 && item?.Quantity < 5 && (
+          <Text style={styles.lowStock}>
+            {t('Only {{count}} left in stock', { count: item.Quantity })}
+          </Text>
+        )}
         <View style={{ width: '100%', alignItems: 'center' }}>
           <Text
             style={[styles.proname, { width: '100%', textAlign: 'center', textAlignVertical: 'center' }]}
@@ -290,18 +296,6 @@ const ProductCard = ({
             {i18n.language === 'vi' ? (item?.vietnamiesName || item?.name) : item?.name}
           </Text>
         </View>
-        {!saleVarient?.value && item?.price_slot?.[0]?.value && (
-          <Text style={styles.weight}>
-            {item.price_slot[0].value || ''}{' '}
-            {item.price_slot[0].unit || ''}
-          </Text>
-        )}
-        {saleVarient?.value && (
-          <Text style={styles.weight}>
-            {saleVarient.value || ''}{' '}
-            {saleVarient.unit || ''}
-          </Text>
-        )}
       </View>
     </Pressable>
   );
@@ -331,7 +325,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   cardimg: {
-    height: 165,
+    height: 200,
     width: '100%',
     borderRadius: 12,
   },
@@ -340,7 +334,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 165,
+    height: 200,
     borderRadius: 12,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
@@ -389,6 +383,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#14532D',
     fontFamily: FONTS.SemiBold,
+  },
+  lowStock: {
+    fontSize: 12,
+    color: '#DC2626',
+    fontFamily: FONTS.Bold,
+    marginTop: 2,
   },
   weight: {
     fontSize: 14,
